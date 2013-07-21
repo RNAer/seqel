@@ -371,26 +371,37 @@ sequence."
     (save-excursion
       (replace-string "u" "t" nil beg end))))
 
-(defun region-summary (beg end)
-  "Count and print the number of all the characters in the region. Use hash
+(defun region-summary (beg end &optional legal-char-regexp)
+  "Count and print the number of all the characters in the region.
+Ignore char that does not belong to LEGAL-CHAR-REGEXP. Use hash
 table to create dictionary-like data type."
   (interactive
    (if (use-region-p) ; (region-active-p)
        (list (region-beginning) (region-end))
      (list (line-beginning-position) (line-end-position))))
-  (let ((myHash (make-hash-table :test 'equal))
-        currentChar
-        currentCount)
+  (let ((my-hash (make-hash-table :test 'equal))
+        char count)
+    ;; match any char if legal char is not provided
+    (if (not legal-char-regexp)
+        (setq legal-char-regexp "."))
     (save-excursion
       (goto-char beg)
       (dotimes (x (- end beg))
-        (setq currentChar (char-after))
-        (setq currentCount (gethash currentChar myHash))
-        (if currentCount
-            (puthash currentChar (1+ currentCount) myHash)
-          (puthash currentChar 1 myHash))
+        (if (looking-at-p legal-char-regexp)
+            (progn (setq char (char-after))
+                   (setq count (gethash char my-hash))
+                   (if count
+                       (puthash char (1+ count) my-hash)
+                     (puthash char 1 my-hash))))
         (forward-char)))
-    (maphash (lambda (x y) (princ (format "%c:%d " x y))) myHash)))
+    (maphash (lambda (x y) (princ (format "%c:%d " x y))) my-hash)))
+
+(defun nuc-summary (beg end)
+  (interactive
+   (if (use-region-p) ; (region-active-p)
+       (list (region-beginning) (region-end))
+     (list (line-beginning-position) (line-end-position))))
+  (region-summary beg end nuc-base-regexp))
 
 
 ;;;;;; isearch motif
@@ -469,59 +480,66 @@ This serves as a warning that the string is being mangled."
 
 
 ;;; Per base colors
-(defun dna-base-color-make-faces (beg end &optional force)
-  "Build a face to display bases with.  FORCE remakes the faces."
+(defface base-face-a
+  '((default
+      (:background "skyblue" :foreground "black"))
+    (((type tty) (class mono)) (:inverse-video t))
+    (t (:background "gray")))
+  "Face for marking up A's"
+  :group 'base-faces)
+
+(defface base-face-c
+  '((((type tty) (class color)) (:background "lightgreen" :foreground "black"))
+    (((type tty) (class mono)) (:inverse-video t))
+    (((class color) (background dark)) (:background "lightgreen" :foreground "black"))
+    (((class color) (background light)) (:background "lightgreen" :foreground "black"))
+    (t (:background "gray")))
+  "Face for marking up C's"
+  :group 'base-faces)
+
+(defface base-face-g
+  '((((type tty) (class color))(:background "pink" :foreground "black"))
+    (((type tty) (class mono)) (:inverse-video t))
+    (((class color) (background dark)) (:background "pink" :foreground "black"))
+    (((class color) (background light)) (:background "pink" :foreground "black"))
+    (t (:background "gray")))
+  "Face for marking up G's"
+  :group 'base-faces)
+
+(defface base-face-t
+  '((((type tty) (class color)) (:background "yellow" :foreground "black"))
+    (((type tty) (class mono)) (:inverse-video t))
+    (((class color) (background dark)) (:background "yellow" :foreground "black"))
+    (((class color) (background light)) (:background "yellow" :foreground "black"))
+    (t (:background "gray")))
+  "Face for marking up T's"
+  :group 'base-faces)
+
+(defun paint-base-region (beg end)
+  "Color the bases in the region BEG to END or the current line."
   (interactive
    (if (use-region-p) ; (region-active-p)
        (list (region-beginning) (region-end))
      (list (line-beginning-position) (line-end-position))))
-  (when (or (not (facep 'dna-face-t)) force)
-    (let ((base-list '("a" "c" "g" "t"))
-          base
-          base-face)
-      (while base-list
-        (setq base (car base-list))
-        (setq base-face (intern (concat "dna-base-face-" base)))
-        (make-face base-face)
-        (set-face-foreground
-         base-face (symbol-value (intern (concat "dna-base-color-" base))))
-        (setq base-list (cdr base-list))))))
-
-
-(defvar dna-color-bases-auto t
-  "Automaticly deactivate option `font-lock-mode' when `dna-color-bases' is run.
-See dna-color-bases for details.")
-;; (setq dna-color-bases-auto t)
-
-(defun dna-color-bases-region (beg end)
-  "Color the bases in the region BEG to END.
-NOTE: The function `font-lock-mode' will undo the work of this
-function if activated.  Disable it before using this
-function.  If `dna-color-bases-auto' is set then option `font-lock-mode'
-is deactivated automatically."
-  (interactive "r")
-  (if (and dna-color-bases-auto font-lock-mode)
-    (font-lock-mode -1))
-  (if font-lock-mode
-    (error "Font-lock-mode is on -- deactivate it"))
   (save-excursion
-    (let (c)
-      (goto-char s)
-      (while (< s e)
-        (setq c (downcase (char-after s)))
+    (let ((case-fold-search t)
+          c)
+      (goto-char beg)
+      (while (< beg end)
+        (setq c (char-after beg))
         (cond
-         ((eq c ?a)
-          (set-text-properties s (+ s 1) '(face dna-base-face-a)))
-         ((eq c ?c)
-          (set-text-properties s (+ s 1) '(face dna-base-face-c)))
-         ((eq c ?g)
-          (set-text-properties s (+ s 1) '(face dna-base-face-g)))
-         ((eq c ?t)
-          (set-text-properties s (+ s 1) '(face dna-base-face-t)))
+         ((char-equal c ?a)
+          (silent-put-text-property beg (+ beg 1) 'face 'base-face-a))
+         ((char-equal c ?c)
+          (silent-put-text-property beg (+ beg 1) 'face 'base-face-c))
+         ((char-equal c ?g)
+          (silent-put-text-property beg (+ beg 1) 'face 'base-face-g))
+         ((or (char-equal c ?t) (char-equal c ?u))
+          (silent-put-text-property beg (+ beg 1) 'face 'base-face-t))
          (t nil))
-        (setq s (+ s 1))))))
+        (setq beg (+ beg 1))))))
 
-(defun uncolor-region (beg end)
+(defun unpaint-base-region (beg end)
   "Uncolor the bases from BEG to END or the current line."
   (interactive
    (if (use-region-p) ; (region-active-p)
