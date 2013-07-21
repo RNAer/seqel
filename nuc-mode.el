@@ -99,12 +99,15 @@ bases the code represents. This includes uppercase bases into
 `rna-base-complement'.")
 
 (defvar rna-base-complement
-  (let ((c-vec dna-base-complement))
+  ;; make a copy of the vector; otherwise it would change it in place.
+  (let ((c-vec (copy-sequence dna-base-complement)))
     (aset c-vec ?a ?u)
     (aset c-vec ?A ?U)
+    (aset c-vec ?u ?a)
+    (aset c-vec ?U ?A)
     (aset c-vec ?t nil)
     (aset c-vec ?T nil)
-    c-vec)
+    c-vec))
   "A vector of upper and lower case bases and their complements.
  rna-base-complement[base] returns the complement of the base. see also
 `dna-base-complement'.")
@@ -175,7 +178,7 @@ See `nuc-delete-forward' and `proceed-char-repeatedly'."
                              (setq count (1+ count)))
                             ((looking-at-p seq-cruft-regexp)
                              (forward-char))
-                            (t (setq x end) ; end the while loop
+                            (t (setq x end) ; end the dotimes loop
                                (message "Bad base '%c' found at position %d,%d"
                                         (following-char)
                                         (line-number-at-pos)
@@ -187,7 +190,7 @@ See `nuc-delete-forward' and `proceed-char-repeatedly'."
 acid sequence. Return the count if the region
  contains only legal nucleic acid characters, including
  `nuc-base-regexp', `seq-cruft-regexp'; otherwise return nil and
- report the location of the invalid characters."
+ report the location of the invalid characters in the echo region."
   (interactive
    (if mark-active
        (list (region-beginning) (region-end))
@@ -226,43 +229,123 @@ See also `rna-p' and `nuc-p'."
   "Look up the complement of the BASE and print a message.
 See `dna-base-complement'."
   (interactive "cComplement of base:")
+  (if (equal base ?u) (setq base ?t))
   (let ((c-base (or (elt dna-base-complement base)
                     ??)))     ; return '?' if there's no complement base
-        (message "Complement of '%c' is '%c'." base c-base)))
+    (message "Complement of '%c' is '%c'." base c-base)))
 
-(defun nuc-complement (beg end)
+(defun nuc-complement (beg end &optional is-rna)
   "Complement a region of bases from BEG to END. If no active region,
 complement the current line.Complement a region of the buffer by deleting it and
-inserting the complements, base by base. Non-base (see `nuc-complement-list' are
-passed over unchanged.
-
-   The cool thing is that the point will remain in the same position and the
-highlighted region is still highlighted after the complement."
+inserting the complements, base by base. Non-base char are passed over unchanged.
+See also `nuc-complement' and `rna-complement'."
   (interactive
    (if (use-region-p) ; (region-active-p)
        (list (region-beginning) (region-end))
      (list (line-beginning-position) (line-end-position))))
-  (let ((deactivate-mark nil)    ; required to keep the marked region hilighted
-        (regionTypeP (= (point) beg))
-        (oldPoint (point))
-        complement-vector r-string r-length r-base r-cbase)
-    (setq complement-vector
-          (cond ((and (rna-p beg end) (dna-p beg end))
-                 (error "both U (at %d) and T (at %d) exist!"
-                        (rna-p beg end) (dna-p beg end))
-                 ((rna-p beg end) rna-base-complement)
-                 (t dna-base-complement))))
+  (let* ((t-exist (dna-p beg end))
+         (u-exist (rna-p beg end))
+         (complement-vector
+          (cond ((and t-exist is-rna)
+                 (error "T (at %d) exist!" t-exist))
+                ((and u-exist is-rna) rna-base-complement)
+                ((and t-exist (not is-rna)) dna-base-complement)
+                ((and u-exist (not is-rna))
+                 (error "U (at %d) exist!" u-exist))))
+          base c-base)
+    (save-excursion
+      (goto-char beg)
+      (while (< (point) end)
+        (setq base (following-char))
+        (setq c-base (aref complement-vector base))
+        (insert (if c-base c-base base))
+        (delete-char 1)))))
 
-    (setq r-string (buffer-substring-no-properties beg end))
-    (setq r-length (length r-string))
+(defalias 'dna-complement 'nuc-complement)
+
+(defun rna-complement (beg end)
+  "Complement a region of bases from BEG to END. If no active region,
+complement the current line.Complement a region of the buffer by deleting it and
+inserting the complements, base by base. Non-base char are passed over unchanged.
+See also `nuc-complement' and `dna-complement'."
+  (interactive
+   (if (use-region-p) ; (region-active-p)
+       (list (region-beginning) (region-end))
+     (list (line-beginning-position) (line-end-position))))
+  (nuc-complement beg end t))
+
+
+(defun reverse-region-by-char (beg end)
+  (interactive
+   (if (use-region-p) ; (region-active-p)
+       (list (region-beginning) (region-end))
+     (list (line-beginning-position) (line-end-position))))
+  (let ((str-len (- end beg))
+        (old-pos (point)))
+    ;; (message "%d and %d" end old-pos)
+    (goto-char end)
+    (dotimes (x str-len)
+      (let (current-char)
+        (save-excursion
+          (goto-char (- end x 1))
+          (setq current-char (following-char)))
+        (insert current-char)))
     (delete-region beg end)
-    (dotimes (r-point r-length)
-      (setq r-base (aref r-string r-point))
-      (setq r-cbase (aref complement-vector r-base))
-      (insert (if r-cbase r-cbase r-base)))
-    (if regionTypeP
-        (push-mark end nil t))                 ; keep the region marked
-    (goto-char oldPoint)))      ; keep the point at the same previous position
+    (goto-char old-pos)
+    (if (/= old-pos end) (push-mark end nil t))))
+
+
+(defun nuc-reverse-complement (beg end &optional is-rna)
+  "Reverse complement a region of DNA (unless IS-RNA is true) from BEG to END.
+Works by deleting the region and inserting bases reversed
+and complemented, base by base while entering non-bases in the order
+found. This function has some code redundancy with
+`nuc-complement'."
+  (interactive
+   (if (use-region-p) ; (region-active-p)
+       (list (region-beginning) (region-end))
+     (list (line-beginning-position) (line-end-position))))
+  (let* ((t-exist (dna-p beg end))
+         (u-exist (rna-p beg end))
+         (complement-vector
+          (cond ((and t-exist is-rna)
+                 (error "T (at %d) exist!" t-exist))
+                ((and u-exist is-rna) rna-base-complement)
+                ((and t-exist (not is-rna)) dna-base-complement)
+                ((and u-exist (not is-rna))
+                 (error "U (at %d) exist!" u-exist))))
+         (str-len (- end beg))
+         (old-pos (point))
+         base c-base)
+    (goto-char end)
+    (dotimes (x str-len)
+      (let (current-char)
+        (save-excursion
+          (goto-char (- end x 1))
+          (setq base (following-char)))
+        (setq c-base (aref complement-vector base))
+        (insert (if c-base c-base base))))
+    (delete-region beg end)
+    (goto-char old-pos)
+    (if (/= old-pos end) (push-mark end nil t))))
+
+
+(defalias 'nuc-rc 'nuc-reverse-complement)
+(defalias 'dna-rc 'nuc-reverse-complement)
+(defalias 'dna-reverse-complement 'nuc-reverse-complement)
+
+(defun rna-reverse-complement (beg end)
+  "Reverse complement a region of RNA from BEG to END (or the current line).
+Works by deleting the region and inserting bases reversed
+and complemented, while entering non-bases in the order
+found. This function is based on `nuc-reverse-complement'."
+  (interactive
+   (if (use-region-p) ; (region-active-p)
+       (list (region-beginning) (region-end))
+     (list (line-beginning-position) (line-end-position))))
+  (nuc-reverse-complement beg end t))
+
+(defalias 'rna-rc 'rna-reverse-complement)
 
 ;;;###autoload
 (defun 2rna (beg end)
@@ -308,42 +391,6 @@ table to create dictionary-like data type."
           (puthash currentChar 1 myHash))
         (forward-char)))
     (maphash (lambda (x y) (princ (format "%c:%d " x y))) myHash)))
-
-(defun nuc-reverse-complement (beg end)
-  "Reverse complement a region of dna from BEG to END.
-Works by deleting the region and inserting bases reversed
-and complemented, while entering non-bases in the order
-found. This function has some code redundancy with
-`nuc-reverse-complement'."
-  (interactive
-   (if (use-region-p) ; (region-active-p)
-       (list (region-beginning) (region-end))
-     (list (line-beginning-position) (line-end-position))))
-  (let ((deactivate-mark nil)          ; required to keep the marked region hilighted
-        (regionTypeP (= (point) end))
-        (oldPoint (point))
-        complement-vector r-string r-length r-base r-cbase)
-    (setq complement-vector
-          (cond ((and (rna-p) (dna-p))
-                 (error "both U (or u at pos %d) and T (or t at pos %d) exist!"
-                        (rna-p) (dna-p))
-                 ((rna-p) rna-base-complement)
-                 (t dna-base-complement))))
-
-    (setq r-string (buffer-substring-no-properties beg end))
-    ;; reverse r-string
-    (setq r-string (apply 'string (reverse (string-to-list r-string))))
-    (setq r-length (length r-string))
-    (delete-region beg end)
-    (dotimes (r-point r-length)
-      (setq r-base (aref r-string r-point))
-      (setq r-cbase (nuc-complement-base r-base))
-      (insert (if r-cbase r-cbase r-base)))
-    (if regionTypeP
-        (push-mark end nil t))  ; keep the region marked
-    (goto-char (+ beg (- end oldPoint)))))      ; keep the point at the same previous position
-
-(defalias 'nuc-rc 'nuc-reverse-complement)
 
 
 ;;;;;; isearch motif
@@ -393,7 +440,7 @@ such as 'acrt' would be transformed into '[a][ ]*[c][ ]*[ag][ ]*[t]."
     (re-search-backward string bound noerror)))
 
 (defadvice isearch-message-prefix (after seq-isearch-ismp)
-  "Set the isearch prompt string to show dna search is active.
+  "Set the isearch prompt string to show seq search is active.
 This serves as a warning that the string is being mangled."
   (setq ad-return-value (concat "MOTIF " ad-return-value)))
 
@@ -404,10 +451,10 @@ This serves as a warning that the string is being mangled."
   (cond (seq-isearch-p
          (setq seq-isearch-p nil)
          (message "motif isearch is off")
-         (ad-disable-advice 'isearch-message-prefix 'around 'seq-isearch-ismp))
+         (ad-disable-advice 'isearch-message-prefix 'after 'seq-isearch-ismp))
         (t (setq seq-isearch-p t)
            (message "motif isearch is on")
-           (ad-enable-advice 'isearch-message-prefix 'around 'seq-isearch-ismp)))
+           (ad-enable-advice 'isearch-message-prefix 'after 'seq-isearch-ismp)))
   ;; in case there are other advices.
   (ad-activate 'isearch-message-prefix))
 
@@ -420,7 +467,7 @@ This serves as a warning that the string is being mangled."
 
 (setq isearch-search-fun-function 'seq-isearch-search-fun)
 
-;;;;;;;;;;;;;;;;; paint
+
 ;;; Per base colors
 (defun dna-base-color-make-faces (beg end &optional force)
   "Build a face to display bases with.  FORCE remakes the faces."
