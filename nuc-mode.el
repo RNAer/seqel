@@ -107,7 +107,7 @@ bases the code represents. This includes uppercase bases into
     (aset c-vec ?U ?A)
     (aset c-vec ?t nil)
     (aset c-vec ?T nil)
-    c-vec))
+    c-vec)
   "A vector of upper and lower case bases and their complements.
  rna-base-complement[base] returns the complement of the base. see also
 `dna-base-complement'.")
@@ -127,7 +127,7 @@ or negative integer, indicating the proceeding direction."
         (error "Illegal char found! Moved %d bases" (* direction x))))
     count))
 
-;;; move
+;;;###autoload
 (defun nuc-move-forward (count)
   "Move forward COUNT bases. Move backward if negative.
 Skip `seq-cruft-regexp' but stop on the illegal base
@@ -480,41 +480,43 @@ This serves as a warning that the string is being mangled."
 
 
 ;;; Per base colors
-(defface base-face-a
-  '((default
-      (:background "skyblue" :foreground "black"))
-    (((type tty) (class mono)) (:inverse-video t))
-    (t (:background "gray")))
-  "Face for marking up A's"
-  :group 'base-faces)
+(defmacro def-char-face (prefix letter backgrnd foregrnd grp)
+  `(defface ,(intern (concat prefix "-face-" letter))
+     '((((type tty) (class color))
+        (:background ,backgrnd :foreground ,foregrnd))
+       (((type tty) (class color)) (:inverse-video t))
+       (((class color) (background dark))
+        (:background ,backgrnd :foreground ,foregrnd))
+       (((class color) (background light))
+        (:background ,backgrnd :foreground ,foregrnd))
+       (t (:background "gray")))
+     ,(concat "Face for marking up " (upcase letter) "'s")
+     :group ,grp))
 
-(defface base-face-c
-  '((((type tty) (class color)) (:background "lightgreen" :foreground "black"))
-    (((type tty) (class mono)) (:inverse-video t))
-    (((class color) (background dark)) (:background "lightgreen" :foreground "black"))
-    (((class color) (background light)) (:background "lightgreen" :foreground "black"))
-    (t (:background "gray")))
-  "Face for marking up C's"
-  :group 'base-faces)
+;; nuc IUPAC: acgtumrwsykvhdbn
+(let ((letcol-alist '((a . (gray black))
+                      (c . (lightgreen black))
+                      (g . (pink black))
+                      (t . (yellow black))
+                      (m . (green black))
+                      (r . (green black))
+                      (w . (green black))
+                      (s . (green black))
+                      (y . (green black))
+                      (k . (green black))
+                      (v . (green black))
+                      (h . (green black))
+                      (d . (green black))
+                      (b . (green black))
+                      (n . (green black)))))
+  (loop for elem in letcol-alist
+        for l = (format "%s" (car elem))
+        for back = (format "%s" (cadr elem))
+        for fore = (format "%s" (caddr elem))
+        do
+        (eval (macroexpand `(def-char-face ,l ,back ,fore)))))
 
-(defface base-face-g
-  '((((type tty) (class color))(:background "pink" :foreground "black"))
-    (((type tty) (class mono)) (:inverse-video t))
-    (((class color) (background dark)) (:background "pink" :foreground "black"))
-    (((class color) (background light)) (:background "pink" :foreground "black"))
-    (t (:background "gray")))
-  "Face for marking up G's"
-  :group 'base-faces)
-
-(defface base-face-t
-  '((((type tty) (class color)) (:background "yellow" :foreground "black"))
-    (((type tty) (class mono)) (:inverse-video t))
-    (((class color) (background dark)) (:background "yellow" :foreground "black"))
-    (((class color) (background light)) (:background "yellow" :foreground "black"))
-    (t (:background "gray")))
-  "Face for marking up T's"
-  :group 'base-faces)
-
+;;;###autoload
 (defun paint-base-region (beg end)
   "Color the bases in the region BEG to END or the current line."
   (interactive
@@ -547,6 +549,13 @@ This serves as a warning that the string is being mangled."
      (list (line-beginning-position) (line-end-position))))
   (remove-text-properties beg end '(face nil)))
 
+(define-minor-mode nuc-mode
+  "Nucleic acid mode"
+  ;; the name, a string, to show in the modeline
+  :lighter " nuc"
+  ;; keymap
+  :keymap nil
+  :global t)
 
 (provide 'nuc-mode)
 
