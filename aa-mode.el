@@ -27,92 +27,147 @@
   "*Chars that represent cruft which may appear between bases.
  It will be skipped during moving and search and anything involving counting bases.")
 
-(defvar nuc-base-other "x"
+(defvar aa-other "x"
   "*Other chars that can possibly exist in a sequence. It should be in lower
 case as the upper case will be added automatically. Please modify
 `nuc-degeneracy-list' and `dna-complement-list' accordingly")
 
-(defvar nuc-degeneracy-list
-  '((?a  ?a)
-    (?c  ?c)
-    (?g  ?g)
-    (?t  ?t)
-    (?u  ?u)
-    (?m  ?a ?c)
-    (?y  ?c ?t)
-    (?r  ?a ?g)
-    (?w  ?a ?t)
-    (?s  ?c ?g)
-    (?k  ?g ?t)
-    (?v  ?a ?c ?g)
-    (?b  ?c ?g ?t)
-    (?h  ?a ?c ?t)
-    (?d  ?a ?g ?t)
-    (?n  ?a ?t ?g ?c)
-    (?x  ?a ?t ?g ?c))
-  "*A association list showing the degeneracy of the bases. Only for lowercase,
-as the upcased will be added automatically.")
-
-(defvar dna-complement-list
-  '((?n . ?n) (?x . ?x) ; identity
-    (?t . ?a) (?a . ?t) (?c . ?g) (?g . ?c)           ; single
-    (?m . ?k) (?r . ?y) (?w . ?w) (?s . ?s) (?y . ?r) (?k . ?m) ; double
-    (?v . ?b) (?b . ?v) (?h . ?d) (?d . ?h))  ; triple
-  "*List of bases and their complements. Bases should be lowercase,
-as the upcased will be added when the vector is made.")
-
 ;;;;; END OF USER CUSTOMIZABLE VARIABLES
 
-(defvar nuc-base-iupac "acgtumrwsykvhdbn"
+(defvar aa-iupac "acdefghiklmnpqrstvwybxz"
   "All char for a single base, following IUPAC code. It should be in lower case
 as the upper case will be added automatically.")
+(defvar aa-iupac-3
+  '((?a . Ala)
+    (?b . Asx)
+    (?c . Cys)
+    (?d . Asp)
+    (?e . Glu)
+    (?f . Phe)
+    (?g . Gly)
+    (?h . His)
+    (?i . Ile)
+    (?k . Lys)
+    (?l . Leu)
+    (?m . Met)
+    (?n . Asn)
+    (?p . Pro)
+    (?q . Gln)
+    (?r . Arg)
+    (?s . Ser)
+    (?t . Thr)
+    (?v . Val)
+    (?w . Trp)
+    (?x . Xaa)
+    (?y . Tyr)
+    (?z . Glx))
+  "*Three letter IUPAC code of AA.")
+(defvar aa-acidic "")
+(defvar aa-neutral "")
+(defvar aa-basic "")
+(defvar aa-hydrophobic "")
+(defvar aa-hydrophilic "")
+(defvar aa-amphipathic "")
+(defvar aa-hydrophobicity
+  '((?a . 41)
+    (?c . 8)
+    (?d . 3.9)
+    (?e . 129.12)
+    (?f . 147.18)
+    (?g . 57.05)
+    (?h . 137.14)
+    (?i . 113.16)
+    (?k . 128.17)
+    (?l . 113.16)
+    (?m . 131.19)
+    (?n . 114.11)
+    (?p . 97.12)
+    (?q . 128.14)
+    (?r . 156.19)
+    (?s . 16)
+    (?t . 101.11)
+    (?v . 99.14)
+    (?w . 186.21)
+    (?y . 163.18))
+  "*Normalized AA hydrophobicity at pH 7, with 100 most hydropobic and
+-100 most hydrophilic. The value is from the Sigma webpage.")
+(defvar aa-pka
+  '((?a . 71.09)
+    (?c . 8)
+    (?d . 3.9)
+    (?e . 129.12)
+    (?f . 147.18)
+    (?g . 57.05)
+    (?h . 137.14)
+    (?i . 113.16)
+    (?k . 128.17)
+    (?l . 113.16)
+    (?m . 131.19)
+    (?n . 114.11)
+    (?p . 97.12)
+    (?q . 128.14)
+    (?r . 156.19)
+    (?s . 16)
+    (?t . 101.11)
+    (?v . 99.14)
+    (?w . 186.21)
+    (?y . 163.18)
+  "*molecular weight")
 
-(defvar nuc-base-regexp
-  (let ((nuc-base (concat nuc-base-iupac nuc-base-other)))
+(defvar aa-mw
+  '((?a . 71.09)
+    (?c . 103.15)
+    (?d . 115.09)
+    (?e . 129.12)
+    (?f . 147.18)
+    (?g . 57.05)
+    (?h . 137.14)
+    (?i . 113.16)
+    (?k . 128.17)
+    (?l . 113.16)
+    (?m . 131.19)
+    (?n . 114.11)
+    (?p . 97.12)
+    (?q . 128.14)
+    (?r . 156.19)
+    (?s . 87.08)
+    (?t . 101.11)
+    (?v . 99.14)
+    (?w . 186.21)
+    (?y . 163.18)
+  "*AA molecular weight")
+
+(defvar aa-regexp
+  (let ((aa (concat aa-iupac aa-other)))
     (regexp-opt (mapcar #'char-to-string
-                        (concat nuc-base (upcase nuc-base)))))
+                        (concat aa (upcase aa)))))
   "A regexp that matches a valid nucleotide base (following IPUAC code plus
-the symbol defined in `nuc-base-other'.")
+the symbol defined in `nuc-other'.")
 
 (defvar seq-cruft-regexp
   (regexp-opt (mapcar #'char-to-string
                       (concat seq-gap seq-space)))
   "A regexp that matches cruft.")
 
-(defvar nuc-degeneracy
-  (let ((nuc-degen nuc-degeneracy-list))
-    (dolist (element nuc-degeneracy-list)
-      (setq nuc-degen (append nuc-degen (list (mapcar 'upcase element)))))
-  nuc-degen)
-  "This is association list with keys being IUPAC code and values being the
-bases the code represents. This includes uppercase bases into
-`nuc-degeneracy-list'.")
+;; define aa faces belonging to aa-face group
+(defvar aa-colors
+  (let ((lower-col (mapcar* #'list
+                            (setcdr (last colors-for-bw) colors-for-bw)
+                            (string-to-list aa-iupac)))
+        (up-col (mapcar* #'list
+                         (setcdr (last colors-for-bw) colors-for-bw)
+                         (string-to-list (upcase aa-iupac)))))
+    (append (mapcar #'(lambda (x) (cons 'black x)) lower-col)
+            (mapcar #'(lambda (x) (cons 'white x)) up-col)))
+  "Background and foreground colors for each IUPAC bases")
 
-(defvar dna-base-complement
-  (let ((c-vec (make-vector 256 nil)))  ; all alphabets chars are < 256
-    (dolist (element dna-complement-list)
-      (aset c-vec (car element) (cdr element))
-      (aset c-vec (upcase (car element)) (upcase (cdr element))))
-    c-vec)
-  "A vector of complements of upper and lower case bases.
- dna-base-complement[base] returns the complement of the base. see also
-`rna-base-complement'.")
-
-(defvar rna-base-complement
-  ;; make a copy of the vector; otherwise it would change it in place.
-  (let ((c-vec (copy-sequence dna-base-complement)))
-    (aset c-vec ?a ?u)
-    (aset c-vec ?A ?U)
-    (aset c-vec ?u ?a)
-    (aset c-vec ?U ?A)
-    (aset c-vec ?t nil)
-    (aset c-vec ?T nil)
-    c-vec)
-  "A vector of upper and lower case bases and their complements.
- rna-base-complement[base] returns the complement of the base. see also
-`dna-base-complement'.")
-
-
+(let ((letcol-alist aa-colors))
+  (loop for elem in letcol-alist
+        for l = (format "%s" (nth 0 elem))
+        for b = (format "%s" (nth 1 elem))
+        for f = (format "%s" (nth 2 elem))
+        do
+        (eval (macroexpand `(def-char-face "aa" ,l ,b ,f "aa-face")))))
 (defun proceed-char-repeatedly (count func legal-char-regexp)
   "Run the FUNC function for COUNT times repeatedly from the point on,
 if the next char belongs to LEGAL-CHAR-REGEXP. COUNT can be either positive
@@ -136,28 +191,28 @@ COUNT can be either positive or negative, indicating the
 moving direction. Return the number of bases that are moved thru.
 See `proceed-char-repeatedly'"
   (interactive "p")
-  (proceed-char-repeatedly count 'forward-char nuc-base-regexp))
+  (proceed-char-repeatedly count 'forward-char aa-regexp))
 
 (defun nuc-move-backward (count)
   "Move backward COUNT bases, similar to `nuc-move-forward'. See also
  `proceed-char-repeatedly'."
   (interactive "p")
   ;; (proceed-char-repeatedly count 'backward-char))
-  (proceed-char-repeatedly (- count) 'forward-char nuc-base-regexp))
+  (proceed-char-repeatedly (- count) 'forward-char aa-regexp))
 
 ;;; delete
 (defun nuc-delete-forward (count)
   "Delete COUNT number of bases starting from the point, similar to
 `nuc-move-forward' (just use delete instead of move)."
   (interactive "p")
-  (proceed-char-repeatedly count 'delete-char nuc-base-regexp))
+  (proceed-char-repeatedly count 'delete-char aa-regexp))
 
 (defun nuc-delete-backward (count)
   "Delete backward COUNT number of bases from the point, similar to
 `nuc-move-forward' (just use delete backward instead of move forward).
 See `nuc-delete-forward' and `proceed-char-repeatedly'."
   (interactive "p")
-  (proceed-char-repeatedly (- count) 'delete-char nuc-base-regexp))
+  (proceed-char-repeatedly (- count) 'delete-char aa-regexp))
 
 
 (defun seq-p (beg end legal-char-regexp)
@@ -189,13 +244,13 @@ See `nuc-delete-forward' and `proceed-char-repeatedly'."
   "Test if the region between BEG and END (or the line) is a legal nucleotide
 acid sequence. Return the count if the region
  contains only legal nucleic acid characters, including
- `nuc-base-regexp', `seq-cruft-regexp'; otherwise return nil and
+ `aa-regexp', `seq-cruft-regexp'; otherwise return nil and
  report the location of the invalid characters in the echo region."
   (interactive
    (if mark-active
        (list (region-beginning) (region-end))
      (list (line-beginning-position) (line-end-position))))
-  (seq-p beg end nuc-base-regexp))
+  (seq-p beg end aa-regexp))
 
 (defalias 'nuc-count 'nuc-p)
 
@@ -396,12 +451,12 @@ table to create dictionary-like data type."
         (forward-char)))
     (maphash (lambda (x y) (princ (format "%c:%d " x y))) my-hash)))
 
-(defun nuc-base-summary (beg end)
+(defun nuc-summary (beg end)
   (interactive
    (if (use-region-p) ; (region-active-p)
        (list (region-beginning) (region-end))
      (list (line-beginning-position) (line-end-position))))
-  (region-summary beg end nuc-base-regexp))
+  (region-summary beg end aa-regexp))
 
 
 ;;;;;; isearch motif
@@ -455,7 +510,7 @@ such as 'acrt' would be transformed into '[a][ ]*[c][ ]*[ag][ ]*[t]."
 This serves as a warning that the string is being mangled."
   (setq ad-return-value (concat "MOTIF " ad-return-value)))
 
-(defvar seq-isearch-p nil)
+(defvar seq-isearch-p t)
 
 (defun toggle-seq-isearch ()
   (interactive)
@@ -480,31 +535,6 @@ This serves as a warning that the string is being mangled."
 
 
 ;;; Per base colors
-;; colors looked good on both black and white
-(defvar colors-for-bw
-  ;; strong contrast
-  '(royalblue magenta limegreen orange red gold3 cyan
-          ;; less strong contrast.
-          slateblue2 maroon4 gray25 rosybrown3 deepskyblue tan4 yellow4 chartreuse4 mediumpurple)
-"*A list colors, with various foreground in black background.")
-(defvar colors-for-white
-  '(black)
-"*A list of color pairs, with various foreground in white background.")
-(defvar colors-for-black
-  '(white))
-;; nuc IUPAC: acgtumrwsykvhdbn
-
-(defvar nuc-base-colors
-  (let ((lower-col (mapcar* #'list
-                            (setcdr (last colors-for-bw) colors-for-bw)
-                            (string-to-list nuc-base-iupac)))
-        (up-col (mapcar* #'list
-                         (setcdr (last colors-for-bw) colors-for-bw)
-                         (string-to-list (upcase nuc-base-iupac)))))
-    (append (mapcar #'(lambda (x) (cons 'black x)) lower-col)
-            (mapcar #'(lambda (x) (cons 'white x)) up-col)))
-  "Background and foreground colors for each IUPAC bases")
-
 (defmacro def-char-face (prefix letter backgrnd foregrnd grp)
   `(defface ,(intern (concat prefix "-face-" letter))
      '((((type tty) (class color))
@@ -515,15 +545,31 @@ This serves as a warning that the string is being mangled."
        (((class color) (background light))
         (:background ,backgrnd :foreground ,foregrnd))
        (t (:background "gray")))
-     ,(concat "Face for marking up " (upcase letter) "'s")))
+     ,(concat "Face for marking up " (upcase letter) "'s")
+     :group ,grp))
 
-;; define base faces belonging to base-face group
-(let ((letcol-alist nuc-base-colors))
+;; nuc IUPAC: acgtumrwsykvhdbn
+(let ((letcol-alist '((a . (gray black))
+                      (c . (lightgreen black))
+                      (g . (pink black))
+                      (t . (yellow black))
+                      (m . (green black))
+                      (r . (green black))
+                      (w . (green black))
+                      (s . (green black))
+                      (y . (green black))
+                      (k . (green black))
+                      (v . (green black))
+                      (h . (green black))
+                      (d . (green black))
+                      (b . (green black))
+                      (n . (green black)))))
   (loop for elem in letcol-alist
-        for f = (format "%s" (nth 0 elem))
-        for b = (format "%s" (nth 1 elem))
-        for l = (format "%c" (nth 2 elem)) do
-        (eval (macroexpand `(def-char-face "base" ,l ,b ,f "base-face")))))
+        for l = (format "%s" (car elem))
+        for back = (format "%s" (cadr elem))
+        for fore = (format "%s" (caddr elem))
+        do
+        (eval (macroexpand `(def-char-face ,l ,back ,fore)))))
 
 ;;;###autoload
 (defun paint-base-region (beg end)
@@ -533,13 +579,21 @@ This serves as a warning that the string is being mangled."
        (list (region-beginning) (region-end))
      (list (line-beginning-position) (line-end-position))))
   (save-excursion
-    (let (char face)
+    (let ((case-fold-search t)
+          c)
       (goto-char beg)
       (while (< beg end)
-        (setq char (char-after beg))
-        (setq face (format "base-face-%c" char))
-        (if (facep face)
-            (silent-put-text-property beg (+ beg 1) 'face (intern face)))
+        (setq c (char-after beg))
+        (cond
+         ((char-equal c ?a)
+          (silent-put-text-property beg (+ beg 1) 'face 'base-face-a))
+         ((char-equal c ?c)
+          (silent-put-text-property beg (+ beg 1) 'face 'base-face-c))
+         ((char-equal c ?g)
+          (silent-put-text-property beg (+ beg 1) 'face 'base-face-g))
+         ((or (char-equal c ?t) (char-equal c ?u))
+          (silent-put-text-property beg (+ beg 1) 'face 'base-face-t))
+         (t nil))
         (setq beg (+ beg 1))))))
 
 (defun unpaint-base-region (beg end)
@@ -558,6 +612,6 @@ This serves as a warning that the string is being mangled."
   :keymap nil
   :global t)
 
-(provide 'nuc-mode)
+(provide 'aa-mode)
 
 ;;; nuc-mode.el ends here
