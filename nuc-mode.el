@@ -404,109 +404,55 @@ table to create dictionary-like data type."
   (region-summary beg end nuc-base-regexp))
 
 
-;;;;;; isearch motif
-
-(defun seq-isearch-mangle-str (str)
-  "Mangle the string STR into a regexp to search over cruft in sequence.
-Inserts a regexp between each base which matches sequence formatting cruft.
-For example, if `seq-cruft-regexp' is '[ ]', the search string 'acgt' would be
-transformed into 'a[ ]*c[ ]*g[ ]*t' and the search string containing IUPAC code
-such as 'acrt' would be transformed into '[a][ ]*[c][ ]*[ag][ ]*[t]."
-  ;; (mapconcat 'identity (split-string str "" t) (concat seq-cruft-regexp "*")))
-  (let ((char-list (string-to-list str))
-        degenerate-str-list)
-    ;; 'ar' will return as ("[a]", "[ag]")
-    (setq degenerate-str-list
-          (mapcar '(lambda (x)
-                     (let ((just-a-var))
-                       (setq just-a-var (assoc x nuc-degeneracy))
-                       (if (not just-a-var)
-                           (error "%c is not a valid IUPAC code in nuc-degeneracy!" x))
-                       (concat "["  (mapconcat 'char-to-string
-                                               (cdr just-a-var) "")
-                               "]")))   ; end of lambda
-                  char-list))
-    ;; (print char-list)
-    ;; (print degenerate-str-list)
-    (mapconcat 'identity degenerate-str-list (concat seq-cruft-regexp "*"))))
-
-;; (defun seq-isearch-transform-string ()
-;;   (interactive)
-;;   (let* ((string (seq-isearch-mangle-str isearch-string)))
-;;     (setq isearch-string string
-;;           isearch-message (mapconcat 'isearch-text-char-description string ""))
-;;     (isearch-search-and-update)))
-
-;; (define-key isearch-mode-map (kbd "C-c C-t") 'seq-isearch-transform-string)
-
-
-(defun seq-isearch-forward (motif &optional bound noerror)
-  "Search forward for MOTIF."
-  (let ((string (seq-isearch-mangle-str motif)))
-    (re-search-forward string bound noerror)))
-
-(defun seq-isearch-backward (motif &optional bound noerror)
-  "Search backward for MOTIF."
-  (let ((string (seq-isearch-mangle-str motif)))
-    (re-search-backward string bound noerror)))
-
-(defadvice isearch-message-prefix (after seq-isearch-ismp)
-  "Set the isearch prompt string to show seq search is active.
-This serves as a warning that the string is being mangled."
-  (setq ad-return-value (concat "MOTIF " ad-return-value)))
-
-(defvar seq-isearch-p nil)
-
-(defun toggle-seq-isearch ()
-  (interactive)
-  (cond (seq-isearch-p
-         (setq seq-isearch-p nil)
-         (message "motif isearch is off")
-         (ad-disable-advice 'isearch-message-prefix 'after 'seq-isearch-ismp))
-        (t (setq seq-isearch-p t)
-           (message "motif isearch is on")
-           (ad-enable-advice 'isearch-message-prefix 'after 'seq-isearch-ismp)))
-  ;; in case there are other advices.
-  (ad-activate 'isearch-message-prefix))
-
-(defun seq-isearch-search-fun ()
-  "Set to `isearch-search-fun-function' when `nuc-mode' is
-  enabled."
-  (if seq-isearch-p
-      (if isearch-forward 'seq-isearch-forward 'seq-isearch-backward)
-    (isearch-search-fun-default)))
-
-(setq isearch-search-fun-function 'seq-isearch-search-fun)
-
 
 ;;; Per base colors
-;; colors looked good on both black and white
-(defvar colors-for-bw
-  ;; strong contrast
-  '(royalblue magenta limegreen orange red gold3 cyan
-          ;; less strong contrast.
-          slateblue2 maroon4 gray25 rosybrown3 deepskyblue tan4 yellow4 chartreuse4 mediumpurple)
-"*A list colors, with various foreground in black background.")
-(defvar colors-for-white
-  '(black)
-"*A list of color pairs, with various foreground in white background.")
-(defvar colors-for-black
-  '(white))
 ;; nuc IUPAC: acgtumrwsykvhdbn
+(defvar color-pairs
+  '((#ffffff #000000)  ; white    on black
+    (#ff0000 #000000)  ; red
+    (#00ff00 #000000)  ; green
+    (#00ffff #000000)  ; cyan
+    (#ff00ff #000000)  ; magenta
+    (#ffff00 #000000)  ; yellow
+    (#ff6600 #000000)  ; orange
+    (#0066ff #000000)  ; ~blue
+#ffffff #000066
+#000000 #0066ff 
+#00ff00 #000066 ;
+#ff0000 #0066ff 
+#ffff00 #0066ff 
+
+#000000 #00ff00 
+#ff0000 #00ff00 
+#ffff00 #00ff00 
+#ffffff #00ff00 
+    (#000000 #ffffff)  ; black    on white
+    (#ff0000 #ffffff)  ; red
+    (#0000ff #ffffff)  ; blue
+    (#ff00ff #ffffff)  ; magenta
+    (#00ffff #ffffff)  ; cyan
+    )
+  "Color pairs that pass WCAG AAA test.
+
+The first one is the text color and the second is the background.")
 
 (defvar nuc-base-colors
-  (let ((lower-col (mapcar* #'list
-                            (setcdr (last colors-for-bw) colors-for-bw)
-                            (string-to-list nuc-base-iupac)))
-        (up-col (mapcar* #'list
-                         (setcdr (last colors-for-bw) colors-for-bw)
-                         (string-to-list (upcase nuc-base-iupac)))))
-    (append (mapcar #'(lambda (x) (cons 'black x)) lower-col)
-            (mapcar #'(lambda (x) (cons 'white x)) up-col)))
-  "Background and foreground colors for each IUPAC bases")
+  (mapcar* #'cons
+           (string-to-list (concat nuc-base-iupac
+                                   (upcase nuc-base-iupac)))
+           (setcdr (last color-pairs) color-pairs))
+  "Background and foreground colors for each IUPAC bases.
 
-(defmacro def-char-face (prefix letter backgrnd foregrnd grp)
-  `(defface ,(intern (concat prefix "-face-" letter))
+This is a list of lists. For each inner list, it contains 3 atoms,
+a nuc base in char type, hex-code colors for foreground and background")
+
+(defmacro def-char-face (letter backgrnd foregrnd grp)
+  "A macro used to define faces.
+
+This will define a face named GRP-LETTER that belongs to the
+face group named GRP, with BACKGRND as background and FOREGRND
+as foreground colors."
+  `(defface ,(intern (concat grp letter))
      '((((type tty) (class color))
         (:background ,backgrnd :foreground ,foregrnd))
        (((type tty) (class color)) (:inverse-video t))
@@ -520,35 +466,25 @@ This serves as a warning that the string is being mangled."
 ;; define base faces belonging to base-face group
 (let ((letcol-alist nuc-base-colors))
   (loop for elem in letcol-alist
-        for f = (format "%s" (nth 0 elem))
-        for b = (format "%s" (nth 1 elem))
-        for l = (format "%c" (nth 2 elem)) do
-        (eval (macroexpand `(def-char-face "base" ,l ,b ,f "base-face")))))
+        for f = (format "%s" (nth 1 elem))
+        for b = (format "%s" (nth 2 elem))
+        for l = (format "%c" (nth 0 elem)) do
+        (eval (macroexpand `(def-char-face ,l ,b ,f "base-face")))))
 
 ;;;###autoload
-(defun paint-base-region (beg end)
-  "Color the bases in the region BEG to END or the current line."
-  (interactive
-   (if (use-region-p) ; (region-active-p)
-       (list (region-beginning) (region-end))
-     (list (line-beginning-position) (line-end-position))))
-  (save-excursion
-    (let (char face)
-      (goto-char beg)
-      (while (< beg end)
-        (setq char (char-after beg))
-        (setq face (format "base-face-%c" char))
-        (if (facep face)
-            (silent-put-text-property beg (+ beg 1) 'face (intern face)))
-        (setq beg (+ beg 1))))))
+(defun paint-nuc-base-region (beg end &optional case)
+  "Color the nucleic acid region BEG to END.
 
-(defun unpaint-base-region (beg end)
-  "Uncolor the bases from BEG to END or the current line."
+If CASE is nil, upcase and lowercase base chars will be colored the same;
+otherwise, not. See `paint-seq-region' for details."
   (interactive
    (if (use-region-p) ; (region-active-p)
        (list (region-beginning) (region-end))
      (list (line-beginning-position) (line-end-position))))
-  (remove-text-properties beg end '(face nil)))
+  (paint-seq-region beg end "base-face" case))
+
+;;;###autoload
+(defalias 'unpaint-nuc-base-region 'unpaint-seq-region)
 
 (define-minor-mode nuc-mode
   "Nucleic acid mode"
