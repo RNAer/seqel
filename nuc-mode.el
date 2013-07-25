@@ -290,10 +290,10 @@ sequence."
    (if (use-region-p) ; (region-active-p)
        (list (region-beginning) (region-end))
      (list (line-beginning-position) (line-end-position))))
-  (let ((case-replace t)
-        (case-fold-search t))
-    (save-excursion
-      (replace-string "t" "u" nil beg end))))
+  (save-excursion
+    (goto-char beg)
+    (while (search-forward "t" end t)
+      (replace-match "u" nil t))))
 
 (defun 2dna (beg end)
   "Convert to DNA. Similar to `2rna'."
@@ -301,10 +301,10 @@ sequence."
    (if (use-region-p) ; (region-active-p)
        (list (region-beginning) (region-end))
      (list (line-beginning-position) (line-end-position))))
-  (let ((case-replace t)                ; these 2 variables preserve case
-        (case-fold-search t))           ; in replace-string
-    (save-excursion
-      (replace-string "u" "t" nil beg end))))
+  (save-excursion
+    (goto-char beg)
+    (while (search-forward "u" end t)
+      (replace-match "t" nil t))))
 
 
 (defun nuc-base-summary (beg end)
