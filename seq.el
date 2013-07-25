@@ -101,6 +101,29 @@ table to create dictionary-like data type."
                                         (current-column)))))))
     (if legal-p count)))
 
+(defun color-gradient-hsl (start stop step-number &optional s l)
+  "Return a list with (STEP-NUMBER + 1) colors from START to STOP in hex code.
+
+For example, \"(color-gradient-hsl 0 0.333 20)\" will produce color
+gradient from red to yellow to green. Please be aware that there is a
+`color-gradient' function defined in color.el, which produces color
+gradient in RGB scales (for the example here, it will create gradient
+from red to green without yellow) besides other differences."
+  (let* ((incremental (/ (- stop start) step-number)))
+    (or s (setq s -1))
+    (or l (setq l 128))
+    (princ incremental)
+    (princ l)
+    (princ (loop for i from start to stop by step-number
+                  collect i))
+    (mapcar #'(lambda (rgb) (format "#%02x%02x%02x"
+                                    (nth 0 rgb)
+                                    (nth 1 rgb)
+                                    (nth 2 rgb)))
+            (mapcar #'(lambda (hue) (color-hsl-to-rgb hue s l))
+                    (loop for i from start to stop by incremental
+                          collect i)))))
+
 
 (defvar color-pairs
   '(("#ffffff" "#000000")  ; white    on black
