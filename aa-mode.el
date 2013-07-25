@@ -1,4 +1,4 @@
-;;; nuc-mode.el --- a minor mode for editing protein sequences
+;;; aa-mode.el --- a minor mode for editing protein sequences
 ;;
 ;;; Commentary:
 ;; * A collection of functions for editing protein sequences.
@@ -14,14 +14,14 @@
 
 (require 'seq)
 
-(defvar aa-other "x"
+(defvar aa-other ""
   "*Other chars that can possibly exist in a sequence. It should be in lower
 case as the upper case will be added automatically. Please modify
 `nuc-degeneracy-list' and `dna-complement-list' accordingly")
 
 ;;;;; END OF USER CUSTOMIZABLE VARIABLES
 
-(defvar aa-iupac "acdefghiklmnpqrstvwybxz"
+(defvar aa-iupac "acdefghiklmnpqrstvwybjxz"
   "All char for a single base, following IUPAC code. It should be in lower case
 as the upper case will be added automatically.")
 (defvar aa-iupac-3
@@ -34,6 +34,7 @@ as the upper case will be added automatically.")
     (?g . Gly)
     (?h . His)
     (?i . Ile)
+    (?j . Xle)
     (?k . Lys)
     (?l . Leu)
     (?m . Met)
@@ -50,80 +51,36 @@ as the upper case will be added automatically.")
     (?z . Glx))
   "*Three letter IUPAC code of AA.")
 
-(defvar aa-acidic "")
-(defvar aa-neutral "")
-(defvar aa-basic "")
-(defvar aa-hydrophobic "")
+(defvar aa-acidic "de")
+(defvar aa-basic "rhk")
+(defvar aa-hydrophobic "ahilmfvpgwy")
 (defvar aa-hydrophilic "")
 (defvar aa-amphipathic "")
-(defvar aa-hydrophobicity
-  '((?a . 41)
-    (?c . 8)
-    (?d . 3.9)
-    (?e . 129.12)
-    (?f . 147.18)
-    (?g . 57.05)
-    (?h . 137.14)
-    (?i . 113.16)
-    (?k . 128.17)
-    (?l . 113.16)
-    (?m . 131.19)
-    (?n . 114.11)
-    (?p . 97.12)
-    (?q . 128.14)
-    (?r . 156.19)
-    (?s . 16)
-    (?t . 101.11)
-    (?v . 99.14)
-    (?w . 186.21)
-    (?y . 163.18))
-  "*Normalized AA hydrophobicity at pH 7, with 100 most hydropobic and
--100 most hydrophilic. The value is from the Sigma webpage.")
-(defvar aa-pka
-  '((?a . 71.09)
-    (?c . 8)
-    (?d . 3.9)
-    (?e . 129.12)
-    (?f . 147.18)
-    (?g . 57.05)
-    (?h . 137.14)
-    (?i . 113.16)
-    (?k . 128.17)
-    (?l . 113.16)
-    (?m . 131.19)
-    (?n . 114.11)
-    (?p . 97.12)
-    (?q . 128.14)
-    (?r . 156.19)
-    (?s . 16)
-    (?t . 101.11)
-    (?v . 99.14)
-    (?w . 186.21)
-    (?y . 163.18)
-  "*molecular weight")
 
 (defvar aa-mw
-  '((?a . 71.09)
-    (?c . 103.15)
-    (?d . 115.09)
-    (?e . 129.12)
-    (?f . 147.18)
-    (?g . 57.05)
-    (?h . 137.14)
-    (?i . 113.16)
-    (?k . 128.17)
-    (?l . 113.16)
-    (?m . 131.19)
-    (?n . 114.11)
-    (?p . 97.12)
-    (?q . 128.14)
-    (?r . 156.19)
-    (?s . 87.08)
-    (?t . 101.11)
-    (?v . 99.14)
-    (?w . 186.21)
-    (?y . 163.18)
-  "*AA molecular weight in Dalton")
+  (let ((mw-vec (make-vector 256 nil)))
+    (aset mw-vec ?a 71.09)
+    (aset mw-vec ?c 103.15)
+    (aset mw-vec ?d 115.09)
+    (aset mw-vec ?e 129.12)
+    (aset mw-vec ?f 147.18)
+    (aset mw-vec ?g 57.05)
+    (aset mw-vec ?h 137.14)
+    (aset mw-vec ?i 113.16)
+    (aset mw-vec ?k 128.17)
+    (aset mw-vec ?l 113.16)
+    (aset mw-vec ?m 131.19)
+    (aset mw-vec ?n 114.11)
+    (aset mw-vec ?p 97.12)
+    (aset mw-vec ?q 128.14)
+    (aset mw-vec ?r 156.19)
+    (aset mw-vec ?s 87.08)
+    (aset mw-vec ?t 101.11)
+    (aset mw-vec ?v 99.14)
+    (aset mw-vec ?w 186.21)
+    (aset mw-vec ?y 163.18)
+  mw-vec)
+  "*AA molecular weights in Dalton in vector.")
 
 (defvar aa-regexp
   (let ((aa (concat aa-iupac aa-other)))
@@ -132,10 +89,27 @@ as the upper case will be added automatically.")
   "A regexp that matches a valid nucleotide base (following IPUAC code plus
 the symbol defined in `aa-other'.")
 
+(defun aa-mw-region (beg end)
+  "Return molecular weight of the region BEG and END or the current line."
+  (interactive
+   (if (use-region-p) ; (region-active-p)
+       (list (region-beginning) (region-end))
+     (list (line-beginning-position) (line-end-position))))
+  (let ((sum-mw 0))
+    (save-excursion
+      (goto-char beg)
+      (while (< (point) end)
+        (setq current (aref aa-mw (downcase (char-after))))
+        (cond (current
+               (setq sum-mw (+ sum-mw current)))
+              ((not (looking-at-p seq-cruft-regexp))
+               (error "Ambiguous or illegal char at position %d, %d"
+                      (line-number-at-pos) (current-column))))
+        (forward-char)))
+    (message "The molecular weight is %.2f" sum-mw)
+    sum-mw))
 
 ;; define aa faces belonging to aa-face group
-
-
 (let ((letcol-alist aa-colors))
   (loop for elem in letcol-alist
         for l = (format "%s" (nth 0 elem))

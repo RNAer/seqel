@@ -1,6 +1,8 @@
 ;;; seq.el --- functions and variables shared by nuc-mode.el and
 ;; aa-mode.el.
 
+(require 'color)
+
 ;; valid characters in the sequences
 (defvar seq-gap "-."
   "*Chars that represent a gap")
@@ -112,10 +114,6 @@ from red to green without yellow) besides other differences."
   (let* ((incremental (/ (- stop start) step-number)))
     (or s (setq s -1))
     (or l (setq l 128))
-    (princ incremental)
-    (princ l)
-    (princ (loop for i from start to stop by step-number
-                  collect i))
     (mapcar #'(lambda (rgb) (format "#%02x%02x%02x"
                                     (nth 0 rgb)
                                     (nth 1 rgb)
