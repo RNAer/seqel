@@ -11,6 +11,10 @@
   "*Chars that represent cruft which may appear between bases.
  It will be skipped during moving and search and anything involving counting bases.")
 
+(defvar seq-space-regexp
+  (regexp-opt (mapcar #'char-to-string seq-space))
+  "A regexp that matches white spaces.")
+
 (defvar seq-cruft-regexp
   (regexp-opt (mapcar #'char-to-string
                       (concat seq-gap seq-space)))
@@ -204,29 +208,6 @@ otherwise, not. FACE-PREFIX decides what kind of face group to use."
 
 ;;;;;; isearch motif
 
-(defun seq-isearch-mangle-str (str)
-  "Mangle the string STR into a regexp to search over cruft in sequence.
-Inserts a regexp between each base which matches sequence formatting cruft.
-For example, if `seq-cruft-regexp' is '[ ]', the search string 'acgt' would be
-transformed into 'a[ ]*c[ ]*g[ ]*t' and the search string containing IUPAC code
-such as 'acrt' would be transformed into '[a][ ]*[c][ ]*[ag][ ]*[t]."
-  ;; (mapconcat 'identity (split-string str "" t) (concat seq-cruft-regexp "*")))
-  (let ((char-list (string-to-list str))
-        degenerate-str-list)
-    ;; 'ar' will return as ("[a]", "[ag]")
-    (setq degenerate-str-list
-          (mapcar #'(lambda (x)
-                      (let ((just-a-var))
-                        (setq just-a-var (assoc x nuc-degeneracy))
-                        (if (not just-a-var)
-                            (error "%c is not a valid IUPAC code in nuc-degeneracy!" x))
-                        (concat "["  (mapconcat 'char-to-string
-                                                (cdr just-a-var) "")
-                                "]")))   ; end of lambda
-                  char-list))
-    ;; (print char-list)
-    ;; (print degenerate-str-list)
-    (mapconcat 'identity degenerate-str-list (concat seq-cruft-regexp "*"))))
 
 ;; (defun seq-isearch-transform-string ()
 ;;   (interactive)

@@ -114,8 +114,7 @@ the symbol defined in `aa-other'.")
   (loop for elem in letcol-alist
         for l = (format "%s" (nth 0 elem))
         for b = (format "%s" (nth 1 elem))
-        for f = (format "%s" (nth 2 elem))
-        do
+        for f = (format "%s" (nth 2 elem)) do
         (eval (macroexpand `(def-char-face "aa" ,l ,b ,f "aa-face")))))
 
 
@@ -212,22 +211,7 @@ For example, if `seq-cruft-regexp' is '[ ]', the search string 'acgt' would be
 transformed into 'a[ ]*c[ ]*g[ ]*t' and the search string containing IUPAC code
 such as 'acrt' would be transformed into '[a][ ]*[c][ ]*[ag][ ]*[t]."
   ;; (mapconcat 'identity (split-string str "" t) (concat seq-cruft-regexp "*")))
-  (let ((char-list (string-to-list str))
-        degenerate-str-list)
-    ;; 'ar' will return as ("[a]", "[ag]")
-    (setq degenerate-str-list
-          (mapcar '(lambda (x)
-                     (let ((just-a-var))
-                       (setq just-a-var (assoc x nuc-degeneracy))
-                       (if (not just-a-var)
-                           (error "%c is not a valid IUPAC code in nuc-degeneracy!" x))
-                       (concat "["  (mapconcat 'char-to-string
-                                               (cdr just-a-var) "")
-                               "]")))   ; end of lambda
-                  char-list))
-    ;; (print char-list)
-    ;; (print degenerate-str-list)
-    (mapconcat 'identity degenerate-str-list (concat seq-cruft-regexp "*"))))
+    (mapconcat 'char-to-string str (concat seq-cruft-regexp "*")))
 
 
 ;;;###autoload

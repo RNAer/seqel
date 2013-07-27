@@ -3,20 +3,6 @@
 ;;; Commentary:
 ;; * A collection of functions for editing DNA and RNA sequences.
 
-;;; Installation:
-;; --------------------
-;; Here are two suggested ways for installing this package.
-;; You can choose to autoload it when needed, or load it
-;; each time emacs is started.  Put one of the following
-;; sections in your .emacs:
-;;
-;; ---Autoload:
-;;  (autoload 'dna-mode "dna-mode" "Major mode for dna" t)
-;;  (add-to-list 'magic-mode-alist '("^>\\|ID\\|LOCUS\\|DNA" . dna-mode))
-;;  (add-to-list
-;;     'auto-mode-alist
-;;     '("\\.\\(fasta\\|fa\\|exp\\|ace\\|gb\\)\\'" . dna-mode))
-;;  (add-hook 'dna-mode-hook 'turn-on-font-lock)
 
 ;;;;;; USER CUSTOMIZABLE VARIABLES START HERE
 (require 'seq)
@@ -68,10 +54,6 @@ as the upper case will be added automatically.")
   "A regexp that matches a valid nucleotide base (following IPUAC code plus
 the symbol defined in `nuc-base-other'.")
 
-(defvar seq-cruft-regexp
-  (regexp-opt (mapcar #'char-to-string
-                      (concat seq-gap seq-space)))
-  "A regexp that matches cruft.")
 
 (defvar nuc-degeneracy
   (let ((nuc-degen nuc-degeneracy-list))
@@ -319,6 +301,27 @@ See also `region-summary'."
 
 
 
+(defun seq-isearch-mangle-str (str)
+  "Mangle the string STR into a regexp to search over cruft in sequence.
+Inserts a regexp between each base which matches sequence formatting cruft.
+For example, if `seq-cruft-regexp' is '[ ]', the search string 'acgt' would be
+transformed into 'a[ ]*c[ ]*g[ ]*t' and the search string containing IUPAC code
+such as 'acrt' would be transformed into '[a][ ]*[c][ ]*[ag][ ]*[t]."
+  ;; (mapconcat 'identity (split-string str "" t) (concat seq-cruft-regexp "*")))
+  (let (degenerate-str-list  tmp)
+    ;; 'ar' will return as ("[a]", "[ag]")
+    (setq degenerate-str-list
+          (mapcar #'(lambda (x)
+                      (setq tmp (assoc x nuc-degeneracy))
+                      (if (not tmp)
+                          (error "%c is not a valid IUPAC code in nuc-degeneracy!" x))
+                      (concat "["  (mapconcat 'char-to-string (cdr tmp) "") "]"))
+                  (string-to-list str)))
+    ;; (print degenerate-str-list)
+    (mapconcat 'identity degenerate-str-list (concat seq-cruft-regexp "*"))))
+
+
+
 ;;; Per base colors
 ;; nuc IUPAC: acgtumrwsykvhdbn
 (defvar nuc-base-colors
@@ -342,7 +345,7 @@ a nuc base in char type, hex-code colors for foreground and background")
 
 
 ;;;###autoload
-(defun paint-nuc-base-region (beg end &optional case)
+(defun nuc-paint-region (beg end &optional case)
   "Color the nucleic acid region BEG to END.
 
 If CASE is nil, upcase and lowercase base chars will be colored the same;
@@ -356,12 +359,24 @@ otherwise, not. See `paint-seq-region' for details."
 ;;;###autoload
 (defalias 'unpaint-nuc-base-region 'unpaint-seq-region)
 
+(defvar nuc-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map "\C-cf"     'nuc-move-forward)
+    (define-key map "\C-cb"     'nuc-move-backward)
+    (define-key map "\C-c\Cd"   'nuc-delete-forward)
+    (define-key map "\C-cd"     'nuc-detete-backward)
+    (define-key map "\C-cp"     'nuc-paint-region)
+    (define-key map "\C-cr"     'nuc-rc)
+    (define-key map "\C-c#"     'nuc-base-summary)
+    map)
+  "Keymap for `nuc-mode'.")
+
 (define-minor-mode nuc-mode
   "Nucleic acid mode"
   ;; the name, a string, to show in the modeline
   :lighter " nuc"
   ;; keymap
-  :keymap nil
+  :keymap nuc-mode-map
   :global t)
 
 (provide 'nuc-mode)
