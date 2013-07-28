@@ -86,35 +86,41 @@ looks like fasta.  It will also turn enable fontification for `fasta-mode'."
   "Return the position of point in the current sequence.")
 
 (defun fasta-beg ()
-  "Move the point the beginning of the current sequence."
+  "Move the point the beginning of the current fasta record.
+
+Return the point of the beginning of the fasta record if the beginning
+is found; otherwise, do not move point and return nil."
   (interactive)
-  (let (pos)
+  (let ((pos nil))
     (save-excursion
-      (forward-char)  ; in case the current char is "^>"
-      (setq pos (search-backward-regexp "^>" (point-min) t)))
-    (and pos  ; only move when the beginning of the seq is found.
-        (goto-char pos)
-        (forward-line)))
-  (point))
+      (end-of-line) ; in case point is at the beginning of the fasta record.
+      (if (re-search-backward "^>" nil t)
+          (setq pos (match-beginning 0))))
+    (cond (pos (goto-char pos))
+          ((called-interactively-p 'interactive)
+           (error "The beginnning of the fasta record is not found!!!")
+           nil))))
     ;; ;; skip white spaces
     ;; (while (looking-at-p seq-space-regexp)
     ;;   (forward-char))))
 
 (defun fasta-end ()
-  "Move the point the end of the current sequence."
+  "Move the point the end of the current fasta record.
+
+Return the point of the end of the fasta record."
   (interactive)
-  (forward-char)  ; in case the current char is "^>"
-  (goto-char (or (search-forward-regexp "^>" (point-max) t)
-                  (point-max)))
-  ;; move to the end of the previous line.
-  (move-end-of-line 0)
-  (point))
+  (let ((old  (point)))
+    (end-of-line) ; in case the point is at the regexp
+    (if (re-search-forward "^>" nil t)
+        (progn (forward-line -1)
+               (goto-char (line-end-position)))
+      (goto-char (point-max)))))
   ;; ;; skip white spaces
   ;; (while (looking-back seq-space-regexp)
   ;;   (backward-char)))
 
 (defun fasta-mark ()
-  "Put point at the beginning of the sequence and mark the end."
+  "Put point at the beginning of the fasta record and mark the end."
   (interactive)
   (fasta-end)
   (push-mark)
@@ -128,29 +134,30 @@ The default width is 80. The white spaces inside will also be removed."
   (or width (setq width 80))
   (save-excursion
     (fasta-mark)
-    (let ((beg (region-beginning)))
+    (forward-line)
+    (let ((beg (point)))
       ;; remove seq-spaces
       (goto-char beg)
       (while (re-search-forward seq-space-regexp (region-end) t)
         (replace-match "" nil nil))
       ;; insert newlines
       (goto-char beg)
-      (message "%d %d %d" width (point) (region-end))
+      ;; (message "%d %d %d" width (point) (region-end))
       (while (< (point) (- (region-end) width))
-        (message "h")
         (forward-char width)
         (insert-char ?\n)))))
 
 (defun fasta-next ()
-  "Move to the beginning of the next sequence."
+  "Move to the beginning of the next fasta record."
   (interactive)
-  (let (pos)
+  (let ((old (point))
+        (pos nil))
     (save-excursion
-      (forward-line)  ; in case point is before the current seq's ">"
-      (setq pos (search-forward-regexp "^>" (point-max) t)))
-    (cond (pos ;; move only when the beginning of the seq is found.
-           (goto-char pos)
-           (forward-line))
+      (end-of-line) ; in case the point is at the regexp
+      (if (re-search-forward "^>" nil t)
+          (setq pos (match-beginning 0))))
+    (cond (pos ;; move only when the beginning of next fasta is found.
+           (goto-char pos))
           ((called-interactively-p 'interactive)
            (message "This is the last sequence in the file!")
            nil))))
@@ -163,16 +170,14 @@ The default width is 80. The white spaces inside will also be removed."
 (defun fasta-prev ()
   "Move to the beginning of the previous sequence.
 
-Return nil only if it's already the first sequences."
+Return nil and do not move if it's already the first sequences."
   (interactive)
-  (let (pos)
+  (let ((pos nil))
     (save-excursion
-      (forward-line)
+      (end-of-line)
       (setq pos (re-search-backward "^>" (point-min) t 2)))
-    ;; (message "%d" pos)
     (cond (pos ;; move only when the beginning of the seq is found.
-           (goto-char pos)
-           (forward-line)) ; return non-nil
+           (goto-char pos)) ; return the beg point of the prev fasta
           ((called-interactively-p 'interactive)
            ;; only echo the message when called interactively
            (message "This is the first sequence in the file!")
@@ -183,6 +188,21 @@ Return nil only if it's already the first sequences."
   (while (fasta-prev)))
 
 
+(defun fasta-delete-next ()
+  (interactive)
+  (save-excursion
+    (if (fasta-next)
+        (delete-region (point) (or (fasta-next)
+                                   (point-max)))
+      (message "This is the last sequence"))))
+
+(defun fasta-delete-prev ()
+  (interactive)
+  (save-excursion
+    (if (fasta-prev)
+        (delete-region (point) (1+ (fasta-end)))
+      (message "This is the first sequence"))))
+
 ;;; column manipulations
 (defun fasta-delete-column ()
   (interactive)
@@ -191,6 +211,7 @@ Return nil only if it's already the first sequences."
           (column   (current-column)))
       (fasta-first)
       (loop do
+            (forward-line) ; move to the sequence region
             (if (or (< (move-to-column column) column)
                     (eq (char-after) ?\n))  ; if at the end of the line.
                 (error "This sequence at line %d does not have this column!!!"
@@ -206,6 +227,7 @@ Return nil only if it's already the first sequences."
           (column   (current-column)))
       (fasta-first)
       (loop do
+            (forward-line)
             (if (< (move-to-column column) column)
                 (error "This sequence at line %d does not have this column!!!"
                        (line-number-at-pos)))
@@ -222,6 +244,7 @@ Return nil only if it's already the first sequences."
                             nil
                           'highlight)))
       (loop do
+            (forward-line)
             (if (< (move-to-column column) column)
                 (error "This sequence at line %d does not have this column!!!"
                        (line-number-at-pos)))
