@@ -81,9 +81,45 @@ looks like fasta.  It will also turn enable fontification for `fasta-mode'."
      (2 font-lock-function-name-face)
      (3 font-lock-comment-face nil t))))
 
+(defun fasta-check ()
+  "Check the validity of the fasta format.
+
+It will check: 1. The file is not empty;
+               2. No fasta record is empty.
+It will run whenever fasta-mode is enabled."
+  (interactive)
+  (let (pos)
+    (save-excursion
+      (fasta-first)
+      (loop do
+            (setq pos (line-end-position))
+            (fasta-end)
+            (while (looking-back seq-space-regexp)
+              (backward-char))
+            ;; (message "%d %d" pos (point))
+            (if (eq pos (point))
+                (error "The fasta record is empty at line %d" (line-number-at-pos)))
+            while (fasta-next)))))
 
 (defun fasta-position ()
-  "Return the position of point in the current sequence.")
+  "Return the position of point in the current sequence.
+
+It will not count white spaces and seq gaps. The count starts
+at zero."
+  (interactive)
+  (let ((pos   (point))
+        (count 0))
+    (save-excursion
+      (if (fasta-beg)
+          (error "The start of the fasta record is not found!!!"))
+      (end-of-line)
+      (while (< (point) pos)
+        (if (not (looking-at-p seq-cruft-regexp))
+            (setq count (1+ count)))
+        (forward-char)))
+    (message "%d" count)
+    count))
+
 
 (defun fasta-beg ()
   "Move the point the beginning of the current fasta record.
@@ -147,24 +183,33 @@ The default width is 80. The white spaces inside will also be removed."
         (forward-char width)
         (insert-char ?\n)))))
 
-(defun fasta-next ()
-  "Move to the beginning of the next fasta record."
-  (interactive)
+(defun fasta-next (&optional n)
+  "Move to the beginning of the next N fasta record.
+
+It moves to the previous -N fasta record if N is negative."
+  (interactive "p")
   (let ((old (point))
         (pos nil))
     (save-excursion
       (end-of-line) ; in case the point is at the regexp
-      (if (re-search-forward "^>" nil t)
+      (or n (setq n 1))
+      (and (< n 0) (setq n (1- n)))
+      (and (eq n 0) (error "Can't move to the next 0 fasta record!!!"))
+      (if (re-search-forward "^>" nil t n)
           (setq pos (match-beginning 0))))
     (cond (pos ;; move only when the beginning of next fasta is found.
            (goto-char pos))
           ((called-interactively-p 'interactive)
-           (message "This is the last sequence in the file!")
+           (if (> n 0)
+               (message "Less than %d fasta records below in the file!" n)
+             (message "Less than %d fasta records above in the file!" (abs (1+ n))))
            nil))))
 
 (defun fasta-last ()
   (interactive)
-  (while (fasta-next)))
+  (while (fasta-next))
+  (if (not (fasta-beg)) ; in case we are in the first seq - move to the start
+      (error "There is no fasta record in this fasta file!!!")))
 
 
 (defun fasta-prev ()
@@ -175,7 +220,7 @@ Return nil and do not move if it's already the first sequences."
   (let ((pos nil))
     (save-excursion
       (end-of-line)
-      (setq pos (re-search-backward "^>" (point-min) t 2)))
+      (setq pos (re-search-backward "^>" t 2)))
     (cond (pos ;; move only when the beginning of the seq is found.
            (goto-char pos)) ; return the beg point of the prev fasta
           ((called-interactively-p 'interactive)
@@ -185,7 +230,9 @@ Return nil and do not move if it's already the first sequences."
 
 (defun fasta-first ()
   (interactive)
-  (while (fasta-prev)))
+  (while (fasta-prev))
+  (if (not (fasta-beg)) ; in case we are in the first seq - move to the start
+      (error "There is no fasta record in this fasta file!!!")))
 
 
 (defun fasta-delete-next ()
@@ -238,11 +285,11 @@ Return nil and do not move if it's already the first sequences."
 (defun fasta-mark-column-toggle ()
   (interactive)
   (save-excursion
-    (let* ((original (point))
-           (column   (current-column))
+    (let* ((column   (current-column))
            (to-face     (if (eq (get-char-property (point) 'face) 'highlight)
                             nil
                           'highlight)))
+      (fasta-first)
       (loop do
             (forward-line)
             (if (< (move-to-column column) column)
