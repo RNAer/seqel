@@ -244,6 +244,14 @@ at zero."
     (message "%d" count)
     count))
 
+(defun fasta-rc ()
+  "Reverse complement current fasta sequence."
+  (interactive)
+  (fasta-mark)
+  (if nuc-mode
+      (if (dna-p)
+          (dna-reverse-complement)
+        (rna-reverse-complement))))
 
 
 ;;; column manipulations
