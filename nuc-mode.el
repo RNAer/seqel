@@ -7,11 +7,6 @@
 ;;;;;; USER CUSTOMIZABLE VARIABLES START HERE
 (require 'seq)
 
-(defvar nuc-base-other "x"
-  "*Other chars that can possibly exist in a sequence. It should be in lower
-case as the upper case will be added automatically. Please modify
-`nuc-degeneracy-list' and `dna-complement-list' accordingly")
-
 (defvar nuc-degeneracy-list
   '((?a  ?a)
     (?c  ?c)
@@ -28,10 +23,18 @@ case as the upper case will be added automatically. Please modify
     (?b  ?c ?g ?t)
     (?h  ?a ?c ?t)
     (?d  ?a ?g ?t)
-    (?n  ?a ?t ?g ?c)
+    (?n  ?a ?t ?g ?c)     ; this and above are IUPAC code.
     (?x  ?a ?t ?g ?c))
   "*A association list showing the degeneracy of the bases. Only for lowercase,
 as the upcased will be added automatically.")
+
+
+(defvar nuc-base
+  (mapcar #'car nuc-degeneracy-list)
+  "All the bases that are allowed.
+
+This is a list of chars. All are in lower cases.")
+
 
 (defvar dna-complement-list
   '((?n . ?n) (?x . ?x) ; identity
@@ -43,16 +46,11 @@ as the upcased will be added when the vector is made.")
 
 ;;;;; END OF USER CUSTOMIZABLE VARIABLES
 
-(defvar nuc-base-iupac "acgtumrwsykvhdbn"
-  "All char for a single base, following IUPAC code. It should be in lower case
-as the upper case will be added automatically.")
-
 (defvar nuc-base-regexp
-  (let ((nuc-base (concat nuc-base-iupac nuc-base-other)))
     (regexp-opt (mapcar #'char-to-string
-                        (concat nuc-base (upcase nuc-base)))))
-  "A regexp that matches a valid nucleotide base (following IPUAC code plus
-the symbol defined in `nuc-base-other'.")
+                        (append nuc-base
+                                (mapcar #'upcase nuc-base))))
+  "A regexp that matches a valid nucleotide base symbol defined in `nuc-degeneracy-list'.")
 
 
 (defvar nuc-degeneracy
@@ -326,12 +324,11 @@ such as 'acrt' would be transformed into '[a][ ]*[c][ ]*[ag][ ]*[t]."
 ;; nuc IUPAC: acgtumrwsykvhdbn
 (defvar nuc-base-colors
   (mapcar* #'cons
-           (string-to-list (concat nuc-base-iupac
-                                   (upcase nuc-base-iupac)))
+           (append nuc-base (mapcar #'upcase nuc-base))
            (setcdr (last color-pairs) color-pairs))
   "Background and foreground colors for each IUPAC bases.
 
-This is a list of lists. For each inner list, it contains 3 atoms,
+This is a list of lists. For each inner list, it contains 3 atoms:
 a nuc base in char type, hex-code colors for foreground and background")
 
 
