@@ -93,28 +93,28 @@ COUNT can be either positive or negative, indicating the
 moving direction. Return the number of bases that are moved thru.
 See `proceed-char-repeatedly'"
   (interactive "p")
-  (proceed-char-repeatedly count 'forward-char nuc-base-regexp))
+  (proceed-char-repeatedly count #'forward-char nuc-base-regexp))
 
 (defun nuc-move-backward (count)
   "Move backward COUNT bases, similar to `nuc-move-forward'. See also
  `proceed-char-repeatedly'."
   (interactive "p")
   ;; (proceed-char-repeatedly count 'backward-char))
-  (proceed-char-repeatedly (- count) 'forward-char nuc-base-regexp))
+  (proceed-char-repeatedly (- count) #'forward-char nuc-base-regexp))
 
 ;;; delete
 (defun nuc-delete-forward (count)
   "Delete COUNT number of bases starting from the point, similar to
 `nuc-move-forward' (just use delete instead of move)."
   (interactive "p")
-  (proceed-char-repeatedly count 'delete-char nuc-base-regexp))
+  (proceed-char-repeatedly count #'delete-char nuc-base-regexp))
 
 (defun nuc-delete-backward (count)
   "Delete backward COUNT number of bases from the point, similar to
 `nuc-move-forward' (just use delete backward instead of move forward).
 See `nuc-delete-forward' and `proceed-char-repeatedly'."
   (interactive "p")
-  (proceed-char-repeatedly (- count) 'delete-char nuc-base-regexp))
+  (proceed-char-repeatedly (- count) #'delete-char nuc-base-regexp))
 
 
 (defun nuc-p (beg end)
@@ -318,7 +318,7 @@ such as 'acrt' would be transformed into '[a][ ]*[c][ ]*[ag][ ]*[t]."
 
 
 ;;; Per base colors
-;; nuc IUPAC: acgtumrwsykvhdbn
+
 (defvar nuc-base-colors
   (mapcar* #'cons
            (append nuc-base (mapcar #'upcase nuc-base))
@@ -339,7 +339,7 @@ a nuc base in char type, hex-code colors for foreground and background")
 
 
 ;;;###autoload
-(defun nuc-paint-region (beg end &optional case)
+(defun nuc-base-paint-region (beg end &optional case)
   "Color the nucleic acid region BEG to END.
 
 If CASE is nil, upcase and lowercase base chars will be colored the same;
@@ -359,7 +359,7 @@ otherwise, not. See `paint-seq-region' for details."
     (define-key map "\C-cb"     'nuc-move-backward)
     (define-key map "\C-c\Cd"   'nuc-delete-forward)
     (define-key map "\C-cd"     'nuc-detete-backward)
-    (define-key map "\C-cp"     'nuc-paint-region)
+    (define-key map "\C-cp"     'nuc-base-paint-region)
     (define-key map "\C-cr"     'nuc-rc)
     (define-key map "\C-c#"     'nuc-base-summary)
     map)
