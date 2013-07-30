@@ -7,66 +7,63 @@
 ;;;;;; USER CUSTOMIZABLE VARIABLES START HERE
 (require 'seq)
 
-(defvar nuc-degeneracy-list
-  '((?a  ?a)
-    (?c  ?c)
-    (?g  ?g)
-    (?t  ?t)
-    (?u  ?u)
-    (?m  ?a ?c)
-    (?y  ?c ?t)
-    (?r  ?a ?g)
-    (?w  ?a ?t)
-    (?s  ?c ?g)
-    (?k  ?g ?t)
-    (?v  ?a ?c ?g)
-    (?b  ?c ?g ?t)
-    (?h  ?a ?c ?t)
-    (?d  ?a ?g ?t)
-    (?n  ?a ?t ?g ?c)     ; this and above are IUPAC code.
-    (?x  ?a ?t ?g ?c))
-  "*A association list showing the degeneracy of the bases. Only for lowercase,
-as the upcased will be added automatically.")
+(defvar nuc-base-alist
+  '((?a  ?t ?a)
+    (?t  ?a ?t)
+    (?u  ?a ?u)
+    (?c  ?g ?c)
+    (?g  ?c ?g)
+    (?m  ?k ?a ?c)
+    (?y  ?r ?c ?t)
+    (?r  ?y ?a ?g)
+    (?w  ?w ?a ?t)
+    (?s  ?s ?c ?g)
+    (?k  ?m ?g ?t)
+    (?v  ?b ?a ?c ?g)
+    (?b  ?v ?c ?g ?t)
+    (?h  ?d ?a ?c ?t)
+    (?d  ?h ?a ?g ?t)
+    (?n  ?n ?a ?t ?g ?c)     ; this and above are IUPAC codes.
+    (?x  ?x ?a ?t ?g ?c))
+  "*A association list showing the degeneracies and complements of the bases.
 
+For each inner list, the first element is allowed nuc bases; the second element
+is the complement of the first, and the rest is the degenerated bases
+for the first. Only for lowercase, as the upcased will be added automatically.")
+
+;;;;; END OF USER CUSTOMIZABLE VARIABLES
 
 (defvar nuc-base
-  (mapcar #'car nuc-degeneracy-list)
+  (mapcar #'car nuc-base-alist)
   "All the bases that are allowed.
 
 This is a list of chars. All are in lower cases.")
 
 
-(defvar dna-complement-list
-  '((?n . ?n) (?x . ?x) ; identity
-    (?t . ?a) (?a . ?t) (?c . ?g) (?g . ?c)           ; single
-    (?m . ?k) (?r . ?y) (?w . ?w) (?s . ?s) (?y . ?r) (?k . ?m) ; double
-    (?v . ?b) (?b . ?v) (?h . ?d) (?d . ?h))  ; triple
-  "*List of bases and their complements. Bases should be lowercase,
-as the upcased will be added when the vector is made.")
-
-;;;;; END OF USER CUSTOMIZABLE VARIABLES
-
 (defvar nuc-base-regexp
     (regexp-opt (mapcar #'char-to-string
                         (append nuc-base
                                 (mapcar #'upcase nuc-base))))
-  "A regexp that matches a valid nucleotide base symbol defined in `nuc-degeneracy-list'.")
+  "A regexp that matches a valid nucleotide base symbol defined
+in `nuc-base-alist'.")
 
 
-(defvar nuc-degeneracy
-  (let ((nuc-degen nuc-degeneracy-list))
-    (dolist (element nuc-degeneracy-list)
-      (setq nuc-degen (append nuc-degen (list (mapcar 'upcase element)))))
-  nuc-degen)
-  "This is association list with keys being IUPAC code and values being the
-bases the code represents. This includes uppercase bases into
-`nuc-degeneracy-list'.")
+(defvar nuc-base-degeneracy
+  (let ((d-vec (make-vector 256 nil)))
+    (dolist (element nuc-base-alist)
+      (aset d-vec (car element) (cddr element))
+      (aset d-vec
+            (upcase (car element))
+            (mapcar 'upcase (cddr element))))
+  d-vec)
+  "A vector of degeneracies for each upper and lower case valid bases
+defined in `nuc-base-alist'.")
 
 (defvar dna-base-complement
   (let ((c-vec (make-vector 256 nil)))  ; all alphabets chars are < 256
-    (dolist (element dna-complement-list)
-      (aset c-vec (car element) (cdr element))
-      (aset c-vec (upcase (car element)) (upcase (cdr element))))
+    (dolist (element nuc-base-alist)
+      (aset c-vec (car element) (nth 1 element))
+      (aset c-vec (upcase (car element)) (upcase (nth 1 element))))
     c-vec)
   "A vector of complements of upper and lower case bases.
  dna-base-complement[base] returns the complement of the base. see also
@@ -310,9 +307,9 @@ such as 'acrt' would be transformed into '[a][ ]*[c][ ]*[ag][ ]*[t]."
     ;; 'ar' will return as ("[a]", "[ag]")
     (setq degenerate-str-list
           (mapcar #'(lambda (x)
-                      (setq tmp (assoc x nuc-degeneracy))
+                      (setq tmp (assoc x nuc-base-degeneracy))
                       (if (not tmp)
-                          (error "%c is not a valid IUPAC code in nuc-degeneracy!" x))
+                          (error "%c is not a valid nuc base character!" x))
                       (concat "["  (mapconcat 'char-to-string (cdr tmp) "") "]"))
                   (string-to-list str)))
     ;; (print degenerate-str-list)
