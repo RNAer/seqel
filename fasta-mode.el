@@ -255,8 +255,12 @@ at zero."
 
 
 ;;; column manipulations
-(defun fasta-delete-column ()
-  (interactive)
+(defun fasta-column-action (snippet)
+  "A function called by other column manipulation functions.
+
+SNIPPET is a piece of code that does some specific manipulation
+at the current column. See `fasta-insert-column' for an example
+of usage."
   (save-excursion
     (let ((original (point))
           (column   (current-column)))
@@ -264,43 +268,43 @@ at zero."
       (loop do
             (forward-line) ; move to the sequence region
             (if (or (< (move-to-column column) column)
-                    (eq (char-after) ?\n))  ; if at the end of the line.
+                    (equal (char-after) ?\n)     ; if at the end of the line
+                    (equal (point) (point-max))) ; or at the end of buffer.
                 (error "This sequence at line %d does not have this column!!!"
                        (line-number-at-pos)))
-            (delete-char 1)
+            ;; (delete-char 1)
+            (eval snippet)
             while (fasta-next)))))
 
 
-(defun fasta-insert-column (char)
-  (interactive "sInsert string:")
-  (save-excursion
-    (let ((original (point))
-          (column   (current-column)))
-      (fasta-first)
-      (loop do
-            (forward-line)
-            (if (< (move-to-column column) column)
-                (error "This sequence at line %d does not have this column!!!"
-                       (line-number-at-pos)))
-            (insert char)
-            while (fasta-next)))))
-
-
-(defun fasta-mark-column-toggle ()
+(defun fasta-delete-column ()
+  "Delete current column."
   (interactive)
-  (save-excursion
-    (let* ((column   (current-column))
-           (to-face     (if (eq (get-char-property (point) 'face) 'highlight)
-                            nil
-                          'highlight)))
-      (fasta-first)
-      (loop do
-            (forward-line)
-            (if (< (move-to-column column) column)
-                (error "This sequence at line %d does not have this column!!!"
-                       (line-number-at-pos)))
-            (silent-put-text-property (point) (1+ (point)) 'face to-face)
-            while (fasta-next)))))
+  (fasta-column-action `(delete-char 1)))
+
+
+(defun fasta-insert-column (str)
+  "Insert a string STR at the column."
+  (interactive "sInsert string:")
+  (fasta-column-action `(insert ,str)))
+
+
+(defun fasta-mark-column (&optional to-face)
+  "Mark the current column with the face TO-FACE.
+
+If TO-FACE is not a face, mark with highlight face by default.
+Thus \\[fasta-mark-column] will mark with highlight face;
+and C-u \\[fasta-mark-column] will unmark the column."
+  (interactive "p")
+  (princ to-face)
+  (cond ((equal to-face 1) ; without C-u
+         (setq to-face 'highlight))
+        ((numberp to-face)
+         (setq to-face nil)))
+  (fasta-column-action
+   `(silent-put-text-property (point) (1+ (point)) 'face to-face)))
+
+
 
 
 (provide 'fasta-mode)
