@@ -34,17 +34,10 @@ automaticly as they cant work together.
   ;; This runs the normal hook change-major-mode-hook, then gets rid of
   ;; the buffer-local variables of the major mode previously in effect.
   (kill-all-local-variables)
-  ;; (setq mode-name "fasta")
-  ;; (setq major-mode 'fasta-mode)
+  (setq mode-name "fasta")
+  (setq major-mode 'fasta-mode)
   (use-local-map fasta-mode-map)
-
-  (make-local-variable 'font-lock-defaults)
-  (setq font-lock-defaults '(dna-font-lock-keywords))
-
-  (make-local-variable 'dna-valid-base-regexp)
-  (make-local-variable 'dna-sequence-start-regexp)
-  (make-local-variable 'dna-cruft-regexp)
-  (make-local-variable 'dna-isearch-case-fold-search)
+  ;; (set-syntax-table fasta-mode-syntax-table)
 
   (run-hooks 'fasta-mode-hook))
 
@@ -80,45 +73,6 @@ looks like fasta.  It will also turn enable fontification for `fasta-mode'."
      (1 font-lock-keyword-face)
      (2 font-lock-function-name-face)
      (3 font-lock-comment-face nil t))))
-
-(defun fasta-check ()
-  "Check the validity of the fasta format.
-
-It will check: 1. The file is not empty;
-               2. No fasta record is empty.
-It will run whenever fasta-mode is enabled."
-  (interactive)
-  (let (pos)
-    (save-excursion
-      (fasta-first)
-      (loop do
-            (setq pos (line-end-position))
-            (fasta-end)
-            (while (looking-back seq-space-regexp)
-              (backward-char))
-            ;; (message "%d %d" pos (point))
-            (if (eq pos (point))
-                (error "The fasta record is empty at line %d" (line-number-at-pos)))
-            while (fasta-next)))))
-
-(defun fasta-position ()
-  "Return the position of point in the current sequence.
-
-It will not count white spaces and seq gaps. The count starts
-at zero."
-  (interactive)
-  (let ((pos   (point))
-        (count 0))
-    (save-excursion
-      (if (fasta-beg)
-          (error "The start of the fasta record is not found!!!"))
-      (end-of-line)
-      (while (< (point) pos)
-        (if (not (looking-at-p seq-cruft-regexp))
-            (setq count (1+ count)))
-        (forward-char)))
-    (message "%d" count)
-    count))
 
 
 (defun fasta-beg ()
@@ -250,6 +204,48 @@ Return nil and do not move if it's already the first sequences."
         (delete-region (point) (1+ (fasta-end)))
       (message "This is the first sequence"))))
 
+
+(defun fasta-check ()
+  "Check the validity of the fasta format.
+
+It will check: 1. The file is not empty;
+               2. No fasta record is empty.
+It will run whenever fasta-mode is enabled."
+  (interactive)
+  (let (pos)
+    (save-excursion
+      (fasta-first)
+      (loop do
+            (setq pos (line-end-position))
+            (fasta-end)
+            (while (looking-back seq-space-regexp)
+              (backward-char))
+            ;; (message "%d %d" pos (point))
+            (if (eq pos (point))
+                (error "The fasta record is empty at line %d" (line-number-at-pos)))
+            while (fasta-next)))))
+
+(defun fasta-position ()
+  "Return the position of point in the current sequence.
+
+It will not count white spaces and seq gaps. The count starts
+at zero."
+  (interactive)
+  (let ((pos   (point))
+        (count 0))
+    (save-excursion
+      (if (fasta-beg)
+          (error "The start of the fasta record is not found!!!"))
+      (end-of-line)
+      (while (< (point) pos)
+        (if (not (looking-at-p seq-cruft-regexp))
+            (setq count (1+ count)))
+        (forward-char)))
+    (message "%d" count)
+    count))
+
+
+
 ;;; column manipulations
 (defun fasta-delete-column ()
   (interactive)
@@ -300,10 +296,6 @@ Return nil and do not move if it's already the first sequences."
 
 
 (provide 'fasta-mode)
-
-;; done loading
-(run-mode-hooks)
-
 
 
 ;;; fasta-mode.el ends here
