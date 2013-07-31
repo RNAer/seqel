@@ -21,35 +21,37 @@ case as the upper case will be added automatically. Please modify
 
 ;;;;; END OF USER CUSTOMIZABLE VARIABLES
 
-(defvar aa-iupac "acdefghiklmnpqrstvwybjxz"
+(defvar pro-aa-alist
+  '((?a . Ala  71.09)
+    (?b . Asx  nil)  ; Asn Asp
+    (?c . Cys  103.15)
+    (?d . Asp  115.09)
+    (?e . Glu  129.12)
+    (?f . Phe  147.18)
+    (?g . Gly  57.05)
+    (?h . His  137.14)
+    (?i . Ile  113.16)
+    (?j . Xle  nil)  ;Leu Ile
+    (?k . Lys  128.17)
+    (?l . Leu  113.16)
+    (?m . Met  131.19)
+    (?n . Asn  114.11)
+    (?p . Pro  97.12 )
+    (?q . Gln  128.14)
+    (?r . Arg  156.19)
+    (?s . Ser  87.08 )
+    (?t . Thr  101.11)
+    (?v . Val  99.14 )
+    (?w . Trp  186.21)
+    (?x . Xaa  nil)  ; unknown aa
+    (?y . Tyr  163.18)
+    (?z . Glx  nil)) ; Glu Gln
+  "*Three letter IUPAC code of AA.")
+
+(defvar aa-iupac
+  (mapcar #'car pro-aa-alist)
   "All char for a single base, following IUPAC code. It should be in lower case
 as the upper case will be added automatically.")
-(defvar aa-iupac-3
-  '((?a . Ala)
-    (?b . Asx)
-    (?c . Cys)
-    (?d . Asp)
-    (?e . Glu)
-    (?f . Phe)
-    (?g . Gly)
-    (?h . His)
-    (?i . Ile)
-    (?j . Xle)
-    (?k . Lys)
-    (?l . Leu)
-    (?m . Met)
-    (?n . Asn)
-    (?p . Pro)
-    (?q . Gln)
-    (?r . Arg)
-    (?s . Ser)
-    (?t . Thr)
-    (?v . Val)
-    (?w . Trp)
-    (?x . Xaa)
-    (?y . Tyr)
-    (?z . Glx))
-  "*Three letter IUPAC code of AA.")
 
 (defvar aa-acidic "de")
 (defvar aa-basic "rhk")
@@ -57,39 +59,20 @@ as the upper case will be added automatically.")
 (defvar aa-hydrophilic "")
 (defvar aa-amphipathic "")
 
-(defvar aa-mw
+(defvar pro-aa-mw
   (let ((mw-vec (make-vector 256 nil)))
-    (aset mw-vec ?a 71.09)
-    (aset mw-vec ?c 103.15)
-    (aset mw-vec ?d 115.09)
-    (aset mw-vec ?e 129.12)
-    (aset mw-vec ?f 147.18)
-    (aset mw-vec ?g 57.05)
-    (aset mw-vec ?h 137.14)
-    (aset mw-vec ?i 113.16)
-    (aset mw-vec ?k 128.17)
-    (aset mw-vec ?l 113.16)
-    (aset mw-vec ?m 131.19)
-    (aset mw-vec ?n 114.11)
-    (aset mw-vec ?p 97.12)
-    (aset mw-vec ?q 128.14)
-    (aset mw-vec ?r 156.19)
-    (aset mw-vec ?s 87.08)
-    (aset mw-vec ?t 101.11)
-    (aset mw-vec ?v 99.14)
-    (aset mw-vec ?w 186.21)
-    (aset mw-vec ?y 163.18)
+
   mw-vec)
   "*AA molecular weights in Dalton in vector.")
 
-(defvar aa-regexp
+(defvar pro-aa-regexp
   (let ((aa (concat aa-iupac aa-other)))
     (regexp-opt (mapcar #'char-to-string
                         (concat aa (upcase aa)))))
   "A regexp that matches a valid nucleotide base (following IPUAC code plus
 the symbol defined in `aa-other'.")
 
-(defun aa-mw-region (beg end)
+(defun pro-mw-region (beg end)
   "Return molecular weight of the region BEG and END or the current line."
   (interactive
    (if (use-region-p) ; (region-active-p)

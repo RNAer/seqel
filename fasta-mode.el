@@ -65,8 +65,7 @@ looks like fasta.  It will also turn enable fontification for `fasta-mode'."
    '("\\.\\(fasta\\|fa\\|fna\\|faa\\)\\'" . fasta-mode)))
 
 
-(defvar fasta-seq-type
-  "Return the type of sequence, either protein or nucleic acid.")
+
 
 (defvar fasta-font-lock-keywords
   '(("^\\(>\\)\\([-_.|a-zA-Z0-9]+\\)\\([ \t]+.*\\)?"
@@ -116,6 +115,8 @@ Return the point of the end of the fasta record."
   (push-mark)
   (fasta-beg))
 
+
+;;;###autoload
 (defun fasta-format (&optional width)
   "Format the current sequence to contain WIDTH chars per line.
 
@@ -225,6 +226,7 @@ It will run whenever fasta-mode is enabled."
                 (error "The fasta record is empty at line %d" (line-number-at-pos)))
             while (fasta-next)))))
 
+
 (defun fasta-position ()
   "Return the position of point in the current sequence.
 
@@ -244,6 +246,40 @@ at zero."
     (message "%d" count)
     count))
 
+
+(defun fasta-seq-length ()
+  "The length of current sequence."
+  (interactive)
+  (let ()
+    (save-excursion
+      (fasta-end)
+      (fasta-position))))
+
+
+(defvar fasta-seq-type
+  "Return the type of sequence, either protein or nucleic acid."
+  (let ((pro-uniq (set-difference pro-aa nuc-base))
+        (nuc-uniq (set-difference nuc-base pro-aa))
+        pos  current)
+    (save-excursion
+      (fasta-first)
+      (loop do
+            (forward-line) ; move to the sequence region
+            (setq pos (point))
+            (fasta-end)
+            (while (> (point) pos)
+              (setq current (char-before))
+              (cond ((memq current pro-uniq)
+                     'pro)
+                    ((memq current nuc-uniq)
+                     'nuc)
+                    (t nil))
+              (backward-char))
+            while (fasta-next)))))
+
+
+      
+;;;###autoload
 (defun fasta-rc ()
   "Reverse complement current fasta sequence."
   (interactive)

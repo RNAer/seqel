@@ -95,6 +95,7 @@ See `proceed-char-repeatedly'"
   (interactive "p")
   (proceed-char-repeatedly count #'forward-char nuc-base-regexp))
 
+;;;###autoload
 (defun nuc-move-backward (count)
   "Move backward COUNT bases, similar to `nuc-move-forward'. See also
  `proceed-char-repeatedly'."
@@ -122,7 +123,8 @@ See `nuc-delete-forward' and `proceed-char-repeatedly'."
 acid sequence. Return the count if the region
  contains only legal nucleic acid characters, including
  `nuc-base-regexp', `seq-cruft-regexp'; otherwise return nil and
- report the location of the invalid characters in the echo region."
+ report the location of the invalid characters in the echo region.
+This function calls `seq-p'."
   (interactive
    (if mark-active
        (list (region-beginning) (region-end))
@@ -166,15 +168,16 @@ See `dna-base-complement'."
                     ??)))     ; return '?' if there's no complement base
     (message "Complement of '%c' is '%c'." base c-base)))
 
+
 (defun nuc-complement (beg end &optional is-rna)
-  "Complement a region of bases from BEG to END. If no active region,
-complement the current line.Complement a region of the buffer by deleting it and
-inserting the complements, base by base. Non-base char are passed over unchanged.
-See also `nuc-complement' and `rna-complement'."
-  (interactive
-   (if (use-region-p) ; (region-active-p)
-       (list (region-beginning) (region-end))
-     (list (line-beginning-position) (line-end-position))))
+  "Complement a region of bases from BEG to END.
+
+Complement a region of the buffer by
+inserting the complements, base by base, and by deleting the region.
+Non-base char are passed over unchanged. By default, it will complement
+to DNA sequence unless IS-RNA is true. C-u \\[nuc-complement] will complement
+as RNA while as DNA without C-u"
+  (interactive "r\nP")
   (let* ((t-exist (dna-p beg end))
          (u-exist (rna-p beg end))
          (complement-vector
@@ -193,18 +196,6 @@ See also `nuc-complement' and `rna-complement'."
         (insert (if c-base c-base base))
         (delete-char 1)))))
 
-(defalias 'dna-complement 'nuc-complement)
-
-(defun rna-complement (beg end)
-  "Complement a region of bases from BEG to END. If no active region,
-complement the current line.Complement a region of the buffer by deleting it and
-inserting the complements, base by base. Non-base char are passed over unchanged.
-See also `nuc-complement' and `dna-complement'."
-  (interactive
-   (if (use-region-p) ; (region-active-p)
-       (list (region-beginning) (region-end))
-     (list (line-beginning-position) (line-end-position))))
-  (nuc-complement beg end t))
 
 
 (defun nuc-reverse-complement (beg end &optional is-rna)
@@ -213,10 +204,7 @@ Works by deleting the region and inserting bases reversed
 and complemented, base by base while entering non-bases in the order
 found. This function has some code redundancy with
 `nuc-complement'."
-  (interactive
-   (if (use-region-p) ; (region-active-p)
-       (list (region-beginning) (region-end))
-     (list (line-beginning-position) (line-end-position))))
+  (interactive "r\nP")
   (let* ((t-exist (dna-p beg end))
          (u-exist (rna-p beg end))
          (complement-vector
@@ -243,21 +231,7 @@ found. This function has some code redundancy with
 
 
 (defalias 'nuc-rc 'nuc-reverse-complement)
-(defalias 'dna-rc 'nuc-reverse-complement)
-(defalias 'dna-reverse-complement 'nuc-reverse-complement)
 
-(defun rna-reverse-complement (beg end)
-  "Reverse complement a region of RNA from BEG to END (or the current line).
-Works by deleting the region and inserting bases reversed
-and complemented, while entering non-bases in the order
-found. This function is based on `nuc-reverse-complement'."
-  (interactive
-   (if (use-region-p) ; (region-active-p)
-       (list (region-beginning) (region-end))
-     (list (line-beginning-position) (line-end-position))))
-  (nuc-reverse-complement beg end t))
-
-(defalias 'rna-rc 'rna-reverse-complement)
 
 ;;;###autoload
 (defun 2rna (beg end)
