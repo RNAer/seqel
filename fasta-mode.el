@@ -10,9 +10,9 @@
  (let ((map (make-sparse-keymap)))
     ;; Ctrl bindings
     (define-key map "\C-cp"     'fasta-position)
-    (define-key map "\C-cp"     'fasta-beg-of-seq)
-    (define-key map "\C-cp"     'fasta-end-of-seq)
-    (define-key map "\C-cp"     'fasta-mark-seq)
+    (define-key map "\C-\M-a"   'fasta-beg)
+    (define-key map "\C-\M-e"   'fasta-end)
+    (define-key map "\C-cm"     'fasta-mark-seq)
     (define-key map "\C-cp"     'fasta-position)
     map)
  "The local keymap for `fasta-mode'")
@@ -74,46 +74,68 @@ looks like fasta.  It will also turn enable fontification for `fasta-mode'."
      (3 font-lock-comment-face nil t))))
 
 
-(defun fasta-beg ()
-  "Move the point the beginning of the current fasta record.
+(defvar fasta-record-regexp "^>.*$"
+  "Fasta label that delimits records.")
+
+
+;;;###autoload
+(defun fasta-beg (count)
+  "Move the point the beginning of the fasta record.
 
 Return the point of the beginning of the fasta record if the beginning
 is found; otherwise, do not move point and return nil."
-  (interactive)
-  (let ((pos nil))
-    (save-excursion
-      (end-of-line) ; in case point is at the beginning of the fasta record.
-      (if (re-search-backward "^>" nil t)
-          (setq pos (match-beginning 0))))
-    (cond (pos (goto-char pos))
-          ((called-interactively-p 'interactive)
-           (error "The beginnning of the fasta record is not found!!!")
-           nil))))
-    ;; ;; skip white spaces
-    ;; (while (looking-at-p seq-space-regexp)
-    ;;   (forward-char))))
+  (interactive "p")
+  (while (and (> count 0)
+              (re-search-backward fasta-record-regexp nil t))
+    (setq count (1- count)))
+  count)
 
-(defun fasta-end ()
-  "Move the point the end of the current fasta record.
+;;;###autoload
+(defun fasta-end (count)
+  "Move forward to the next end fasta record.
 
 Return the point of the end of the fasta record."
+  (interactive "p")
+  (let ((pos (point))  found)
+    (and (looking-at-p fasta-record-regexp)
+         (setq count (1+ count)))
+    (while (and (re-search-forward fasta-record-regexp nil t)
+                (> count 0))
+      (setq count (1- count)))
+    (if (> count 0)
+        (progn (goto-char (point-max))
+               (setq count (1- count)))
+      (beginning-of-line)))
+  count)
+
+;;;###autoload
+(defun fasta-last ()
   (interactive)
-  (let ((old  (point)))
-    (end-of-line) ; in case the point is at the regexp
-    (if (re-search-forward "^>" nil t)
-        (progn (forward-line -1)
-               (goto-char (line-end-position)))
-      (goto-char (point-max)))))
-  ;; ;; skip white spaces
-  ;; (while (looking-back seq-space-regexp)
-  ;;   (backward-char)))
+  (while (fasta-end 1)))
+
+;;;###autoload
+(defun fasta-first ()
+  (interactive)
+  (while (fasta-beg 1)))
+
+
+(defun fasta-count ()
+  (interactive)
+  (let ((total 0))
+    (save-excursion
+      (goto-char (point-max))
+      (while (eq (fasta-beg 1) 0)
+        (setq total (1+ total))))
+    (if (called-interactively-p 'interactive)
+        (message "Total %d sequences" total))
+    total))
 
 (defun fasta-mark ()
   "Put point at the beginning of the fasta record and mark the end."
   (interactive)
-  (fasta-end)
+  (fasta-end 1)
   (push-mark)
-  (fasta-beg))
+  (fasta-beg 1))
 
 
 ;;;###autoload
@@ -138,63 +160,12 @@ The default width is 80. The white spaces inside will also be removed."
         (forward-char width)
         (insert-char ?\n)))))
 
-(defun fasta-next (&optional n)
-  "Move to the beginning of the next N fasta record.
-
-It moves to the previous -N fasta record if N is negative."
-  (interactive "p")
-  (let ((old (point))
-        (pos nil))
-    (save-excursion
-      (end-of-line) ; in case the point is at the regexp
-      (or n (setq n 1))
-      (and (< n 0) (setq n (1- n)))
-      (and (eq n 0) (error "Can't move to the next 0 fasta record!!!"))
-      (if (re-search-forward "^>" nil t n)
-          (setq pos (match-beginning 0))))
-    (cond (pos ;; move only when the beginning of next fasta is found.
-           (goto-char pos))
-          ((called-interactively-p 'interactive)
-           (if (> n 0)
-               (message "Less than %d fasta records below in the file!" n)
-             (message "Less than %d fasta records above in the file!" (abs (1+ n))))
-           nil))))
-
-(defun fasta-last ()
-  (interactive)
-  (while (fasta-next))
-  (if (not (fasta-beg)) ; in case we are in the first seq - move to the start
-      (error "There is no fasta record in this fasta file!!!")))
-
-
-(defun fasta-prev ()
-  "Move to the beginning of the previous sequence.
-
-Return nil and do not move if it's already the first sequences."
-  (interactive)
-  (let ((pos nil))
-    (save-excursion
-      (end-of-line)
-      (setq pos (re-search-backward "^>" t 2)))
-    (cond (pos ;; move only when the beginning of the seq is found.
-           (goto-char pos)) ; return the beg point of the prev fasta
-          ((called-interactively-p 'interactive)
-           ;; only echo the message when called interactively
-           (message "This is the first sequence in the file!")
-           nil)))) ; return nil
-
-(defun fasta-first ()
-  (interactive)
-  (while (fasta-prev))
-  (if (not (fasta-beg)) ; in case we are in the first seq - move to the start
-      (error "There is no fasta record in this fasta file!!!")))
-
 
 (defun fasta-delete-next ()
   (interactive)
   (save-excursion
-    (if (fasta-next)
-        (delete-region (point) (or (fasta-next)
+    (if (fasta-end 1)
+        (delete-region (point) (or (fasta-end 1)
                                    (point-max)))
       (message "This is the last sequence"))))
 
@@ -278,7 +249,6 @@ at zero."
             while (fasta-next)))))
 
 
-      
 ;;;###autoload
 (defun fasta-rc ()
   "Reverse complement current fasta sequence."

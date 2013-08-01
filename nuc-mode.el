@@ -197,7 +197,7 @@ as RNA while as DNA without C-u"
         (delete-char 1)))))
 
 
-
+;;;###autoload
 (defun nuc-reverse-complement (beg end &optional is-rna)
   "Reverse complement a region of DNA (unless IS-RNA is true) from BEG to END.
 Works by deleting the region and inserting bases reversed
@@ -331,7 +331,7 @@ otherwise, not. See `paint-seq-region' for details."
   (let ((map (make-sparse-keymap)))
     (define-key map "\C-cf"     'nuc-move-forward)
     (define-key map "\C-cb"     'nuc-move-backward)
-    (define-key map "\C-c\Cd"   'nuc-delete-forward)
+    (define-key map "\C-c\C-d"   'nuc-delete-forward)
     (define-key map "\C-cd"     'nuc-detete-backward)
     (define-key map "\C-cp"     'nuc-base-paint-region)
     (define-key map "\C-cr"     'nuc-rc)
