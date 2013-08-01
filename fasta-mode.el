@@ -143,9 +143,10 @@ Return the point of the end of the fasta record."
 (defun fasta-format (&optional width)
   "Format the current sequence to contain WIDTH chars per line.
 
-The default width is 80. The white spaces inside will also be removed."
+By default, each sequence is one line. The white spaces inside
+will also be removed."
   (interactive "P")
-  (or width (setq width 80))
+
   (save-excursion
     (fasta-mark)
     (forward-line)
@@ -155,11 +156,12 @@ The default width is 80. The white spaces inside will also be removed."
       (while (re-search-forward seq-space-regexp (region-end) t)
         (replace-match "" nil nil))
       ;; insert newlines
-      (goto-char beg)
-      ;; (message "%d %d %d" width (point) (region-end))
-      (while (< (point) (- (region-end) width))
-        (forward-char width)
-        (insert-char ?\n)))))
+      (if width
+          (progn (goto-char beg)
+                 ;; (message "%d %d %d" width (point) (region-end))
+                 (while (< (point) (- (region-end) width))
+                   (forward-char width)
+                   (insert-char ?\n)))))))
 
 
 (defun fasta-delete-next ()
@@ -239,6 +241,19 @@ at zero."
           (nuc-reverse-complement beg end is-rna)))))
 
 
+
+(defun fasta-relative-position ()
+  "The point position counted from the beginning of the sequence."
+  (interactive)
+  (if (looking-at-p fasta-record-regexp)
+      (error "Point is not in the sequence region")
+  (let ((pos (point)))
+    (save-excursion
+      (fasta-beg 1)
+      (forward-line)
+      (- pos (point))))))
+
+
 ;;; column manipulations
 (defun fasta-column-action (snippet)
   "A function called by other column manipulation functions.
@@ -247,8 +262,7 @@ SNIPPET is a piece of code that does some specific manipulation
 at the current column. See `fasta-insert-column' for an example
 of usage."
   (save-excursion
-    (let ((original (point))
-          (column   (current-column)))
+    (let ((column   (current-column)))
       (fasta-first)
       (loop do
             (forward-line) ; move to the sequence region
@@ -259,7 +273,7 @@ of usage."
                        (line-number-at-pos)))
             ;; (delete-char 1)
             (eval snippet)
-            while (fasta-beg 1)))))
+            while (fasta-end 1)))))
 
 
 (defun fasta-delete-column ()
@@ -291,6 +305,13 @@ and C-u \\[fasta-mark-column] will unmark the column."
 
 
 
+(defun fasta2stockholm ()
+  ""
+  (interactive))
+
+(defun fasta-align ()
+  ""
+  (interactive))
 
 (provide 'fasta-mode)
 
