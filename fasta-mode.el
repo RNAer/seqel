@@ -96,27 +96,27 @@ is found; otherwise, do not move point and return nil."
 
 Return the point of the end of the fasta record."
   (interactive "p")
-  (let ((pos (point))  found)
-    (and (looking-at-p fasta-record-regexp)
-         (setq count (1+ count)))
-    (while (and (re-search-forward fasta-record-regexp nil t)
-                (> count 0))
-      (setq count (1- count)))
-    (if (> count 0)
-        (progn (goto-char (point-max))
-               (setq count (1- count)))
-      (beginning-of-line)))
+  (and (looking-at-p fasta-record-regexp)
+       (setq count (1+ count)))
+  (while (and (> count 0)
+              (re-search-forward fasta-record-regexp nil t))
+    (setq count (1- count)))
+  (if (> count 0)
+      (if (/= (point) (point-max))
+          (progn (goto-char (point-max))
+                 (setq count (1- count))))
+    (beginning-of-line))
   count)
 
 ;;;###autoload
 (defun fasta-last ()
   (interactive)
-  (while (fasta-end 1)))
+  (while (equal (fasta-end 1) 0)))
 
 ;;;###autoload
 (defun fasta-first ()
   (interactive)
-  (while (fasta-beg 1)))
+  (while (equal (fasta-beg 1) 0)))
 
 ;;;###autoload
 (defun fasta-count ()
@@ -273,7 +273,7 @@ of usage."
                        (line-number-at-pos)))
             ;; (delete-char 1)
             (eval snippet)
-            while (fasta-end 1)))))
+            while (eq (fasta-end 1) 0)))))
 
 
 (defun fasta-delete-column ()
