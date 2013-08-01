@@ -118,7 +118,7 @@ Return the point of the end of the fasta record."
   (interactive)
   (while (fasta-beg 1)))
 
-
+;;;###autoload
 (defun fasta-count ()
   (interactive)
   (let ((total 0))
@@ -129,6 +129,7 @@ Return the point of the end of the fasta record."
     (if (called-interactively-p 'interactive)
         (message "Total %d sequences" total))
     total))
+
 
 (defun fasta-mark ()
   "Put point at the beginning of the fasta record and mark the end."
@@ -169,34 +170,6 @@ The default width is 80. The white spaces inside will also be removed."
                                    (point-max)))
       (message "This is the last sequence"))))
 
-(defun fasta-delete-prev ()
-  (interactive)
-  (save-excursion
-    (if (fasta-prev)
-        (delete-region (point) (1+ (fasta-end)))
-      (message "This is the first sequence"))))
-
-
-(defun fasta-check ()
-  "Check the validity of the fasta format.
-
-It will check: 1. The file is not empty;
-               2. No fasta record is empty.
-It will run whenever fasta-mode is enabled."
-  (interactive)
-  (let (pos)
-    (save-excursion
-      (fasta-first)
-      (loop do
-            (setq pos (line-end-position))
-            (fasta-end)
-            (while (looking-back seq-space-regexp)
-              (backward-char))
-            ;; (message "%d %d" pos (point))
-            (if (eq pos (point))
-                (error "The fasta record is empty at line %d" (line-number-at-pos)))
-            while (fasta-next)))))
-
 
 (defun fasta-position ()
   "Return the position of point in the current sequence.
@@ -207,24 +180,28 @@ at zero."
   (let ((pos   (point))
         (count 0))
     (save-excursion
-      (if (fasta-beg)
+      (if (> (fasta-beg 1) 0)
           (error "The start of the fasta record is not found!!!"))
       (end-of-line)
       (while (< (point) pos)
         (if (not (looking-at-p seq-cruft-regexp))
             (setq count (1+ count)))
         (forward-char)))
-    (message "%d" count)
+    (if (called-interactively-p 'interactive)
+        (message "Position %d" count))
     count))
 
 
 (defun fasta-seq-length ()
-  "The length of current sequence."
+  "Return the length of current sequence."
   (interactive)
-  (let ()
+  (let (length)
     (save-excursion
-      (fasta-end)
-      (fasta-position))))
+      (fasta-end 1)
+      (setq length (fasta-position)))
+    (if (called-interactively-p 'interactive)
+        (message "Length %d" length))
+    length))
 
 
 (defvar fasta-seq-type
@@ -233,7 +210,7 @@ at zero."
         (nuc-uniq (set-difference nuc-base pro-aa))
         pos  current)
     (save-excursion
-      (fasta-first)
+      (goto-char (point-max))
       (loop do
             (forward-line) ; move to the sequence region
             (setq pos (point))
@@ -250,14 +227,16 @@ at zero."
 
 
 ;;;###autoload
-(defun fasta-rc ()
+(defun fasta-rc (is-rna)
   "Reverse complement current fasta sequence."
-  (interactive)
-  (fasta-mark)
-  (if nuc-mode
-      (if (dna-p)
-          (dna-reverse-complement)
-        (rna-reverse-complement))))
+  (interactive "P")
+  (princ is-rna)
+  (save-excursion
+    (fasta-mark)
+    (let ((beg (region-beginning))
+          (end (region-end)))
+      (if nuc-mode
+          (nuc-reverse-complement beg end is-rna)))))
 
 
 ;;; column manipulations
@@ -280,7 +259,7 @@ of usage."
                        (line-number-at-pos)))
             ;; (delete-char 1)
             (eval snippet)
-            while (fasta-next)))))
+            while (fasta-beg 1)))))
 
 
 (defun fasta-delete-column ()
@@ -302,7 +281,7 @@ If TO-FACE is not a face, mark with highlight face by default.
 Thus \\[fasta-mark-column] will mark with highlight face;
 and C-u \\[fasta-mark-column] will unmark the column."
   (interactive "p")
-  (princ to-face)
+  ;; (princ to-face)
   (cond ((equal to-face 1) ; without C-u
          (setq to-face 'highlight))
         ((numberp to-face)
