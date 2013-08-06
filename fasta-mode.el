@@ -26,16 +26,15 @@ breaks.  Use \\[universal-argument] number as a prefix to
 `fasta-forward-base' to move that many bases.  This skips line
 breaks and spaces.
 
-`dna-color-bases-region' disables `font-lock-mode'
-automaticly as they cant work together.
-\\[dna-color-bases-region] turns `font-lock-mode' back on.
+￼Special commands:
+￼\\{fasta-mode-map}
 
 \\{nuc-mode-map}"
   ;; This runs the normal hook change-major-mode-hook, then gets rid of
   ;; the buffer-local variables of the major mode previously in effect.
-  (kill-all-local-variables)
-  (setq mode-name "fasta")
-  (setq major-mode 'fasta-mode)
+  ;; (kill-all-local-variables)
+  ;; (setq mode-name "fasta")
+  ;; (setq major-mode 'fasta-mode)
   (use-local-map fasta-mode-map)
   ;; (set-syntax-table fasta-mode-syntax-table)
 

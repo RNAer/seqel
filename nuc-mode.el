@@ -290,6 +290,11 @@ such as 'acrt' would be transformed into '[a][ ]*[c][ ]*[ag][ ]*[t]."
     (mapconcat 'identity degenerate-str-list (concat seq-cruft-regexp "*"))))
 
 
+;; weighted homopolymer rate (WHR)
+(defun nuc-whr (beg end)
+  ""
+)
+
 
 ;;; Per base colors
 
@@ -327,6 +332,7 @@ otherwise, not. See `paint-seq-region' for details."
 ;;;###autoload
 (defalias 'unpaint-nuc-base-region 'unpaint-seq-region)
 
+
 (defvar nuc-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map "\C-cf"     'nuc-move-forward)
@@ -340,6 +346,9 @@ otherwise, not. See `paint-seq-region' for details."
   "Keymap for `nuc-mode'.")
 
 (define-minor-mode nuc-mode
+  ;; the fun auto defines a buffer local variable `nuc-mode'
+  ;; and this key value set its initial value
+  :init-value nil
   "Nucleic acid mode"
   ;; the name, a string, to show in the modeline
   :lighter " nuc"

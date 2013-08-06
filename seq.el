@@ -168,7 +168,7 @@ The first one is the text color and the second is the background.")
 This will define a face named GRP-LETTER that belongs to the
 face group named GRP, with BACKGRND as background and FOREGRND
 as foreground colors."
-  `(defface ,(intern (concat grp letter))
+  `(defface ,(intern (concat grp "-" letter))
      '((((type tty) (class color))
         (:background ,backgrnd :foreground ,foregrnd))
        (((type tty) (class color)) (:inverse-video t))
