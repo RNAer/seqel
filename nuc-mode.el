@@ -293,8 +293,31 @@ such as 'acrt' would be transformed into '[a][ ]*[c][ ]*[ag][ ]*[t]."
 ;; weighted homopolymer rate (WHR)
 (defun nuc-whr (beg end)
   ""
-)
-
+  (interactive
+   (if (use-region-p) ; (region-active-p)
+       (list (region-beginning) (region-end))
+     (list (line-beginning-position) (line-end-position))))
+  (let ((n  1.0)  (ni 0) (nis 0)
+        old cur)
+    (save-excursion
+      (goto-char beg)
+      (while (and (/= (point) end) (looking-at-p nuc-base-regexp))
+        (setq cur (char-after))
+        (cond ((not old)
+               (setq ni 1))
+              ((/= old cur)
+               (setq n (1+ n))
+               (setq nis (+ nis (expt ni 2)))
+               (setq ni 1))
+              ((= old cur)
+               (setq ni (1+ ni))))
+        ;; (message "%c %d %d %d" cur ni nis n)
+        (setq old cur)
+        (forward-char)))
+    (setq nis (+ nis (expt ni 2)))
+    ;; (message "%d %d" nis n)
+    ;; (princ (/ nis n))
+    (/ nis n)))
 
 ;;; Per base colors
 
