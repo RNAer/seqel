@@ -341,7 +341,7 @@ a nuc base in char type, hex-code colors for foreground and background")
 
 
 ;;;###autoload
-(defun nuc-base-paint-region (beg end &optional case)
+(defun nuc-paint-region (beg end &optional case)
   "Color the nucleic acid region BEG to END.
 
 If CASE is nil, upcase and lowercase base chars will be colored the same;
