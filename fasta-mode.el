@@ -17,6 +17,16 @@
     map)
  "The local keymap for `fasta-mode'")
 
+(let ((equivs
+       '((fasta-next . forward-paragraph)
+         (fasta-prev . backward-paragraph)
+         (fasta-mark . mark-paragraph))))
+  (dolist (x equivs)
+    (substitute-key-definition (cdr x)
+                               (car x)
+                               fasta-mode-map
+                               (current-global-map))))
+
 ;;;###autoload
 (define-derived-mode fasta-mode text-mode "fasta"
   "Major mode for editing sequences in fasta format.
@@ -37,7 +47,6 @@ breaks and spaces.
   ;; (setq major-mode 'fasta-mode)
   (use-local-map fasta-mode-map)
   ;; (set-syntax-table fasta-mode-syntax-table)
-
   (run-hooks 'fasta-mode-hook))
 
 
@@ -62,8 +71,6 @@ looks like fasta.  It will also turn enable fontification for `fasta-mode'."
   (add-to-list
    'auto-mode-alist
    '("\\.\\(fasta\\|fa\\|fna\\|faa\\)\\'" . fasta-mode)))
-
-
 
 
 (defvar fasta-font-lock-keywords

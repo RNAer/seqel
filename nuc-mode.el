@@ -360,7 +360,7 @@ otherwise, not. See `paint-seq-region' for details."
   (let ((map (make-sparse-keymap)))
     (define-key map "\C-cf"     'nuc-move-forward)
     (define-key map "\C-cb"     'nuc-move-backward)
-    (define-key map "\C-c\C-d"   'nuc-delete-forward)
+    (define-key map "\C-c\C-d"  'nuc-delete-forward)
     (define-key map "\C-cd"     'nuc-detete-backward)
     (define-key map "\C-cp"     'nuc-base-paint-region)
     (define-key map "\C-cr"     'nuc-rc)
