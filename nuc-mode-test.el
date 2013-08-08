@@ -41,20 +41,28 @@
 
 (ert-deftest nuc-rc-test ()
   :tags '(nuc-mode)
-  (let ((cases '((should "acgtmrwsykvhdbnACGTMRWSYKVHDBN" "NVHDBMRSWYKACGTnvhdbmrswykacgt" nil)
-                 (should "acgumrwsykvhdbnACGUMRWSYKVHDBN" "NVHDBMRSWYKACGUnvhdbmrswykacgu" t)))
+  (let ((cases '((1 "acgtmrwsykvhdbnACGTMRWSYKVHDBN" nil "NVHDBMRSWYKACGTnvhdbmrswykacgt")
+                 (1 "acgumrwsykvhdbnACGUMRWSYKVHDBN" t   "NVHDBMRSWYKACGUnvhdbmrswykacgu")
+                 (2 "acug" nil)     ; error cases
+                 (2 "actg" t)))
+        type-test
         tmp
         func)
     (with-temp-buffer
       (dolist (test cases)
+        (setq type-test (nth 0 test))
         (insert (nth 1 test))
         (set-mark (point-min))
         (goto-char (point-max))
-        (if (nth 3 test)
-            (setq current-prefix-arg '(4)))
-        (call-interactively 'nuc-rc)
-        (setq tmp (buffer-string))
-        (eval `(,(nth 0 test) (equal tmp (nth 2 test))))
+        (if (nth 2 test)
+            (setq current-prefix-arg '(4))
+          (setq current-prefix-arg nil))
+        (cond ((equal type-test 1)
+               (call-interactively 'nuc-rc)
+               (setq tmp (buffer-string))
+               (should (equal tmp (nth 3 test))))
+              ((equal type-test 2)
+               (should-error (call-interactively 'nuc-rc))))
         (delete-region (point-min) (point-max))))))
 
 (ert-deftest nuc-base-summary-test ()

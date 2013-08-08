@@ -209,11 +209,11 @@ found. This function has some code redundancy with
          (u-exist (rna-p beg end))
          (complement-vector
           (cond ((and t-exist is-rna)
-                 (error "T (at %d) exist!" t-exist))
+                 (error "T (at %d) exist" t-exist))
                 ((and u-exist is-rna) rna-base-complement)
                 ((and t-exist (not is-rna)) dna-base-complement)
                 ((and u-exist (not is-rna))
-                 (error "U (at %d) exist!" u-exist))))
+                 (error "U (at %d) exist" u-exist))))
          (str-len (- end beg))
          (old-pos (point))
          base c-base)
