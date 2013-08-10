@@ -4,10 +4,12 @@
 (require 'color)
 
 ;; valid characters in the sequences
-(defvar seq-gap "-."
+(defvar seq-gap
+  '(?- ?.)
   "*Chars that represent a gap")
 
-(defvar seq-space " \t\n"
+(defvar seq-space
+  '(?  ?\t ?\n)
   "*Chars that represent cruft which may appear between bases.
  It will be skipped during moving and search and anything involving counting bases.")
 
@@ -26,7 +28,7 @@
 if the next char belongs to LEGAL-CHAR-REGEXP. COUNT can be either positive
 or negative integer, indicating the proceeding direction."
   (let ((direction (if (< count 0) -1 1)))
-    (fset 'looking (if (< count 0) 'looking-back 'looking-at-p))
+    (fset 'looking (if (< count 0) 'looking-back 'looking-at))
     (dotimes (x (abs count))
       (while (looking seq-cruft-regexp)
         (funcall func direction))
@@ -72,7 +74,7 @@ table to create dictionary-like data type."
     (save-excursion
       (goto-char beg)
       (dotimes (x (- end beg))
-        (if (looking-at-p legal-char-regexp)
+        (if (looking-at legal-char-regexp)
             (progn (setq char (char-after))
                    (setq count (gethash char my-hash))
                    (if count
@@ -82,29 +84,33 @@ table to create dictionary-like data type."
     (maphash (lambda (x y) (princ (format "%c:%d " x y))) my-hash)))
 
 
-(defun seq-p (beg end legal-char-regexp)
+(defun seq-count (beg end &optional legal-char-regexp)
   "Test if the region between BEG and END is a legal
  sequence defined by LEGAL-CHAR-REGEXP and `seq-cruft-regexp'.
  Return the count if the region contains only legal characters;
  otherwise return nil and
  report the location of the invalid characters."
-  (let ((count 0) (legal-p nil))
+  (let ((count 0) (legal-p t))
+    ;; allow any char if legal-char-regexp is not provided
+    (or legal-char-regexp
+        (setq legal-char-regexp "."))
     (save-excursion
       (goto-char beg)
       ;; (point) will not equal `end' if invalid char is met.
       ;; Using forward-char to check char one-by-one has the advantage of
       ;; negligible memory requirement.
-      (setq legal-p (dotimes (x (- end beg) (= (point) end))
-                      (cond ((looking-at-p legal-char-regexp)
-                             (forward-char)
-                             (setq count (1+ count)))
-                            ((looking-at-p seq-cruft-regexp)
-                             (forward-char))
-                            (t (setq x end) ; end the dotimes loop
-                               (message "Bad base '%c' found at position %d,%d"
-                                        (following-char)
-                                        (line-number-at-pos)
-                                        (current-column)))))))
+      (while (< (point) end)
+        (cond ((looking-at seq-cruft-regexp)
+               (forward-char))
+              ((looking-at legal-char-regexp)
+               (forward-char)
+               (setq count (1+ count)))
+              (t (message "Bad char '%c' found at position %d,%d"
+                          (char-after)
+                          (line-number-at-pos)
+                          (current-column))
+                 (setq legal-p nil)
+                 (goto-char end)))))
     (if legal-p count)))
 
 (defun color-gradient-hsl (start stop step-number &optional s l)

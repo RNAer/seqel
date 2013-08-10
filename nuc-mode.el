@@ -118,24 +118,28 @@ See `nuc-delete-forward' and `proceed-char-repeatedly'."
   (proceed-char-repeatedly (- count) #'delete-char nuc-base-regexp))
 
 
-(defun nuc-p (beg end)
+(defun nuc-count (beg end)
   "Test if the region between BEG and END (or the line) is a legal nucleotide
 acid sequence. Return the count if the region
  contains only legal nucleic acid characters, including
  `nuc-base-regexp', `seq-cruft-regexp'; otherwise return nil and
  report the location of the invalid characters in the echo region.
-This function calls `seq-p'."
+This function calls `seq-count'."
   (interactive
    (if mark-active
        (list (region-beginning) (region-end))
      (list (line-beginning-position) (line-end-position))))
-  (seq-p beg end nuc-base-regexp))
+  (let ((length (seq-count beg end nuc-base-regexp)))
+    (and length
+         (called-interactively-p 'interactive)
+         (message "Base count: %d" length))
+    length))
 
-(defalias 'nuc-count 'nuc-p)
+(defalias 'nuc-p 'nuc-count)
 
-(defun rna-p (beg end)
+(defun nuc-rna-p (beg end)
   "Return the point of 'u' or 'U' if they are found; otherwise return nil.
-See also `dna-p' and `nuc-p'."
+See also `nuc-dna-p' and `nuc-p'."
   (interactive
    (if (use-region-p)
        (list (region-beginning) (region-end))
@@ -146,9 +150,9 @@ See also `dna-p' and `nuc-p'."
       (search-forward "u" end t))))
       ;; (re-search-forward "[uU]" end t))))
 
-(defun dna-p (beg end)
+(defun nuc-dna-p (beg end)
   "Return the point of 't' or 'T' if they are found; otherwise return nil.
-See also `rna-p' and `nuc-p'."
+See also `nuc-rna-p' and `nuc-p'."
   (interactive
    (if (use-region-p)
        (list (region-beginning) (region-end))
@@ -178,8 +182,8 @@ Non-base char are passed over unchanged. By default, it will complement
 to DNA sequence unless IS-RNA is true. C-u \\[nuc-complement] will complement
 as RNA while as DNA without C-u"
   (interactive "r\nP")
-  (let* ((t-exist (dna-p beg end))
-         (u-exist (rna-p beg end))
+  (let* ((t-exist (nuc-dna-p beg end))
+         (u-exist (nuc-rna-p beg end))
          (complement-vector
           (cond ((and t-exist is-rna)
                  (error "T (at %d) exist!" t-exist))
@@ -205,8 +209,8 @@ and complemented, base by base while entering non-bases in the order
 found. This function has some code redundancy with
 `nuc-complement'."
   (interactive "r\nP")
-  (let* ((t-exist (dna-p beg end))
-         (u-exist (rna-p beg end))
+  (let* ((t-exist (nuc-dna-p beg end))
+         (u-exist (nuc-rna-p beg end))
          (complement-vector
           (cond ((and t-exist is-rna)
                  (error "T (at %d) exist" t-exist))
@@ -234,7 +238,7 @@ found. This function has some code redundancy with
 
 
 ;;;###autoload
-(defun 2rna (beg end)
+(defun nuc-2rna (beg end)
   "Convert to RNA. It basically convert 'u' to 't' ('U' to 'T') in the
 sequence."
   (interactive
@@ -246,8 +250,8 @@ sequence."
     (while (search-forward "t" end t)
       (replace-match "u" nil t))))
 
-(defun 2dna (beg end)
-  "Convert to DNA. Similar to `2rna'."
+(defun nuc-2dna (beg end)
+  "Convert to DNA. Similar to `nuc-2rna'."
   (interactive
    (if (use-region-p) ; (region-active-p)
        (list (region-beginning) (region-end))
@@ -301,7 +305,7 @@ such as 'acrt' would be transformed into '[a][ ]*[c][ ]*[ag][ ]*[t]."
         old cur)
     (save-excursion
       (goto-char beg)
-      (while (and (/= (point) end) (looking-at-p nuc-base-regexp))
+      (while (and (/= (point) end) (looking-at nuc-base-regexp))
         (setq cur (char-after))
         (cond ((not old)
                (setq ni 1))

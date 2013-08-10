@@ -5,21 +5,21 @@
 (defvar fasta-mode-hook nil
   "*Hook to setup `fasta-mode'.")
 
+(defvar fasta-setup-on-load nil
+  "*If not nil setup dna mode on buffer load.")
 
 (defvar fasta-mode-map
- (let ((map (make-sparse-keymap)))
+  ;; use `make-keymap' if there are lots of keybindings
+  (let ((map (make-sparse-keymap)))
     ;; Ctrl bindings
     (define-key map "\C-cp"     'fasta-position)
-    (define-key map "\C-\M-a"   'fasta-beg)
-    (define-key map "\C-\M-e"   'fasta-end)
-    (define-key map "\C-cm"     'fasta-mark-seq)
     (define-key map "\C-cp"     'fasta-position)
     map)
  "The local keymap for `fasta-mode'")
 
 (let ((equivs
-       '((fasta-next . forward-paragraph)
-         (fasta-prev . backward-paragraph)
+       '((fasta-end . forward-paragraph)
+         (fasta-beg . backward-paragraph)
          (fasta-mark . mark-paragraph))))
   (dolist (x equivs)
     (substitute-key-definition (cdr x)
@@ -27,61 +27,55 @@
                                fasta-mode-map
                                (current-global-map))))
 
+
+(defvar fasta-font-lock-keywords
+  '(("^\\(>\\)\\([-_.|a-zA-Z0-9]+\\)\\(.*\\)?"
+     (1 font-lock-keyword-face)
+     (2 font-lock-function-name-face)
+     (3 font-lock-comment-face))))
+
+
+(defvar fasta-record-regexp "^>.*$"
+  "Fasta label that delimits records.")
+
+
 ;;;###autoload
 (define-derived-mode fasta-mode text-mode "fasta"
   "Major mode for editing sequences in fasta format.
 
-This mode also customizes isearch to search over line
-breaks.  Use \\[universal-argument] number as a prefix to
-`fasta-forward-base' to move that many bases.  This skips line
-breaks and spaces.
-
 ￼Special commands:
 ￼\\{fasta-mode-map}
-
-\\{nuc-mode-map}"
+  \\{nuc-mode-map}
+  \\{pro-mode-map}"
   ;; This runs the normal hook change-major-mode-hook, then gets rid of
   ;; the buffer-local variables of the major mode previously in effect.
   ;; (kill-all-local-variables)
   ;; (setq mode-name "fasta")
   ;; (setq major-mode 'fasta-mode)
-  (use-local-map fasta-mode-map)
+  ;; (use-local-map fasta-mode-map)
+  ;; The above are automatically done if the mode is defined using
+  ;; `define-derived-mode'.
+  ;; the variable automatically becomes buffer-local when set
+  (setq font-lock-defaults '(fasta-font-lock-keywords))
   ;; (set-syntax-table fasta-mode-syntax-table)
   (run-hooks 'fasta-mode-hook))
 
 
-;;; Setup functions
 (defun fasta-find-file ()
   "Invoke `fasta-mode' if the buffer look like a fasta.
 and another mode is not active.
 This function is added to `find-file-hooks'."
   (if (and (eq major-mode 'fundamental-mode)
-           (looking-at "^\\(>\\)"))
+           (looking-at fasta-record-regexp))
     (fasta-mode)))
+
+(if fasta-setup-on-load
+    (add-hook 'find-file-hook 'fasta-find-file))
 
 
 ;;;###autoload
-(defun fasta-add-hooks ()
-  "Add a default set of fasta-hooks.
-These hooks will activate `fasta-mode' when visiting a file
-which has a fasta-like name (.fasta or .fa) or whose contents
-looks like fasta.  It will also turn enable fontification for `fasta-mode'."
-  (add-hook 'fasta-mode-hook 'turn-on-font-lock)
-  (add-hook 'find-file-hooks 'fasta-find-file)
-  (add-to-list
-   'auto-mode-alist
-   '("\\.\\(fasta\\|fa\\|fna\\|faa\\)\\'" . fasta-mode)))
-
-
-(defvar fasta-font-lock-keywords
-  '(("^\\(>\\)\\([-_.|a-zA-Z0-9]+\\)\\([ \t]+.*\\)?"
-     (1 font-lock-keyword-face)
-     (2 font-lock-function-name-face)
-     (3 font-lock-comment-face nil t))))
-
-
-(defvar fasta-record-regexp "^>.*$"
-  "Fasta label that delimits records.")
+(add-to-list 'auto-mode-alist
+             '("\\.\\(fasta\\|fa\\|fna\\|faa\\)\\'" . fasta-mode))
 
 
 ;;;###autoload
@@ -102,7 +96,7 @@ is found; otherwise, do not move point and return nil."
 
 Return the point of the end of the fasta record."
   (interactive "p")
-  (and (looking-at-p fasta-record-regexp)
+  (and (looking-at fasta-record-regexp)
        (setq count (1+ count)))
   (while (and (> count 0)
               (re-search-forward fasta-record-regexp nil t))
@@ -116,13 +110,16 @@ Return the point of the end of the fasta record."
 
 ;;;###autoload
 (defun fasta-last ()
+  "Go to the last fasta record"
   (interactive)
-  (while (equal (fasta-end 1) 0)))
+  (while (= (fasta-end 1) 0))
+  (fasta-beg 1))
 
 ;;;###autoload
 (defun fasta-first ()
+  "Go to the first fasta record"
   (interactive)
-  (while (equal (fasta-beg 1) 0)))
+  (while (= (fasta-beg 1) 0)))
 
 ;;;###autoload
 (defun fasta-count ()
@@ -130,7 +127,7 @@ Return the point of the end of the fasta record."
   (let ((total 0))
     (save-excursion
       (goto-char (point-max))
-      (while (eq (fasta-beg 1) 0)
+      (while (= (fasta-beg 1) 0)
         (setq total (1+ total))))
     (if (called-interactively-p 'interactive)
         (message "Total %d sequences" total))
@@ -174,7 +171,7 @@ will also be removed."
   (interactive)
   (save-excursion
     (if (fasta-end 1)
-        (delete-region (point) (or (fasta-end 1)
+        (delete-region (point) (or (> (fasta-end 1) 0)
                                    (point-max)))
       (message "This is the last sequence"))))
 
@@ -185,19 +182,35 @@ will also be removed."
 It will not count white spaces and seq gaps. The count starts
 at zero."
   (interactive)
+  (if (looking-at fasta-record-regexp)
+      (error "Point is not in the sequence region"))
   (let ((pos   (point))
         (count 0))
     (save-excursion
       (if (> (fasta-beg 1) 0)
-          (error "The start of the fasta record is not found!!!"))
+          (error "The start of the fasta record is not found"))
       (end-of-line)
       (while (< (point) pos)
-        (if (not (looking-at-p seq-cruft-regexp))
+        (if (not (looking-at seq-cruft-regexp))
             (setq count (1+ count)))
         (forward-char)))
     (if (called-interactively-p 'interactive)
         (message "Position %d" count))
     count))
+
+
+(defun fasta-relative-position ()
+  "The point position counted from the beginning of the record."
+  (interactive)
+  (if (looking-at fasta-record-regexp)
+      (error "Point is not in the sequence region"))
+  (let ((pos (point)))
+    (save-excursion
+      (fasta-beg 1)
+      (forward-line)
+      (if (called-interactively-p 'interactive)
+          (message "Position %d." (- pos (point)))
+        (- pos (point))))))
 
 
 (defun fasta-seq-length ()
@@ -212,26 +225,43 @@ at zero."
     length))
 
 
-(defvar fasta-seq-type
+(defun fasta-seq-type ()
   "Return the type of sequence, either protein or nucleic acid."
+  (interactive)
   (let ((pro-uniq (set-difference pro-aa nuc-base))
         (nuc-uniq (set-difference nuc-base pro-aa))
-        pos  current)
+        (atugc    '(?a ?t ?u ?g ?c ?A ?T ?U ?G ?C))
+        (smallest 100000)
+        (count    0)
+        (atugc-p  t)
+        pos  current type)
     (save-excursion
       (goto-char (point-max))
-      (loop do
-            (forward-line) ; move to the sequence region
-            (setq pos (point))
-            (fasta-end)
-            (while (> (point) pos)
-              (setq current (char-before))
-              (cond ((memq current pro-uniq)
-                     'pro)
-                    ((memq current nuc-uniq)
-                     'nuc)
-                    (t nil))
-              (backward-char))
-            while (fasta-next)))))
+      (setq pos (point))
+      (setq type (catch 'seq-type
+                   (while (> (fasta-beg 1) 0)
+                     ;; (message "%d" (line-number-at-pos))
+                     (forward-line) ; move to the sequence region
+                     (while (< (point) pos)
+                       (setq current (char-after))
+                       (cond ((memq current pro-uniq)
+                              (throw 'seq-type 'pro))
+                             ((memq current nuc-uniq)
+                              (throw 'seq-type 'nuc)))
+                       (or (not atugc-p)
+                           (memq current seq-gap)
+                           (memq current seq-space)
+                           (if (memq current atugc) (setq count (1+ count)))
+                           (setq atugc-p nil))
+                       (forward-char)
+                       ;; (message "%c %S" current atugc-p)
+                       (if (or (> count smallest) (/= 1 (fasta-beg 1)))
+                           (if atugc-p
+                               (throw 'seq-type 'nuc)
+                             (throw 'seq-type 'pro))))
+                     (fasta-beg 1)
+                     (setq pos (point)))))
+    type)))
 
 
 ;;;###autoload
@@ -248,50 +278,42 @@ at zero."
 
 
 
-(defun fasta-relative-position ()
-  "The point position counted from the beginning of the sequence."
-  (interactive)
-  (if (looking-at-p fasta-record-regexp)
-      (error "Point is not in the sequence region")
-  (let ((pos (point)))
-    (save-excursion
-      (fasta-beg 1)
-      (forward-line)
-      (- pos (point))))))
-
-
 ;;; column manipulations
-(defun fasta-column-action (snippet)
+(defun fasta--column-action (snippet &optional n-p)
   "A function called by other column manipulation functions.
 
 SNIPPET is a piece of code that does some specific manipulation
-at the current column. See `fasta-insert-column' for an example
-of usage."
+at the current column. N-P is a boolean to indicate whether the
+column is allowed at the end of line. See `fasta-insert-column'
+and `fasta-mark-column' for an example of usage."
   (save-excursion
-    (let ((column   (current-column)))
-      (fasta-first)
-      (loop do
-            (forward-line) ; move to the sequence region
-            (if (or (< (move-to-column column) column)
-                    (equal (char-after) ?\n)     ; if at the end of the line
-                    (equal (point) (point-max))) ; or at the end of buffer.
-                (error "This sequence at line %d does not have this column!!!"
-                       (line-number-at-pos)))
-            ;; (delete-char 1)
-            (eval snippet)
-            while (eq (fasta-end 1) 0)))))
+    (condition-case ex
+        (let ((column   (current-column)))
+          (fasta-first)
+          (loop do
+                (forward-line) ; move to the sequence region
+                (if (or (< (move-to-column column) column)
+                        (and n-p (eolp)))
+                    (error "This sequence at line %d does not have this column"
+                           (line-number-at-pos)))
+                (eval snippet)
+                while (and (= (fasta-end 1) 0) (not (eobp)))))
+      ;; return to the original state if error is met.
+      ('error
+       (primitive-undo 1 buffer-undo-list)
+       (eval ex)))))
 
 
 (defun fasta-delete-column ()
   "Delete current column."
   (interactive)
-  (fasta-column-action `(delete-char 1)))
+  (fasta--column-action `(delete-char 1) t))
 
 
 (defun fasta-insert-column (str)
   "Insert a string STR at the column."
   (interactive "sInsert string:")
-  (fasta-column-action `(insert ,str)))
+  (fasta--column-action `(insert ,str)))
 
 
 (defun fasta-mark-column (&optional to-face)
@@ -306,9 +328,8 @@ and C-u \\[fasta-mark-column] will unmark the column."
          (setq to-face 'highlight))
         ((numberp to-face)
          (setq to-face nil)))
-  (fasta-column-action
-   `(silent-put-text-property (point) (1+ (point)) 'face to-face)))
-
+  (fasta--column-action
+   `(silent-put-text-property (point) (1+ (point)) 'face to-face) t))
 
 
 (defun fasta2stockholm ()

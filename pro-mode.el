@@ -14,41 +14,34 @@
 
 (require 'seq)
 
-(defvar aa-other ""
-  "*Other chars that can possibly exist in a sequence. It should be in lower
-case as the upper case will be added automatically. Please modify
-`nuc-degeneracy-list' and `dna-complement-list' accordingly")
-
-;;;;; END OF USER CUSTOMIZABLE VARIABLES
-
 (defvar pro-aa-alist
-  '((?a . Ala  71.09)
-    (?b . Asx  nil)  ; Asn Asp
-    (?c . Cys  103.15)
-    (?d . Asp  115.09)
-    (?e . Glu  129.12)
-    (?f . Phe  147.18)
-    (?g . Gly  57.05)
-    (?h . His  137.14)
-    (?i . Ile  113.16)
-    (?j . Xle  nil)  ;Leu Ile
-    (?k . Lys  128.17)
-    (?l . Leu  113.16)
-    (?m . Met  131.19)
-    (?n . Asn  114.11)
-    (?p . Pro  97.12 )
-    (?q . Gln  128.14)
-    (?r . Arg  156.19)
-    (?s . Ser  87.08 )
-    (?t . Thr  101.11)
-    (?v . Val  99.14 )
-    (?w . Trp  186.21)
-    (?x . Xaa  nil)  ; unknown aa
-    (?y . Tyr  163.18)
-    (?z . Glx  nil)) ; Glu Gln
+  '((?a  "Ala"  71.09)
+    (?b  "Asx"  nil)  ; Asn Asp
+    (?c  "Cys"  103.15)
+    (?d  "Asp"  115.09)
+    (?e  "Glu"  129.12)
+    (?f  "Phe"  147.18)
+    (?g  "Gly"  57.05)
+    (?h  "His"  137.14)
+    (?i  "Ile"  113.16)
+    (?j  "Xle"  nil)  ;Leu Ile
+    (?k  "Lys"  128.17)
+    (?l  "Leu"  113.16)
+    (?m  "Met"  131.19)
+    (?n  "Asn"  114.11)
+    (?p  "Pro"  97.12 )
+    (?q  "Gln"  128.14)
+    (?r  "Arg"  156.19)
+    (?s  "Ser"  87.08 )
+    (?t  "Thr"  101.11)
+    (?v  "Val"  99.14 )
+    (?w  "Trp"  186.21)
+    (?x  "Xaa"  nil)  ; unknown aa
+    (?y  "Tyr"  163.18)
+    (?z  "Glx"  nil)) ; Glu Gln
   "*Three letter IUPAC code of AA.")
 
-(defvar aa-iupac
+(defvar pro-aa
   (mapcar #'car pro-aa-alist)
   "All char for a single base, following IUPAC code. It should be in lower case
 as the upper case will be added automatically.")
@@ -66,7 +59,7 @@ as the upper case will be added automatically.")
   "*AA molecular weights in Dalton in vector.")
 
 (defvar pro-aa-regexp
-  (let ((aa (concat aa-iupac aa-other)))
+  (let ((aa (concat pro-aa-iupac pro-aa-other)))
     (regexp-opt (mapcar #'char-to-string
                         (concat aa (upcase aa)))))
   "A regexp that matches a valid nucleotide base (following IPUAC code plus
@@ -85,7 +78,7 @@ the symbol defined in `aa-other'.")
         (setq current (aref aa-mw (downcase (char-after))))
         (cond (current
                (setq sum-mw (+ sum-mw current)))
-              ((not (looking-at-p seq-cruft-regexp))
+              ((not (looking-at seq-cruft-regexp))
                (error "Ambiguous or illegal char at position %d, %d"
                       (line-number-at-pos) (current-column))))
         (forward-char)))
@@ -93,12 +86,21 @@ the symbol defined in `aa-other'.")
     sum-mw))
 
 ;; define aa faces belonging to aa-face group
-(let ((letcol-alist aa-colors))
+(defvar pro-aa-colors
+  (mapcar* #'cons
+           (append pro-aa (mapcar #'upcase pro-aa))
+           (setcdr (last color-pairs) color-pairs))
+  "Background and foreground colors for each IUPAC bases.
+
+This is a list of lists. For each inner list, it contains 3 atoms:
+a nuc base in char type, hex-code colors for foreground and background")
+
+(let ((letcol-alist pro-aa-colors))
   (loop for elem in letcol-alist
-        for l = (format "%s" (nth 0 elem))
-        for b = (format "%s" (nth 1 elem))
-        for f = (format "%s" (nth 2 elem)) do
-        (eval (macroexpand `(def-char-face "aa" ,l ,b ,f "aa-face")))))
+        for l = (format "%c" (nth 0 elem))
+        for f = (nth 1 elem)
+        for b = (nth 2 elem) do
+        (eval (macroexpand `(def-char-face ,l ,b ,f "aa-face")))))
 
 
 ;;;###autoload
@@ -147,10 +149,10 @@ See `aa-delete-forward' and `proceed-char-repeatedly'."
       ;; Using forward-char to check char one-by-one has the advantage of
       ;; negligible memory requirement.
       (setq legal-p (dotimes (x (- end beg) (= (point) end))
-                      (cond ((looking-at-p legal-char-regexp)
+                      (cond ((looking-at legal-char-regexp)
                              (forward-char)
                              (setq count (1+ count)))
-                            ((looking-at-p seq-cruft-regexp)
+                            ((looking-at seq-cruft-regexp)
                              (forward-char))
                             (t (setq x end) ; end the dotimes loop
                                (message "Bad base '%c' found at position %d,%d"
