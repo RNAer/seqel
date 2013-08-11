@@ -18,9 +18,9 @@
  "The local keymap for `fasta-mode'")
 
 (let ((equivs
-       '((fasta-end . forward-paragraph)
-         (fasta-beg . backward-paragraph)
-         (fasta-mark . mark-paragraph))))
+       '((fasta-forward  . forward-paragraph)
+         (fasta-backward . backward-paragraph)
+         (fasta-mark     . mark-paragraph))))
   (dolist (x equivs)
     (substitute-key-definition (cdr x)
                                (car x)
@@ -66,10 +66,14 @@
   "Invoke `fasta-mode' if the buffer look like a fasta.
 and another mode is not active.
 This function is added to `find-file-hooks'."
-  (if (and (eq major-mode 'fundamental-mode)
-           (looking-at fasta-record-regexp))
-    (fasta-mode)))
+  (save-excursion
+    (goto-char (point-min))
+    (if (and (eq major-mode 'fundamental-mode)
+             (looking-at fasta-record-regexp))
+        (fasta-mode))))
 
+
+;;;###autoload
 (if fasta-setup-on-load
     (add-hook 'find-file-hook 'fasta-find-file))
 
@@ -80,11 +84,12 @@ This function is added to `find-file-hooks'."
 
 
 ;;;###autoload
-(defun fasta-beg (count)
+(defun fasta-backward (count)
   "Move the point the beginning of the fasta record.
 
-Return the point of the beginning of the fasta record if the beginning
-is found; otherwise, do not move point and return nil."
+It works in the style of `backward-paragraph'. COUNT need to be positive number;
+otherwise point will not move. The number of fasta record remain to be moved is
+returned."
   (interactive "p")
   (while (and (> count 0)
               (re-search-backward fasta-record-regexp nil t))
@@ -92,10 +97,12 @@ is found; otherwise, do not move point and return nil."
   count)
 
 ;;;###autoload
-(defun fasta-end (count)
-  "Move forward to the next end fasta record.
+(defun fasta-forward (count)
+  "Move forward to the end fasta record.
 
-Return the point of the end of the fasta record."
+It works in the style of `forward-paragraph'. COUNT need to be positive number;
+otherwise point will not move. The number of fasta record remain to be moved is
+returned.."
   (interactive "p")
   (and (looking-at fasta-record-regexp)
        (setq count (1+ count)))
@@ -111,16 +118,16 @@ Return the point of the end of the fasta record."
 
 ;;;###autoload
 (defun fasta-last ()
-  "Go to the last fasta record"
+  "Go to the beginning of last fasta record"
   (interactive)
-  (while (= (fasta-end 1) 0))
-  (fasta-beg 1))
+  (while (= (fasta-forward 1) 0))
+  (fasta-backward 1))
 
 ;;;###autoload
 (defun fasta-first ()
-  "Go to the first fasta record"
+  "Go to the beginning of first fasta record"
   (interactive)
-  (while (= (fasta-beg 1) 0)))
+  (while (= (fasta-backward 1) 0)))
 
 ;;;###autoload
 (defun fasta-count ()
@@ -128,51 +135,65 @@ Return the point of the end of the fasta record."
   (let ((total 0))
     (save-excursion
       (goto-char (point-max))
-      (while (= (fasta-beg 1) 0)
+      (while (= (fasta-backward 1) 0)
         (setq total (1+ total))))
     (if (called-interactively-p 'interactive)
         (message "Total %d sequences" total))
     total))
 
 
-(defun fasta-mark ()
-  "Put point at the beginning of the fasta record and mark the end."
-  (interactive)
-  (fasta-end 1)
+(defun fasta-mark (&optional whole)
+  "Put point at the beginning of the sequence and mark the end.
+
+If a prefix arg is provided or WHOLE is t, then put the point at
+the beginning of the fasta entry instead of the sequence."
+  (interactive "P")
+  (fasta-forward 1)
   (push-mark)
-  (fasta-beg 1))
+  (fasta-backward 1)
+  (or whole
+      (forward-line)))
 
 
 ;;;###autoload
 (defun fasta-format (&optional width)
   "Format the current sequence to contain WIDTH chars per line.
 
-By default, each sequence is one line. The white spaces inside
+By default, each sequence is one line if WIDTH is nil. The white spaces inside
 will also be removed."
   (interactive "P")
 
   (save-excursion
-    (fasta-mark)
-    (forward-line)
-    (let ((beg (point)))
+    (let (beg end)
+      (fasta-forward 1)
+      (backward-char)
+      (setq end (point-marker))
+      (fasta-backward 1)
+      (setq beg (line-beginning-position 2)) ; the beg of next line
       ;; remove seq-spaces
       (goto-char beg)
-      (while (re-search-forward seq-space-regexp (region-end) t)
+      (while (re-search-forward seq-space-regexp end t)
+        ;; (setq count (1+ count))
         (replace-match "" nil nil))
       ;; insert newlines
       (if width
-          (progn (goto-char beg)
-                 ;; (message "%d %d %d" width (point) (region-end))
-                 (while (< (point) (- (region-end) width))
-                   (forward-char width)
-                   (insert-char ?\n)))))))
+          (progn
+            (and (< width 0)
+                 (error "Width cannot be a negative number"))
+            (goto-char (- end width))
+            (setq end (point-marker))
+            (goto-char beg)
+            ;; (message "%d %d %d" width (point) (region-end))
+            (while (< (point) end)
+              (forward-char width)
+              (insert-char ?\n)))))))
 
 
 (defun fasta-delete-next ()
   (interactive)
   (save-excursion
-    (if (fasta-end 1)
-        (delete-region (point) (or (> (fasta-end 1) 0)
+    (if (fasta-forward 1)
+        (delete-region (point) (or (> (fasta-forward 1) 0)
                                    (point-max)))
       (message "This is the last sequence"))))
 
@@ -188,7 +209,7 @@ at zero."
   (let ((pos   (point))
         (count 0))
     (save-excursion
-      (if (> (fasta-beg 1) 0)
+      (if (> (fasta-backward 1) 0)
           (error "The start of the fasta record is not found"))
       (end-of-line)
       (while (< (point) pos)
@@ -207,7 +228,7 @@ at zero."
       (error "Point is not in the sequence region"))
   (let ((pos (point)))
     (save-excursion
-      (fasta-beg 1)
+      (fasta-backward 1)
       (forward-line)
       (if (called-interactively-p 'interactive)
           (message "Position %d." (- pos (point)))
@@ -219,7 +240,7 @@ at zero."
   (interactive)
   (let (length)
     (save-excursion
-      (fasta-end 1)
+      (fasta-forward 1)
       (setq length (fasta-position)))
     (if (called-interactively-p 'interactive)
         (message "Length %d" length))
@@ -240,7 +261,7 @@ at zero."
       (goto-char (point-max))
       (setq pos (point))
       (setq type (catch 'seq-type
-                   (while (> (fasta-beg 1) 0)
+                   (while (> (fasta-backward 1) 0)
                      ;; (message "%d" (line-number-at-pos))
                      (forward-line) ; move to the sequence region
                      (while (< (point) pos)
@@ -256,18 +277,18 @@ at zero."
                            (setq atugc-p nil))
                        (forward-char)
                        ;; (message "%c %S" current atugc-p)
-                       (if (or (> count smallest) (/= 1 (fasta-beg 1)))
+                       (if (or (> count smallest) (/= 1 (fasta-backward 1)))
                            (if atugc-p
                                (throw 'seq-type 'nuc)
                              (throw 'seq-type 'pro))))
-                     (fasta-beg 1)
+                     (fasta-backward 1)
                      (setq pos (point)))))
     type)))
 
 
 ;;;###autoload
 (defun fasta-rc (is-rna)
-  "Reverse complement current fasta sequence."
+  "Reverse complement current fasta sequence if it is nuc sequence."
   (interactive "P")
   (princ is-rna)
   (save-excursion
@@ -298,7 +319,7 @@ and `fasta-mark-column' for an example of usage."
                     (error "This sequence at line %d does not have this column"
                            (line-number-at-pos)))
                 (eval snippet)
-                while (and (= (fasta-end 1) 0) (not (eobp)))))
+                while (and (= (fasta-forward 1) 0) (not (eobp)))))
       ;; return to the original state if error is met.
       ('error
        (primitive-undo 1 buffer-undo-list)
@@ -333,7 +354,7 @@ and C-u \\[fasta-mark-column] will unmark the column."
    `(silent-put-text-property (point) (1+ (point)) 'face to-face) t))
 
 
-(defun fasta2stockholm ()
+(defun fasta-2-stockholm ()
   ""
   (interactive))
 
