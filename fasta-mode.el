@@ -57,6 +57,7 @@
   ;; `define-derived-mode'.
   ;; the variable automatically becomes buffer-local when set
   (setq font-lock-defaults '(fasta-font-lock-keywords))
+  (flyspell-mode -1)
   ;; (set-syntax-table fasta-mode-syntax-table)
   (run-hooks 'fasta-mode-hook))
 

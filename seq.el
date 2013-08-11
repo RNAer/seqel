@@ -200,7 +200,8 @@ otherwise, not. FACE-PREFIX decides what kind of face group to use."
           ;; let upcase base use the color of lowercase base color
           (setq face (format "%s-%c" face-prefix (downcase char))))
         (if (facep face)
-            (silent-put-text-property beg (+ beg 1) 'face (intern face)))
+            ;; use font-lock-face instead of face for font-lock-mode is enabled
+            (silent-put-text-property beg (+ beg 1) 'font-lock-face (intern face)))
         (setq beg (+ beg 1))))))
 
 (defun unpaint-seq-region (beg end)
@@ -209,7 +210,7 @@ otherwise, not. FACE-PREFIX decides what kind of face group to use."
    (if (use-region-p) ; (region-active-p)
        (list (region-beginning) (region-end))
      (list (line-beginning-position) (line-end-position))))
-  (remove-text-properties beg end '(face nil)))
+  (remove-text-properties beg end '(font-lock-face nil)))
 
 
 ;;;;;; isearch motif
