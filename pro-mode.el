@@ -59,9 +59,9 @@ as the upper case will be added automatically.")
   "*AA molecular weights in Dalton in vector.")
 
 (defvar pro-aa-regexp
-  (let ((aa (concat pro-aa-iupac pro-aa-other)))
-    (regexp-opt (mapcar #'char-to-string
-                        (concat aa (upcase aa)))))
+  (regexp-opt (mapcar #'char-to-string
+                      (concat pro-aa
+                              (mapcar #'upcase pro-aa))))
   "A regexp that matches a valid nucleotide base (following IPUAC code plus
 the symbol defined in `aa-other'.")
 

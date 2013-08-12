@@ -80,11 +80,11 @@
         (if (nth 2 test)
             (setq current-prefix-arg '(4))
           (setq current-prefix-arg nil))
-        (cond ((equal type-test 1)
+        (cond ((= type-test 1)
                (call-interactively 'nuc-rc)
                (setq tmp (buffer-string))
                (should (equal tmp (nth 3 test))))
-              ((equal type-test 2)
+              ((= type-test 2)
                (should-error (call-interactively 'nuc-rc))))
         (delete-region (point-min) (point-max))))))
 

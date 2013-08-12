@@ -241,6 +241,7 @@ at zero."
   (let (length)
     (save-excursion
       (fasta-forward 1)
+      (backward-char)
       (setq length (fasta-position)))
     (if (called-interactively-p 'interactive)
         (message "Length %d" length))
@@ -248,12 +249,18 @@ at zero."
 
 
 (defun fasta-seq-type ()
-  "Return the type of sequence, either protein or nucleic acid."
+  "Return the type of sequence, either 'pro (protein), 'nuc (nucleic acid) or
+nil (undetermined).
+
+It will search all the sequence residues for unique nuc base and unique
+protein amino acid IUPAC code. If found, the type is determined. Or if
+more than (1000) number or all of them are \"atugc\", then it is determined
+to be nuc"
   (interactive)
   (let ((pro-uniq (set-difference pro-aa nuc-base))
         (nuc-uniq (set-difference nuc-base pro-aa))
         (atugc    '(?a ?t ?u ?g ?c ?A ?T ?U ?G ?C))
-        (smallest 100000)
+        (smallest 1000)
         (count    0)
         (atugc-p  t)
         pos  current type)
@@ -277,26 +284,27 @@ at zero."
                            (setq atugc-p nil))
                        (forward-char)
                        ;; (message "%c %S" current atugc-p)
-                       (if (or (> count smallest) (/= 1 (fasta-backward 1)))
-                           (if atugc-p
-                               (throw 'seq-type 'nuc)
-                             (throw 'seq-type 'pro))))
+                       (and (> count smallest)
+                            atugc-p
+                            (throw 'seq-type 'nuc))
                      (fasta-backward 1)
-                     (setq pos (point)))))
-    type)))
+                     (setq pos (point))))))
+      (and atugc-p
+           (setq type 'nuc)))
+    type))
 
 
 ;;;###autoload
 (defun fasta-rc (is-rna)
   "Reverse complement current fasta sequence if it is nuc sequence."
   (interactive "P")
-  (princ is-rna)
   (save-excursion
     (fasta-mark)
     (let ((beg (region-beginning))
           (end (region-end)))
-      (if nuc-mode
-          (nuc-reverse-complement beg end is-rna)))))
+      (if nuc-mode  ; if nuc-mode is enabled
+          (nuc-reverse-complement beg end is-rna)
+        (error "nuc mode is not enabled")))))
 
 
 
@@ -326,10 +334,10 @@ and `fasta-mark-column' for an example of usage."
        (eval ex)))))
 
 
-(defun fasta-delete-column ()
+(defun fasta-delete-column (&optional n)
   "Delete current column."
-  (interactive)
-  (fasta--column-action `(delete-char 1) t))
+  (interactive "p")
+  (fasta--column-action `(delete-char n) t))
 
 
 (defun fasta-insert-column (str)
@@ -338,8 +346,8 @@ and `fasta-mark-column' for an example of usage."
   (fasta--column-action `(insert ,str)))
 
 
-(defun fasta-mark-column (&optional to-face)
-  "Mark the current column with the face TO-FACE.
+(defun fasta-paint-column (&optional to-face)
+  "Paint the current column with the face TO-FACE.
 
 If TO-FACE is not a face, mark with highlight face by default.
 Thus \\[fasta-mark-column] will mark with highlight face;
@@ -351,16 +359,32 @@ and C-u \\[fasta-mark-column] will unmark the column."
         ((numberp to-face)
          (setq to-face nil)))
   (fasta--column-action
-   `(silent-put-text-property (point) (1+ (point)) 'face to-face) t))
+   `(silent-put-text-property (point) (1+ (point)) 'font-lock-face to-face) t))
+
+
+(defun fasta-summary-column (&optional case)
+  "Summary of the column.
+
+If CASE is nil, the summary will be case insensitive."
+  (interactive "P")
+  (let ((my-hash (make-hash-table :test 'equal))
+        count char)
+    (fasta--column-action `(progn (setq char (char-after))
+                                  (or case (setq char (upcase char)))
+                                  (setq count (gethash char my-hash))
+                                  (if count
+                                      (puthash char (1+ count) my-hash)
+                                    (puthash char 1 my-hash)))
+                          t)
+    (if (called-interactively-p 'interactive)
+        (maphash (lambda (x y) (princ (format "%c:%d " x y) t)) my-hash)
+      my-hash)))
 
 
 (defun fasta-2-stockholm ()
-  ""
+  "Convert fasta format to stockholm."
   (interactive))
 
-(defun fasta-align ()
-  ""
-  (interactive))
 
 (provide 'fasta-mode)
 

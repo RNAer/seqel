@@ -81,7 +81,7 @@ table to create dictionary-like data type."
                        (puthash char (1+ count) my-hash)
                      (puthash char 1 my-hash))))
         (forward-char)))
-    (maphash (lambda (x y) (princ (format "%c:%d " x y))) my-hash)))
+    (maphash (lambda (x y) (princ (format "%c:%d " x y) t)) my-hash)))
 
 
 (defun seq-count (beg end &optional legal-char-regexp)
@@ -263,5 +263,24 @@ This serves as a warning that the string is being mangled."
     (isearch-search-fun-default)))
 
 (setq isearch-search-fun-function 'seq-isearch-search-fun)
+
+
+(defun hash-alist (alist)
+  "Convert association list to a hash table and return it."
+  (let ((my-hash (make-hash-table :test 'equal)))
+    (dolist (entry alist)
+      (puthash (car entry) (cdr entry) my-hash))
+    my-hash))
+
+(defun hash-equal (hash1 hash2)
+  "Compare two hash tables to see whether they are equal."
+  (and (= (hash-table-count hash1)
+          (hash-table-count hash2))
+       (catch 'flag
+         (maphash (lambda (x y)
+                    (or (equal (gethash x hash2) y)
+                        (throw 'flag nil)))
+                  hash1)
+         (throw 'flag t))))
 
 (provide 'seq)

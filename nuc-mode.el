@@ -212,6 +212,7 @@ found. This function has some code redundancy with
   (let* ((t-exist (nuc-dna-p beg end))
          (u-exist (nuc-rna-p beg end))
          (complement-vector
+          ;; decide it's DNA or RNA
           (cond ((and t-exist is-rna)
                  (error "T (at %d) exist" t-exist))
                 ((and u-exist is-rna) rna-base-complement)
