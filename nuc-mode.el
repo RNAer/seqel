@@ -1,13 +1,14 @@
 ;;; nuc-mode.el --- a minor mode for editing nucleic acid sequences
-;;
+;;; It should not be enabled with pro-mode at the same time.
 ;;; Commentary:
 ;; * A collection of functions for editing DNA and RNA sequences.
 
 
-;;;;;; USER CUSTOMIZABLE VARIABLES START HERE
 (require 'seq)
 
-(defvar nuc-base-alist
+;;;;;; USER CUSTOMIZABLE VARIABLES START HERE
+
+(defvar nuc-base--alist
   '((?a  ?t ?a)
     (?t  ?a ?t)
     (?u  ?a ?u)
@@ -33,6 +34,13 @@ for the first. Only for lowercase, as the upcased will be added automatically.")
 
 ;;;;; END OF USER CUSTOMIZABLE VARIABLES
 
+(defvar nuc-base-alist
+  (append (mapcar (lambda (x)
+                    (mapcar #'upcase x))
+                  nuc-base--alist)
+          nuc-base--alist)
+  "Similar to `nuc-base--alist', just with upcase bases added.")
+
 (defvar nuc-base
   (mapcar #'car nuc-base-alist)
   "All the bases that are allowed.
@@ -41,9 +49,7 @@ This is a list of chars. All are in lower cases.")
 
 
 (defvar nuc-base-regexp
-    (regexp-opt (mapcar #'char-to-string
-                        (append nuc-base
-                                (mapcar #'upcase nuc-base))))
+    (regexp-opt (mapcar #'char-to-string nuc-base))
   "A regexp that matches a valid nucleotide base symbol defined
 in `nuc-base-alist'.")
 
@@ -51,10 +57,7 @@ in `nuc-base-alist'.")
 (defvar nuc-base-degeneracy
   (let ((d-vec (make-vector 256 nil)))
     (dolist (element nuc-base-alist)
-      (aset d-vec (car element) (cddr element))
-      (aset d-vec
-            (upcase (car element))
-            (mapcar 'upcase (cddr element))))
+      (aset d-vec (car element) (cddr element)))
   d-vec)
   "A vector of degeneracies for each upper and lower case valid bases
 defined in `nuc-base-alist'.")
@@ -62,8 +65,7 @@ defined in `nuc-base-alist'.")
 (defvar dna-base-complement
   (let ((c-vec (make-vector 256 nil)))  ; all alphabets chars are < 256
     (dolist (element nuc-base-alist)
-      (aset c-vec (car element) (nth 1 element))
-      (aset c-vec (upcase (car element)) (upcase (nth 1 element))))
+      (aset c-vec (car element) (nth 1 element)))
     c-vec)
   "A vector of complements of upper and lower case bases.
  dna-base-complement[base] returns the complement of the base. see also
@@ -163,7 +165,7 @@ See also `nuc-rna-p' and `nuc-p'."
       (search-forward "t" end t))))
 
 
-(defun base-complement-lookup (base)
+(defun nuc-base-complement-lookup (base)
   "Look up the complement of the BASE and print a message.
 See `dna-base-complement'."
   (interactive "cComplement of base:")
@@ -263,7 +265,7 @@ sequence."
       (replace-match "t" nil t))))
 
 
-(defun nuc-base-summary (beg end)
+(defun nuc-summary (beg end)
   "Summarize the frequencies of bases in the region BEG and END or the current line.
 
 See also `region-summary'."
@@ -328,7 +330,7 @@ such as 'acrt' would be transformed into '[a][ ]*[c][ ]*[ag][ ]*[t]."
 
 (defvar nuc-base-colors
   (mapcar* #'cons
-           (append nuc-base (mapcar #'upcase nuc-base))
+           nuc-base
            (setcdr (last color-pairs) color-pairs))
   "Background and foreground colors for each IUPAC bases.
 
@@ -346,7 +348,7 @@ a nuc base in char type, hex-code colors for foreground and background")
 
 
 ;;;###autoload
-(defun nuc-paint-region (beg end &optional case)
+(defun nuc-paint (beg end &optional case)
   "Color the nucleic acid region BEG to END.
 
 If CASE is nil, upcase and lowercase base chars will be colored the same;
@@ -358,26 +360,27 @@ otherwise, not. See `paint-seq-region' for details."
   (paint-seq-region beg end "base-face" case))
 
 ;;;###autoload
-(defalias 'unpaint-nuc-base-region 'unpaint-seq-region)
+(defalias 'nuc-unpaint 'unpaint-seq-region)
 
 
 (defvar nuc-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map "\C-cf"     'nuc-move-forward)
     (define-key map "\C-cb"     'nuc-move-backward)
-    (define-key map "\C-c\Cr"   'nuc-rc)
-    (define-key map "\C-c\c#"   'nuc-base-summary)
+    (define-key map "\C-c\C-r"  'nuc-rc)
+    (define-key map "\C-c\c-#"  'nuc-summary)
     map)
   "Keymap for `nuc-mode'.")
 
 (define-minor-mode nuc-mode
+  "Nucleic acid mode.
+
+It should not be enabled with `pro-mode' at the same time."
   ;; the fun auto defines a buffer local variable `nuc-mode'
   ;; and this key value set its initial value
   :init-value nil
-  "Nucleic acid mode"
   ;; the name, a string, to show in the modeline
   :lighter " nuc"
-  ;; keymap
   :keymap nuc-mode-map
   :global t)
 

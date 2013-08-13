@@ -1,6 +1,7 @@
 ;;; nuc-mode-test.el --- a unit test for nuc-mode.el
 
 (require 'nuc-mode)
+(require 'seq)
 (require 'ert)
 
 
@@ -90,3 +91,6 @@
 
 (ert-deftest nuc-base-summary-test ()
   :tags '(nuc-mode))
+
+
+;; nuc-mode-test.el ends here

@@ -206,3 +206,5 @@ ac"
                  (hash-alist (nth 2 test))))
         (delete-region (point-min) (point-max))))))
 
+
+;; fasta-mode-test.el ends here

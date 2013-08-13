@@ -1,20 +1,11 @@
 ;;; aa-mode.el --- a minor mode for editing protein sequences
-;;
-;;; Commentary:
-;; * A collection of functions for editing protein sequences.
-
-;;; Installation:
-;; --------------------
-;; Here are two suggested ways for installing this package.
-;; You can choose to autoload it when needed, or load it
-;; each time emacs is started.  Put one of the following
-;; sections in your .emacs:
+;;; It should be not enabled with nuc-mode at the same time.
 
 ;;;;;; USER CUSTOMIZABLE VARIABLES START HERE
 
 (require 'seq)
 
-(defvar pro-aa-alist
+(defvar pro-aa--alist
   '((?a  "Ala"  71.09)
     (?b  "Asx"  nil)  ; Asn Asp
     (?c  "Cys"  103.15)
@@ -39,33 +30,49 @@
     (?x  "Xaa"  nil)  ; unknown aa
     (?y  "Tyr"  163.18)
     (?z  "Glx"  nil)) ; Glu Gln
-  "*Three letter IUPAC code of AA.")
+  "*A association list of one-letter, three-letter IUPAC code of AA and their molecular weight.
+
+For each inner list, the first element is allowed AA; the second element
+is the three-letter code of the first, and the last is the molecular weight.
+for the first. Only for lowercase, as the upcased will be added automatically.")
+
+;;;;; END OF USER CUSTOMIZABLE VARIABLES
+
+(defvar pro-aa-alist
+  (append (mapcar (lambda (x)
+                    (setcar x (upcase (car x))))
+                  pro-aa--alist)
+          pro-aa--alist)
+  "Similar to `pro-aa--alist', just with upcase bases added.")
+
 
 (defvar pro-aa
   (mapcar #'car pro-aa-alist)
   "All char for a single base, following IUPAC code. It should be in lower case
 as the upper case will be added automatically.")
 
-(defvar aa-acidic "de")
-(defvar aa-basic "rhk")
-(defvar aa-hydrophobic "ahilmfvpgwy")
-(defvar aa-hydrophilic "")
-(defvar aa-amphipathic "")
+(defvar pro-aa-acidic "de")
+(defvar pro-aa-basic "rhk")
+(defvar pro-aa-hydrophobic "ahilmfvpgwy")
+(defvar pro-aa-hydrophilic "")
+(defvar pro-aa-amphipathic "")
+
 
 (defvar pro-aa-mw
   (let ((mw-vec (make-vector 256 nil)))
+    (dolist (element pro-aa-alist)
+      (aset mw-vec (car element) (nth 2 element)))
+    mw-vec)
+  "A vector of AA molecular weights in Dalton.")
 
-  mw-vec)
-  "*AA molecular weights in Dalton in vector.")
 
 (defvar pro-aa-regexp
-  (regexp-opt (mapcar #'char-to-string
-                      (concat pro-aa
-                              (mapcar #'upcase pro-aa))))
+  (regexp-opt (mapcar #'char-to-string pro-aa))
   "A regexp that matches a valid nucleotide base (following IPUAC code plus
-the symbol defined in `aa-other'.")
+the symbol defined in `pro-aa-other'.")
 
-(defun pro-mw-region (beg end)
+
+(defun pro-weight (beg end)
   "Return molecular weight of the region BEG and END or the current line."
   (interactive
    (if (use-region-p) ; (region-active-p)
@@ -75,36 +82,36 @@ the symbol defined in `aa-other'.")
     (save-excursion
       (goto-char beg)
       (while (< (point) end)
-        (setq current (aref aa-mw (downcase (char-after))))
+        (setq current (aref pro-aa-mw (downcase (char-after))))
         (cond (current
                (setq sum-mw (+ sum-mw current)))
               ((not (looking-at seq-cruft-regexp))
                (error "Ambiguous or illegal char at position %d, %d"
                       (line-number-at-pos) (current-column))))
         (forward-char)))
-    (message "The molecular weight is %.2f" sum-mw)
+    (if (called-interactively-p 'interactive)
+        (message "The molecular weight is %.2f" sum-mw))
     sum-mw))
 
-;; define aa faces belonging to aa-face group
-(defvar pro-aa-colors
-  (mapcar* #'cons
-           (append pro-aa (mapcar #'upcase pro-aa))
-           (setcdr (last color-pairs) color-pairs))
-  "Background and foreground colors for each IUPAC bases.
 
-This is a list of lists. For each inner list, it contains 3 atoms:
-a nuc base in char type, hex-code colors for foreground and background")
+(defun pro-1-2-3 (beg end)
+  "Convert 1-letter IUPAC code to 3-letter IUPAC code"
+  (interactive
+   (if (use-region-p) ; (region-active-p)
+       (list (region-beginning) (region-end))
+     (list (line-beginning-position) (line-end-position)))))
 
-(let ((letcol-alist pro-aa-colors))
-  (loop for elem in letcol-alist
-        for l = (format "%c" (nth 0 elem))
-        for f = (nth 1 elem)
-        for b = (nth 2 elem) do
-        (eval (macroexpand `(def-char-face ,l ,b ,f "aa-face")))))
+
+(defun pro-3-2-1 (beg end)
+  "Convert 3-letter IUPAC code to 1-letter IUPAC code"
+  (interactive
+   (if (use-region-p) ; (region-active-p)
+       (list (region-beginning) (region-end))
+     (list (line-beginning-position) (line-end-position)))))
 
 
 ;;;###autoload
-(defun aa-move-forward (count)
+(defun pro-move-forward (count)
   "Move forward COUNT bases. Move backward if negative.
 Skip `seq-cruft-regexp' but stop on the illegal base
 and report how many bases the point have been moved by.
@@ -112,71 +119,46 @@ COUNT can be either positive or negative, indicating the
 moving direction. Return the number of bases that are moved thru.
 See `proceed-char-repeatedly'"
   (interactive "p")
-  (proceed-char-repeatedly count 'forward-char aa-regexp))
+  (proceed-char-repeatedly count #'forward-char pro-aa-regexp))
 
-(defun aa-move-backward (count)
-  "Move backward COUNT bases, similar to `aa-move-forward'. See also
+(defun pro-move-backward (count)
+  "Move backward COUNT bases, similar to `pro-aa-move-forward'. See also
  `proceed-char-repeatedly'."
   (interactive "p")
   ;; (proceed-char-repeatedly count 'backward-char))
-  (proceed-char-repeatedly (- count) 'forward-char aa-regexp))
+  (proceed-char-repeatedly (- count) #'forward-char pro-aa-regexp))
 
 ;;; delete
-(defun aa-delete-forward (count)
+(defun pro-delete-forward (count)
   "Delete COUNT number of bases starting from the point, similar to
-`aa-move-forward' (just use delete instead of move)."
+`pro-aa-move-forward' (just use delete instead of move)."
   (interactive "p")
-  (proceed-char-repeatedly count 'delete-char aa-regexp))
+  (proceed-char-repeatedly count #'delete-char pro-aa-regexp))
 
-(defun aa-delete-backward (count)
+(defun pro-delete-backward (count)
   "Delete backward COUNT number of bases from the point, similar to
-`aa-move-forward' (just use delete backward instead of move forward).
-See `aa-delete-forward' and `proceed-char-repeatedly'."
+`pro-aa-move-forward' (just use delete backward instead of move forward).
+See `pro-aa-delete-forward' and `proceed-char-repeatedly'."
   (interactive "p")
-  (proceed-char-repeatedly (- count) 'delete-char aa-regexp))
+  (proceed-char-repeatedly (- count) #'delete-char pro-aa-regexp))
 
 
-(defun seq-p (beg end legal-char-regexp)
-  "Test if the region between BEG and END is a legal
- sequence defined by LEGAL-CHAR-REGEXP and `seq-cruft-regexp'.
- Return the count if the region contains only legal characters;
- otherwise return nil and
- report the location of the invalid characters."
-  (let ((count 0) (legal-p nil))
-    (save-excursion
-      (goto-char beg)
-      ;; (point) will not equal `end' if invalid char is met.
-      ;; Using forward-char to check char one-by-one has the advantage of
-      ;; negligible memory requirement.
-      (setq legal-p (dotimes (x (- end beg) (= (point) end))
-                      (cond ((looking-at legal-char-regexp)
-                             (forward-char)
-                             (setq count (1+ count)))
-                            ((looking-at seq-cruft-regexp)
-                             (forward-char))
-                            (t (setq x end) ; end the dotimes loop
-                               (message "Bad base '%c' found at position %d,%d"
-                                        (following-char)
-                                        (line-number-at-pos)
-                                        (current-column)))))))
-    (if legal-p count)))
-
-(defun aa-p (beg end)
+(defun pro-count (beg end)
   "Test if the region between BEG and END (or the line) is a legal
 protein sequence. Return the count if the region
  contains only legal nucleic acid characters, including
- `aa-regexp', `seq-cruft-regexp'; otherwise return nil and
+ `pro-aa-regexp', `seq-cruft-regexp'; otherwise return nil and
  report the location of the invalid characters in the echo region."
   (interactive
    (if mark-active
        (list (region-beginning) (region-end))
      (list (line-beginning-position) (line-end-position))))
-  (seq-p beg end aa-regexp))
+  (seq-p beg end pro-aa-regexp))
 
-(defalias 'aa-count 'aa-p)
+(defalias 'pro-p 'pro-count)
 
 
-(defun aa-summary (beg end)
+(defun pro-summary (beg end)
   "Summarize the frequencies of AA in the region BEG and END or the current line.
 
 See also `region-summary'."
@@ -184,7 +166,7 @@ See also `region-summary'."
    (if (use-region-p) ; (region-active-p)
        (list (region-beginning) (region-end))
      (list (line-beginning-position) (line-end-position))))
-  (region-summary beg end aa-regexp))
+  (region-summary beg end pro-aa-regexp))
 
 
 ;;;;;; isearch motif
@@ -199,40 +181,62 @@ such as 'acrt' would be transformed into '[a][ ]*[c][ ]*[ag][ ]*[t]."
     (mapconcat 'char-to-string str (concat seq-cruft-regexp "*")))
 
 
+;; define aa faces belonging to pro-aa-face group
+(defvar pro-aa-colors
+  (mapcar* #'cons
+           pro-aa
+           (setcdr (last color-pairs) color-pairs))
+  "Background and foreground colors for each IUPAC bases.
+
+This is a list of lists. For each inner list, it contains 3 atoms:
+a nuc base in char type, hex-code colors for foreground and background")
+
+(let ((letcol-alist pro-aa-colors))
+  (loop for elem in letcol-alist
+        for f = (nth 1 elem)
+        for b = (nth 2 elem)
+        for l = (format "%c" (nth 0 elem)) do
+        (eval (macroexpand `(def-char-face ,l ,b ,f "aa-face")))))
+
+
 ;;;###autoload
-(defun paint-aa-region (beg end &optiona case)
-  "Color the bases in the region BEG to END or the current line."
+(defun pro-paint (beg end &optiona case)
+  "Color the nucleic acid region BEG to END.
+
+If CASE is nil, upcase and lowercase base chars will be colored the same;
+otherwise, not. See `paint-seq-region' for details."
   (interactive
    (if (use-region-p) ; (region-active-p)
        (list (region-beginning) (region-end))
      (list (line-beginning-position) (line-end-position))))
-  (save-excursion
-    (let ((case-fold-search t)
-          c)
-      (goto-char beg)
-      (while (< beg end)
-        (setq c (char-after beg))
-        (cond
-         ((char-equal c ?a)
-          (silent-put-text-property beg (+ beg 1) 'face 'base-face-a))
-         ((char-equal c ?c)
-          (silent-put-text-property beg (+ beg 1) 'face 'base-face-c))
-         ((char-equal c ?g)
-          (silent-put-text-property beg (+ beg 1) 'face 'base-face-g))
-         ((or (char-equal c ?t) (char-equal c ?u))
-          (silent-put-text-property beg (+ beg 1) 'face 'base-face-t))
-         (t nil))
-        (setq beg (+ beg 1))))))
+  (paint-seq-region beg end "aa-face" case))
+
+;;;###autoload
+(defalias 'pro-unpaint 'unpaint-seq-region)
 
 
-(define-minor-mode aa-mode
-  "Nucleic acid mode"
+(defvar pro-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map "\C-cf"     'pro-move-forward)
+    (define-key map "\C-cb"     'pro-move-backward)
+    (define-key map "\C-cw"     'pro-weight)
+    (define-key map "\C-c1"     'pro-1-2-3)
+    (define-key map "\C-c3"     'pro-3-2-1)
+    (define-key map "\C-c\c-#"  'pro-summary)
+    map)
+  "Keymap for `pro-mode'.")
+
+
+(define-minor-mode pro-mode
+  "Protein mode
+
+It should be not enabled with `nuc-mode' at the same time."
+  :init-value nil
   ;; the name, a string, to show in the modeline
-  :lighter " aa"
-  ;; keymap
-  :keymap nil
+  :lighter " pro"
+  :keymap pro-mode-map
   :global t)
 
-(provide 'aa-mode)
+(provide 'pro-mode)
 
 ;;; nuc-mode.el ends here
