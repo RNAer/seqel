@@ -198,7 +198,7 @@ otherwise, not. FACE-PREFIX decides what kind of face group to use."
         (if case
             (setq face (format "%s-%c" face-prefix char))
           ;; let upcase base use the color of lowercase base color
-          (setq face (format "%s-%c" face-prefix (downcase char))))
+          (setq face (format "%s-%c" face-prefix (upcase char))))
         (if (facep face)
             ;; use font-lock-face instead of face for font-lock-mode is enabled
             (silent-put-text-property beg (+ beg 1) 'font-lock-face (intern face)))

@@ -346,12 +346,12 @@ and `fasta-mark-column' for an example of usage."
   (fasta--column-action `(insert ,str)))
 
 
-(defun fasta-paint-column (&optional to-face)
-  "Paint the current column with the face TO-FACE.
+(defun fasta-highlight-column (&optional to-face)
+  "Highlight the current column with the face TO-FACE.
 
 If TO-FACE is not a face, mark with highlight face by default.
-Thus \\[fasta-mark-column] will mark with highlight face;
-and C-u \\[fasta-mark-column] will unmark the column."
+Thus \\[fasta-highlight-column] will mark with highlight face;
+and C-u \\[fasta-highlight-column] will unmark the column."
   (interactive "p")
   ;; (princ to-face)
   (cond ((equal to-face 1) ; without C-u
@@ -360,6 +360,26 @@ and C-u \\[fasta-mark-column] will unmark the column."
          (setq to-face nil)))
   (fasta--column-action
    `(silent-put-text-property (point) (1+ (point)) 'font-lock-face to-face) t))
+
+
+(defun fasta-paint-column (&optional case)
+  "Paint the current column according their aa or nuc bases.
+
+By default, lower and upper cases are painted in the same colors.
+C-u \\[fasta-paint-column] honors the cases"
+  (interactive "P")
+  (let ((to-face 'format)
+        (current-char '(char-after)))
+    (or case
+        (setq current-char (list 'upcase current-char)))
+    (cond (nuc-mode
+           (setq to-face (list to-face "base-face-%c" current-char)))
+          (pro-mode
+           (setq to-face (list to-face "aa-face-%c" current-char)))
+          (t
+           (error "Unknown seq type")))
+    (fasta--column-action
+     `(silent-put-text-property (point) (1+ (point)) 'font-lock-face (intern ,to-face)) t)))
 
 
 (defun fasta-summary-column (&optional case)
