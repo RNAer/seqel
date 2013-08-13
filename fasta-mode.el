@@ -1,6 +1,8 @@
 ;;; fasta-mode -- a major mode for editing fasta files
 
 (require 'seq)
+(require 'nuc-mode)
+(require 'pro-mode)
 
 (defvar fasta-mode-hook nil
   "*Hook to setup `fasta-mode'.")
@@ -12,8 +14,20 @@
   ;; use `make-keymap' if there are lots of keybindings
   (let ((map (make-sparse-keymap)))
     ;; Ctrl bindings
+    (define-key map "\C-ca"     'fasta-first)
+    (define-key map "\C-cc"     'fasta-count)
+    (define-key map "\C-cd"     'fasta-delete)
+    (define-key map "\C-ce"     'fasta-last)
+    (define-key map "\C-cf"     'fasta-format)
+    (define-key map "\C-cl"     'fasta-seq-length)
+    ;; (define-key map "\C-cm"     'fasta-mark)
     (define-key map "\C-cp"     'fasta-position)
-    (define-key map "\C-cp"     'fasta-position)
+    (define-key map "\C-cr"     'fasta-rc)
+    (define-key map "\C-c\C-d"  'fasta-delete-column)
+    (define-key map "\C-c\C-i"  'fasta-insert-column)
+    (define-key map "\C-c\C-h"  'fasta-highlight-column)
+    (define-key map "\C-c\C-p"  'fasta-paint-column)
+    (define-key map "\C-c\C-s"  'fasta-summary-column)
     map)
  "The local keymap for `fasta-mode'")
 
@@ -138,7 +152,7 @@ returned.."
       (while (= (fasta-backward 1) 0)
         (setq total (1+ total))))
     (if (called-interactively-p 'interactive)
-        (message "Total %d sequences" total))
+        (message "Total %d sequences." total))
     total))
 
 
@@ -189,13 +203,12 @@ will also be removed."
               (insert-char ?\n)))))))
 
 
-(defun fasta-delete-next ()
+(defun fasta-delete ()
+  "Delete current fasta entry."
   (interactive)
   (save-excursion
-    (if (fasta-forward 1)
-        (delete-region (point) (or (> (fasta-forward 1) 0)
-                                   (point-max)))
-      (message "This is the last sequence"))))
+    (fasta-mark t)
+    (kill-region (region-beginning) (region-end))))
 
 
 (defun fasta-position ()
@@ -303,7 +316,7 @@ to be nuc"
     (let ((beg (region-beginning))
           (end (region-end)))
       (if nuc-mode  ; if nuc-mode is enabled
-          (nuc-reverse-complement beg end is-rna)
+          (nuc-reverse-complement beg (1- end) is-rna)
         (error "nuc mode is not enabled")))))
 
 
