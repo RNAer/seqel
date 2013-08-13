@@ -8,7 +8,7 @@
   "*Hook to setup `fasta-mode'.")
 
 (defvar fasta-setup-on-load nil
-  "*If not nil setup dna mode on buffer load.")
+  "*If not nil setup fasta mode on buffer load.")
 
 (defvar fasta-mode-map
   ;; use `make-keymap' if there are lots of keybindings
@@ -46,7 +46,8 @@
   '(("^\\(>\\)\\([-_.|a-zA-Z0-9]+\\)\\(.*\\)?"
      (1 font-lock-keyword-face)
      (2 font-lock-function-name-face)
-     (3 font-lock-comment-face))))
+     (3 font-lock-comment-face)))
+  "Expressions to hilight in `fasta-mode'.")
 
 
 (defvar fasta-record-regexp "^>.*$"
