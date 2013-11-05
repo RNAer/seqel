@@ -1,0 +1,15 @@
+# override the rule in parent dir if there is any
+!*
+
+*.elc
+*.pyc
+__pycache__
+*~
+\#*\#
+
+
+# OS generate files
+.DS_Store
+ehthumbs.db
+Icon?
+Thumbs.db

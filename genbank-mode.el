@@ -141,6 +141,10 @@ at zero."
           (nuc-reverse-complement beg (1- end) is-rna)
         (error "nuc mode is not enabled")))))
 
+;;;###autoload
+(defun genbank-2-fasta ()
+  (interactive))
+
 
 (provide 'genbank-mode)
 

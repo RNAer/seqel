@@ -7,8 +7,9 @@
 (defvar fasta-mode-hook nil
   "*Hook to setup `fasta-mode'.")
 
+;;;###autoload
 (defvar fasta-setup-on-load nil
-  "*If not nil setup fasta mode on buffer load.")
+  "*If not nil, set up fasta mode on buffer load.")
 
 (defvar fasta-mode-map
   ;; use `make-keymap' if there are lots of keybindings

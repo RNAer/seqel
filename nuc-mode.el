@@ -26,6 +26,8 @@
     (?d  ?h ?a ?g ?t)
     (?n  ?n ?a ?t ?g ?c)     ; this and above are IUPAC codes.
     (?x  ?x ?a ?t ?g ?c))
+  ;; Traditionally, the doc string starting with an asterisk (*) indicates
+  ;; the variable is customizable.
   "*A association list showing the degeneracies and complements of the bases.
 
 For each inner list, the first element is allowed nuc bases; the second element
@@ -361,6 +363,50 @@ otherwise, not. See `paint-seq-region' for details."
 
 ;;;###autoload
 (defalias 'nuc-unpaint 'unpaint-seq-region)
+
+
+(defvar translation-table-fp "genetic_code.txt"
+  "The file path of translation tables.")
+
+(defvar translation-table nil
+  "The current translation table in hash table.")
+
+(defun set-translation-table (num)
+  "Set current table to translation table NUM."
+  (let ((my-hash (make-hash-table :test 'equal))
+        codon current)
+    (with-temp-buffer
+      (insert-file-contents translation-table-fp)
+      (goto-char (point-min))
+      (or (search-forward (format "##%d" num))
+          (error "Translation table %d is not found" num))
+      (while (and (forward-line) (looking-at ".\\{5\\}"))
+        (setq codon (buffer-substring-no-properties (point)
+                                                    (+ 3 (point))))
+        (forward-char 3)
+        (setq current (char-after))
+        (puthash codon current my-hash)
+        (message "%s_%c" codon current)
+        (while (string-match "T" codon)
+           (setq codon (replace-match "U" t t codon)))
+        (puthash codon current my-hash)))
+    (setq translation-table my-hash)))
+
+;;;###autoload
+(defun nuc-translate (beg end)
+  "Translate the nuc seq to protein seq using current translation table."
+  (interactive
+   (if (use-region-p) ; (region-active-p)
+       (list (region-beginning) (region-end))
+     (list (line-beginning-position) (line-end-position))))
+  (let (tmp codon)
+      (goto-char beg)
+      (while (and (setq tmp (+ 3 (point))) (< tmp end))
+        (message "%d %d %d" (point) tmp end)
+        (message "%s" (buffer-substring-no-properties (point) tmp))
+        (setq codon (upcase (buffer-substring-no-properties (point) tmp)))
+        (delete-region (point) tmp)
+        (insert-char (gethash codon translation-table)))))
 
 
 (defvar nuc-mode-map

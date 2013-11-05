@@ -92,5 +92,21 @@
 (ert-deftest nuc-base-summary-test ()
   :tags '(nuc-mode))
 
+(ert-deftest nuc-translate-test ()
+  :tags '(nuc-mode)
+  (let ((cases '(("ggggaggtggcgaggaagatgacgtggtagttgtcgcggcagctgcca" . "GEVARKMTW*LSRQLP")))
+        tmp)
+    (with-temp-buffer
+      (dolist (test cases)
+        (setq nuc (car test))
+        (insert nuc)
+        (set-mark (point-min))
+        (goto-char (point-max))
+        (call-interactively 'nuc-translate)
+        (setq tmp (buffer-string))
+        (should (equal tmp (cdr test)))
+        (delete-region (point-min) (point-max))))))
+
+
 
 ;; nuc-mode-test.el ends here
