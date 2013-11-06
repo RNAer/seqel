@@ -47,7 +47,7 @@ for the first. Only for lowercase, as the upcased will be added automatically.")
   (mapcar #'car nuc-base-alist)
   "All the bases that are allowed.
 
-This is a list of chars. All are in lower cases.")
+This is a list of chars. Only lower cases.")
 
 
 (defvar nuc-base-regexp
@@ -143,6 +143,7 @@ This function calls `seq-count'."
 
 (defun nuc-rna-p (beg end)
   "Return the point of 'u' or 'U' if they are found; otherwise return nil.
+
 See also `nuc-dna-p' and `nuc-p'."
   (interactive
    (if (use-region-p)
@@ -156,6 +157,7 @@ See also `nuc-dna-p' and `nuc-p'."
 
 (defun nuc-dna-p (beg end)
   "Return the point of 't' or 'T' if they are found; otherwise return nil.
+
 See also `nuc-rna-p' and `nuc-p'."
   (interactive
    (if (use-region-p)
@@ -268,14 +270,16 @@ sequence."
 
 
 (defun nuc-summary (beg end)
-  "Summarize the frequencies of bases in the region BEG and END or the current line.
+  "Print the frequencies of bases in the region BEG and END or the current line.
 
 See also `region-summary'."
   (interactive
    (if (use-region-p) ; (region-active-p)
        (list (region-beginning) (region-end))
      (list (line-beginning-position) (line-end-position))))
-  (region-summary beg end nuc-base-regexp))
+  (let ((my-hash (region-summary beg end nuc-base-regexp)))
+    (maphash (lambda (x y) (princ (format "%c:%d " x y) t))
+             my-hash)))
 
 
 
@@ -301,7 +305,11 @@ such as 'acrt' would be transformed into '[a][ ]*[c][ ]*[ag][ ]*[t]."
 
 ;; weighted homopolymer rate (WHR)
 (defun nuc-whr (beg end)
-  ""
+  "Calculate weighted homopolymer rate of the selected sequence.
+
+A homopolymer is a sequence of identical bases, like AAAA or TTTTTTTT.
+The weighted homopolymer rate (WHR) of a sequence is a measure of
+the frequency of homopolymers in the sequence. "
   (interactive
    (if (use-region-p) ; (region-active-p)
        (list (region-beginning) (region-end))
@@ -328,8 +336,8 @@ such as 'acrt' would be transformed into '[a][ ]*[c][ ]*[ag][ ]*[t]."
     ;; (princ (/ nis n))
     (/ nis n)))
 
-;;; Per base colors
 
+;;; Per base colors
 (defvar nuc-base-colors
   (mapcar* #'cons
            nuc-base
@@ -394,7 +402,9 @@ otherwise, not. See `paint-seq-region' for details."
 
 ;;;###autoload
 (defun nuc-translate (beg end)
-  "Translate the nuc seq to protein seq using current translation table."
+  "Translate the nuc seq to protein seq using current translation table.
+
+The ambiguous codons will be translated into asterisk."
   (interactive
    (if (use-region-p) ; (region-active-p)
        (list (region-beginning) (region-end))

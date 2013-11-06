@@ -40,7 +40,8 @@ for the first. Only for lowercase, as the upcased will be added automatically.")
 
 (defvar pro-aa-alist
   (append (mapcar (lambda (x)
-                    (setcar x (upcase (car x))))
+                    (setcar x (upcase (car x)))
+                    x)
                   pro-aa--alist)
           pro-aa--alist)
   "Similar to `pro-aa--alist', just with upcase bases added.")

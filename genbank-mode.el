@@ -42,7 +42,7 @@
 
     ;; more genbank keywords...
     "ORIGIN" "ACCESSION" "AUTHORS" "BASE COUNT" "DEFINITION"
-    "FEATURES" "JOURNAL" "KEYWORDS" "MEDLINE" "NID"
+    "FEATURES" "JOURNAL" "KEYWORDS" "MEDLINE" "NID "
     "ORGANISM" "REFERENCE" "SEGMENT" "SOURCE" "TITLE"
     "DBLINK" "PUBMED" "REMARK" "COMMENT" "CONSRTM"
 
@@ -56,7 +56,7 @@
 (define-derived-mode genbank-mode text-mode "genbank"
   "Major mode for editing sequences in genbank format.
 
-￼Special commands:
+Special commands:
 ￼\\{genbank-mode-map}
   \\{nuc-mode-map}
   \\{pro-mode-map}"

@@ -1,9 +1,9 @@
 ;;; seq.el --- functions and variables shared by nuc-mode.el and
-;; aa-mode.el.
+;;; aa-mode.el.
 
 (require 'color)
 
-;; valid characters in the sequences
+;; valid characters as alignment gaps in the sequences
 (defvar seq-gap
   '(?- ?.)
   "*Chars that represent a gap")
@@ -20,12 +20,15 @@
 (defvar seq-cruft-regexp
   (regexp-opt (mapcar #'char-to-string
                       (concat seq-gap seq-space)))
-  "A regexp that matches cruft.")
+  "A regexp that matches cruft, including `seq-gap' and `seq-space'.")
 
 
 (defun proceed-char-repeatedly (count func legal-char-regexp)
-  "Run the FUNC function for COUNT times repeatedly from the point on,
-if the next char belongs to LEGAL-CHAR-REGEXP. COUNT can be either positive
+  "Run the FUNC function for COUNT times repeatedly from the point on.
+
+The next char has to belong to LEGAL-CHAR-REGEXP; otherwise, stop and report
+error. The `seq-cruft-regexp' char will be skipped, i.e., not counted.
+ Return the actual count of legal char. COUNT can be either positive
 or negative integer, indicating the proceeding direction."
   (let ((direction (if (< count 0) -1 1)))
     (fset 'looking (if (< count 0) 'looking-back 'looking-at))
@@ -39,6 +42,7 @@ or negative integer, indicating the proceeding direction."
 
 
 (defun reverse-region-by-char (beg end)
+  "Reverse the sequence in the region."
   (interactive
    (if (use-region-p) ; (region-active-p)
        (list (region-beginning) (region-end))
@@ -59,16 +63,17 @@ or negative integer, indicating the proceeding direction."
 
 
 (defun region-summary (beg end &optional legal-char-regexp)
-  "Count and print the number of all the characters in the region.
+  "Count the number of all the characters in the region.
+
 Ignore char that does not belong to LEGAL-CHAR-REGEXP. Use hash
-table to create dictionary-like data type."
+table to create dictionary-like data type. Return the hash table."
   (interactive
    (if (use-region-p) ; (region-active-p)
        (list (region-beginning) (region-end))
      (list (line-beginning-position) (line-end-position))))
   (let ((my-hash (make-hash-table :test 'equal))
         char count)
-    ;; match any char if legal char is not provided
+    ;; any char is allowed if legal char is not provided
     (if (not legal-char-regexp)
         (setq legal-char-regexp "."))
     (save-excursion
@@ -81,7 +86,7 @@ table to create dictionary-like data type."
                        (puthash char (1+ count) my-hash)
                      (puthash char 1 my-hash))))
         (forward-char)))
-    (maphash (lambda (x y) (princ (format "%c:%d " x y) t)) my-hash)))
+    my-hash))
 
 
 (defun seq-count (beg end &optional legal-char-regexp)
@@ -266,9 +271,15 @@ This serves as a warning that the string is being mangled."
 
 
 (defun hash-alist (alist)
-  "Convert association list to a hash table and return it."
+  "Convert association list to a hash table and return it.
+
+The car will be the key and the cdr will be the value. If
+there are multiple items with the same car, error will be
+reported."
   (let ((my-hash (make-hash-table :test 'equal)))
     (dolist (entry alist)
+      (if (gethash (car entry) my-hash)
+          (error "repeat hashing"))
       (puthash (car entry) (cdr entry) my-hash))
     my-hash))
 
@@ -278,6 +289,7 @@ This serves as a warning that the string is being mangled."
           (hash-table-count hash2))
        (catch 'flag
          (maphash (lambda (x y)
+                    ;; (message "%c" x)
                     (or (equal (gethash x hash2) y)
                         (throw 'flag nil)))
                   hash1)

@@ -32,6 +32,11 @@
     map)
  "The local keymap for `fasta-mode'")
 
+;;;###autoload
+(add-to-list 'auto-mode-alist
+             '("\\.\\(fasta\\|fa\\|fna\\|faa\\)\\'" . fasta-mode))
+
+;; map the paragraph key bindings to corresponding fasta functions
 (let ((equivs
        '((fasta-forward  . forward-paragraph)
          (fasta-backward . backward-paragraph)
