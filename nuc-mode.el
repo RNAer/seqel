@@ -229,8 +229,8 @@ found. This function has some code redundancy with
          (old-pos (point))
          base c-base)
     (goto-char end)
-    (dotimes (x str-len)
-      (let (current-char)
+    (let (current-char)
+      (dotimes (x str-len)
         (save-excursion
           (goto-char (- end x 1))
           (setq base (following-char)))
@@ -285,6 +285,7 @@ See also `region-summary'."
 
 (defun seq-isearch-mangle-str (str)
   "Mangle the string STR into a regexp to search over cruft in sequence.
+
 Inserts a regexp between each base which matches sequence formatting cruft.
 For example, if `seq-cruft-regexp' is '[ ]', the search string 'acgt' would be
 transformed into 'a[ ]*c[ ]*g[ ]*t' and the search string containing IUPAC code
@@ -373,32 +374,20 @@ otherwise, not. See `paint-seq-region' for details."
 (defalias 'nuc-unpaint 'unpaint-seq-region)
 
 
-(defvar translation-table-fp "genetic_code.txt"
-  "The file path of translation tables.")
+(defconst translation-table (nuc-set-translation-table 1)
+  "Define the translation table.
 
-(defvar translation-table nil
-  "The current translation table in hash table.")
+This is hash table with codons as keys. It is set by
+`nuc-set-translation-table'.")
 
-(defun set-translation-table (num)
-  "Set current table to translation table NUM."
-  (let ((my-hash (make-hash-table :test 'equal))
-        codon current)
-    (with-temp-buffer
-      (insert-file-contents translation-table-fp)
-      (goto-char (point-min))
-      (or (search-forward (format "##%d" num))
-          (error "Translation table %d is not found" num))
-      (while (and (forward-line) (looking-at ".\\{5\\}"))
-        (setq codon (buffer-substring-no-properties (point)
-                                                    (+ 3 (point))))
-        (forward-char 3)
-        (setq current (char-after))
-        (puthash codon current my-hash)
-        (message "%s_%c" codon current)
-        (while (string-match "T" codon)
-           (setq codon (replace-match "U" t t codon)))
-        (puthash codon current my-hash)))
-    (setq translation-table my-hash)))
+
+(defun nuc-set-translation-table (&optional n)
+  (interactive "p")
+  (let (table)
+    (or (setq table (genetic-code n))
+        (error "The translation table does not exist"))
+    (setq translation-table (hash-alist table))))
+
 
 ;;;###autoload
 (defun nuc-translate (beg end)
@@ -409,14 +398,20 @@ The ambiguous codons will be translated into asterisk."
    (if (use-region-p) ; (region-active-p)
        (list (region-beginning) (region-end))
      (list (line-beginning-position) (line-end-position))))
-  (let (tmp codon)
+  (let ((times (- end beg))
+        codon aa)
+    (save-excursion
       (goto-char beg)
-      (while (and (setq tmp (+ 3 (point))) (< tmp end))
-        (message "%d %d %d" (point) tmp end)
-        (message "%s" (buffer-substring-no-properties (point) tmp))
-        (setq codon (upcase (buffer-substring-no-properties (point) tmp)))
-        (delete-region (point) tmp)
-        (insert-char (gethash codon translation-table)))))
+      (dotimes (x times)
+        (if (looking-at nuc-base-regexp)
+            (setq codon (concat codon (char-to-string (char-after)))))
+        ;; (message codon)
+        (if (equal (length codon) 3)
+            (progn (setq aa (car (gethash (upcase codon) translation-table)))
+                   (or aa (setq aa ?X))
+                   (insert-char aa)
+                   (setq codon nil)))
+        (delete-char 1)))))
 
 
 (defvar nuc-mode-map
