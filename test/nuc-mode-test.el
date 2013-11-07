@@ -180,7 +180,7 @@
 
 (ert-deftest nuc-translate-test ()
   :tags '(nuc-mode)
-  (let ((cases '(("ggggaggtggcgaggaagatgacgtggtagttgtcgcggcagctgcca" . "GEVARKMTW*LSRQLP")))
+  (let ((cases '(("accatttcm mtc" . "TISX")))
         tmp)
     (with-temp-buffer
       (dolist (test cases)

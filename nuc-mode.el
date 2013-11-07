@@ -254,7 +254,7 @@ sequence."
      (list (line-beginning-position) (line-end-position))))
   (save-excursion
     (goto-char beg)
-    (while (search-forward "t" end t)
+    (while (search-forward "t" end t)  ;(case-fold-search t)
       (replace-match "u" nil t))))
 
 (defun nuc-2dna (beg end)
@@ -265,7 +265,7 @@ sequence."
      (list (line-beginning-position) (line-end-position))))
   (save-excursion
     (goto-char beg)
-    (while (search-forward "u" end t)
+    (while (search-forward "u" end t)   ;(case-fold-search t)
       (replace-match "t" nil t))))
 
 
@@ -295,7 +295,7 @@ such as 'acrt' would be transformed into '[a][ ]*[c][ ]*[ag][ ]*[t]."
     ;; 'ar' will return as ("[a]", "[ag]")
     (setq degenerate-str-list
           (mapcar #'(lambda (x)
-                      (setq tmp (assoc x nuc-base-degeneracy))
+                      (setq tmp (aref nuc-base-degeneracy x))
                       (if (not tmp)
                           (error "%c is not a valid nuc base character!" x))
                       (concat "["  (mapconcat 'char-to-string (cdr tmp) "") "]"))
@@ -381,37 +381,71 @@ This is hash table with codons as keys. It is set by
 `nuc-set-translation-table'.")
 
 
+(defun decode (codons)
+  "Return the list of amino acid(s) that are coded by the CODONS.
+
+Example: (decode '(?t ?c ?m) should return (83) and (decode '(?m ?a ?t)) should
+return (72 78) for translation table 1."
+  (let ((case-fold-search t)
+        codon aas aa)
+    (dolist (first (aref nuc-base-degeneracy (nth 0 codons)))
+      (if (memq first '(?u ?U)) (setq first ?t))
+      (dolist (second (aref nuc-base-degeneracy (nth 1 codons)))
+        (if (memq second '(?u ?U)) (setq second ?t))
+        (dolist (third (aref nuc-base-degeneracy (nth 2 codons)))
+          (if (memq third '(?u ?U)) (setq third ?t))
+          (setq codon (format "%c%c%c" first second third))
+          (setq aa (car (gethash (upcase codon) translation-table)))
+          (or aa (error "codon %s is not recognized." codon))
+          (or (memq aa aas)
+              (setq aas (cons aa aas))))))
+    aas))
+
+
 (defun nuc-set-translation-table (&optional n)
+  "Set translation table.
+
+By default, this function set the table 1 as the translation table.
+For example, run `C-u 2 M-x nuc-set-translation-table' to set it to table 2."
   (interactive "p")
   (let (table)
     (or (setq table (genetic-code n))
-        (error "The translation table does not exist"))
+        (error "The translation table %d does not exist" n))
     (setq translation-table (hash-alist table))))
 
 
-;;;###autoload
+;;;###AUTOLOAD
 (defun nuc-translate (beg end)
   "Translate the nuc seq to protein seq using current translation table.
 
-The ambiguous codons will be translated into asterisk."
+The ambiguous codon will be handled correctly: if it is mapped to multiple
+amino acids, 'X' will be output; if it is still mapped to single amino acide,
+then it will be translated into the amino acid."
   (interactive
    (if (use-region-p) ; (region-active-p)
        (list (region-beginning) (region-end))
      (list (line-beginning-position) (line-end-position))))
   (let ((times (- end beg))
+        (i 0)
         codon aa)
     (save-excursion
       (goto-char beg)
       (dotimes (x times)
         (if (looking-at nuc-base-regexp)
-            (setq codon (concat codon (char-to-string (char-after)))))
-        ;; (message codon)
+            (setq codon (cons (char-after) codon)))
         (if (equal (length codon) 3)
-            (progn (setq aa (car (gethash (upcase codon) translation-table)))
-                   (or aa (setq aa ?X))
+            (progn (setq aa (decode (nreverse codon)))
+                   (or aa
+                       (error "not"))
+                   (if (> (length aa) 1)
+                       (setq aa ?X)
+                     (setq aa (car aa)))
                    (insert-char aa)
+                   (setq i (1+ i))
                    (setq codon nil)))
-        (delete-char 1)))))
+        ;; put the deletion at the end, to keep the proper region mark.
+        (delete-char 1)))
+    (message "Translated %d nucleotides to %d amino acids" (* 3 i) i)))
 
 
 (defvar nuc-mode-map
