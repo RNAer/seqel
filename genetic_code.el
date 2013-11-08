@@ -15,7 +15,7 @@ The tables are downloaded from"
            ("TCG" ?S -)
            ("TAT" ?Y -)
            ("TAC" ?Y -)
-           ("TAA" ?* -)
+           ("TAA" ?* -) ; stop codon
            ("TAG" ?* -)
            ("TGT" ?C -)
            ("TGC" ?C -)

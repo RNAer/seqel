@@ -425,28 +425,27 @@ then it will be translated into the amino acid."
    (if (use-region-p) ; (region-active-p)
        (list (region-beginning) (region-end))
      (list (line-beginning-position) (line-end-position))))
-  (let ((times (- end beg))
-        (i 0) (j 0)
+  (let (;; check valid of the sequence and
+        ;; count the number of aa it will convert to
+        (n (nuc-count beg end))
         codon aa)
       (goto-char beg)
-      (dotimes (x times)
-        (if (looking-at nuc-base-regexp)
-            (setq codon (cons (char-after) codon)))
-        (forward-char)
-        (setq j (1- j))
-        (if (equal (length codon) 3)
-            (progn (setq aa (decode (nreverse codon)))
-                   (or aa
-                       (error "Not recoginzed codon."))
-                   (if (> (length aa) 1)
-                       (setq aa ?X)
-                     (setq aa (car aa)))
-                   (delete-char j)
-                   (insert-char aa)
-                   (setq i (1+ i))
-                   (setq j 0)
-                   (setq codon nil))))
-    (message "Translated %d nucleotides to %d amino acids" (* 3 i) i)))
+      (if n
+        (progn
+          (setq n (/ n 3))
+          (message "%d nucleotides to %d amino acids" (* 3 n) n)
+          (while (> n 0)
+            (if (looking-at nuc-base-regexp)
+                (setq codon (cons (char-after) codon)))
+            (if (equal (length codon) 3)
+                (progn (setq aa (decode (nreverse codon)))
+                       (if (> (length aa) 1)
+                           (setq aa ?X)
+                         (setq aa (car aa)))
+                       (insert-char aa)
+                       (setq n (1- n))
+                       (setq codon nil)))
+            (delete-char 1))))))
 
 
 (defvar nuc-mode-map
