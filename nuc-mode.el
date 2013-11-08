@@ -426,25 +426,26 @@ then it will be translated into the amino acid."
        (list (region-beginning) (region-end))
      (list (line-beginning-position) (line-end-position))))
   (let ((times (- end beg))
-        (i 0)
+        (i 0) (j 0)
         codon aa)
-    (save-excursion
       (goto-char beg)
       (dotimes (x times)
         (if (looking-at nuc-base-regexp)
             (setq codon (cons (char-after) codon)))
+        (forward-char)
+        (setq j (1- j))
         (if (equal (length codon) 3)
             (progn (setq aa (decode (nreverse codon)))
                    (or aa
-                       (error "not"))
+                       (error "Not recoginzed codon."))
                    (if (> (length aa) 1)
                        (setq aa ?X)
                      (setq aa (car aa)))
+                   (delete-char j)
                    (insert-char aa)
                    (setq i (1+ i))
-                   (setq codon nil)))
-        ;; put the deletion at the end, to keep the proper region mark.
-        (delete-char 1)))
+                   (setq j 0)
+                   (setq codon nil))))
     (message "Translated %d nucleotides to %d amino acids" (* 3 i) i)))
 
 
