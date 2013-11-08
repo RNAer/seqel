@@ -169,8 +169,9 @@ returned.."
 If a prefix arg is provided or WHOLE is t, then put the point at
 the beginning of the fasta entry instead of the sequence."
   (interactive "P")
+  (push-mark) ; mark current position
   (fasta-forward 1)
-  (push-mark)
+  (push-mark nil nil t)
   (fasta-backward 1)
   (or whole
       (forward-line)))
@@ -183,7 +184,6 @@ the beginning of the fasta entry instead of the sequence."
 By default, each sequence is one line if WIDTH is nil. The white spaces inside
 will also be removed."
   (interactive "P")
-
   (save-excursion
     (let (beg end)
       (fasta-forward 1)
@@ -326,7 +326,14 @@ to be nuc"
           (nuc-reverse-complement beg (1- end) is-rna)
         (error "nuc mode is not enabled")))))
 
-
+(defun fasta-translate ()
+  "Translate the current fasta sequence to amino acids."
+  (interactive)
+  (save-excursion
+    (fasta-mark)
+    (if nuc-mode  ; if nuc-mode is enabled
+        (nuc-translate (region-beginning) (region-end))
+      (error "nuc mode is not enabled"))))
 
 ;;; column manipulations
 (defun fasta--column-action (snippet &optional n-p)

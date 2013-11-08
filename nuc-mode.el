@@ -402,7 +402,7 @@ return (72 78) for translation table 1."
     aas))
 
 
-(defun nuc-set-translation-table (&optional n)
+(defun nuc-set-translation-table (n)
   "Set translation table.
 
 By default, this function set the table 1 as the translation table.
@@ -411,7 +411,8 @@ For example, run `C-u 2 M-x nuc-set-translation-table' to set it to table 2."
   (let (table)
     (or (setq table (genetic-code n))
         (error "The translation table %d does not exist" n))
-    (setq translation-table (hash-alist table))))
+    (setq translation-table (hash-alist table))
+    (message "Set to translation table %d" n)))
 
 
 ;;;###AUTOLOAD
@@ -426,7 +427,7 @@ then it will be translated into the amino acid."
        (list (region-beginning) (region-end))
      (list (line-beginning-position) (line-end-position))))
   (let (;; check valid of the sequence and
-        ;; count the number of aa it will convert to
+        ;; count the number of bases
         (n (nuc-count beg end))
         codon aa)
       (goto-char beg)
@@ -453,7 +454,8 @@ then it will be translated into the amino acid."
     (define-key map "\C-cf"     'nuc-move-forward)
     (define-key map "\C-cb"     'nuc-move-backward)
     (define-key map "\C-c\C-r"  'nuc-rc)
-    (define-key map "\C-c\c-#"  'nuc-summary)
+    (define-key map "\C-c\C-#"  'nuc-summary)
+    (define-key map "\C-c\C-t"  'nuc-translate)
     map)
   "Keymap for `nuc-mode'.")
 
