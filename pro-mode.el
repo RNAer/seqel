@@ -66,11 +66,23 @@ as the upper case will be added automatically.")
     mw-vec)
   "A vector of AA molecular weights in Dalton.")
 
+(defvar pro-aa-1-vec
+  (let ((vec (make-vector 256 nil)))
+    (dolist (element pro-aa-alist)
+      (aset vec (car element) (nth 1 element)))
+    vec)
+  "A vector of 3-letter amino acid codes.")
+
+(defvar pro-aa-3-hash
+  (let ((my-hash (make-hash-table :test 'equal)))
+    (dolist (element pro-aa--alist)
+      (puthash (nth 1 element) (car element) my-hash))
+    my-hash)
+  "A hash table with 3-letter code as key and 1-letter code as value.")
 
 (defvar pro-aa-regexp
   (regexp-opt (mapcar #'char-to-string pro-aa))
-  "A regexp that matches a valid nucleotide base (following IPUAC code plus
-the symbol defined in `pro-aa-other'.")
+  "A regexp that matches a valid 1-letter amino acid code in `pro-aa'.")
 
 
 (defun pro-weight (beg end)
@@ -100,15 +112,42 @@ the symbol defined in `pro-aa-other'.")
   (interactive
    (if (use-region-p) ; (region-active-p)
        (list (region-beginning) (region-end))
-     (list (line-beginning-position) (line-end-position)))))
+     (list (line-beginning-position) (line-end-position))))
+  (condition-case err
+      (let ((times (- end beg)))
+        (goto-char beg)
+        (dotimes (x times)
+          (if (looking-at pro-aa-regexp)
+              (progn (insert (aref pro-aa-1-vec (char-after)))
+                     (delete-char 1))
+            (forward-char))))
+    (error (primitive-undo 1 buffer-undo-list)
+           (message "Failed: %s" err))))
 
 
 (defun pro-3-2-1 (beg end)
-  "Convert 3-letter IUPAC code to 1-letter IUPAC code"
+  "Convert 3-letter IUPAC code to 1-letter IUPAC code.
+
+Currently it only converts 3-letter codes without any characters
+between them."
   (interactive
    (if (use-region-p) ; (region-active-p)
        (list (region-beginning) (region-end))
-     (list (line-beginning-position) (line-end-position)))))
+     (list (line-beginning-position) (line-end-position))))
+  (condition-case err
+      (let ((times (/ (- end beg) 3))
+            code letter)
+        (goto-char beg)
+        (dotimes (x times)
+          (setq code (buffer-substring (point) (+ 3 (point))))
+          (setq letter (gethash code pro-aa-3-hash))
+          (if letter
+              (insert-char letter)
+            (error "Unknown code '%s' at position %d" code (point)))
+          (delete-char 3)))
+    ;; return to the original state if error is met.
+    (error (primitive-undo 1 buffer-undo-list)
+           (message "Failed: %s" err))))
 
 
 ;;;###autoload

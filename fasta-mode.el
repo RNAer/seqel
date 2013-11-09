@@ -21,7 +21,7 @@
     (define-key map "\C-ce"     'fasta-last)
     (define-key map "\C-cf"     'fasta-format)
     (define-key map "\C-cl"     'fasta-seq-length)
-    ;; (define-key map "\C-cm"     'fasta-mark)
+    (define-key map "\C-cm"     'fasta-mark)
     (define-key map "\C-cp"     'fasta-position)
     (define-key map "\C-cr"     'fasta-rc)
     (define-key map "\C-c\C-d"  'fasta-delete-column)
@@ -316,7 +316,9 @@ to be nuc"
 
 ;;;###autoload
 (defun fasta-rc (is-rna)
-  "Reverse complement current fasta sequence if it is nuc sequence."
+  "Reverse complement current fasta sequence if it is nuc sequence.
+
+If IS-RNA is nil, then assume the sequence is RNA; otherwise, DNA."
   (interactive "P")
   (save-excursion
     (fasta-mark)
@@ -334,6 +336,16 @@ to be nuc"
     (if nuc-mode  ; if nuc-mode is enabled
         (nuc-translate (region-beginning) (region-end))
       (error "nuc mode is not enabled"))))
+
+(defun fasta-weight ()
+  "Calculate the molecular weight of the current protein entry."
+  (interactive)
+  (save-excursion
+    (fasta-mark)
+    (if pro-mode  ; if nuc-mode is enabled
+        (pro-weight (region-beginning) (region-end))
+      (error "pro mode is not enabled"))))
+
 
 ;;; column manipulations
 (defun fasta--column-action (snippet &optional n-p)
@@ -426,12 +438,6 @@ If CASE is nil, the summary will be case insensitive."
     (if (called-interactively-p 'interactive)
         (maphash (lambda (x y) (princ (format "%c:%d " x y) t)) my-hash)
       my-hash)))
-
-
-(defun fasta-2-stockholm ()
-  "Convert fasta format to stockholm."
-  (interactive))
-
 
 (provide 'fasta-mode)
 
