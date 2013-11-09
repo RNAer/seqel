@@ -3,6 +3,7 @@
 (require 'seq)
 (require 'nuc-mode)
 (require 'pro-mode)
+(require 'genetic-code)
 
 (defvar fasta-mode-hook nil
   "*Hook to setup `fasta-mode'.")
@@ -108,47 +109,45 @@ This function is added to `find-file-hooks'."
 (defun fasta-backward (count)
   "Move the point the beginning of the fasta record.
 
-It works in the style of `backward-paragraph'. COUNT need to be positive number;
-otherwise point will not move. The number of fasta record remain to be moved is
-returned."
+It works in the style of `backward-paragraph'. COUNT need to be positive integer.
+Return current point if it moved over COUNT of records; otherwise return nil."
   (interactive "p")
-  (while (and (> count 0)
-              (re-search-backward fasta-record-regexp nil t))
-    (setq count (1- count)))
-  count)
+  (if (> count 0)
+      (re-search-backward fasta-record-regexp nil 'move-to-point-min count)
+    (error "The parameter count should be positive integer.")))
 
 ;;;###autoload
 (defun fasta-forward (count)
   "Move forward to the end fasta record.
 
-It works in the style of `forward-paragraph'. COUNT need to be positive number;
-otherwise point will not move. The number of fasta record remain to be moved is
-returned.."
+It works in the style of `forward-paragraph'. Count need to be positive integer.
+Return current point if it moved over COUNT of records; otherwise return nil."
   (interactive "p")
-  (and (looking-at fasta-record-regexp)
-       (setq count (1+ count)))
-  (while (and (> count 0)
-              (re-search-forward fasta-record-regexp nil t))
-    (setq count (1- count)))
-  (if (> count 0)
-      (if (/= (point) (point-max))
-          (progn (goto-char (point-max))
-                 (setq count (1- count))))
-    (beginning-of-line))
-  count)
+  (if (looking-at fasta-record-regexp)
+      (setq count (1+ count)))
+  (if (< count 1)
+      (error "The parameter count should be positive integer."))
+  (if (re-search-forward fasta-record-regexp nil 'move-to-point-max count)
+      (progn (beginning-of-line) (point))
+    nil))
+
 
 ;;;###autoload
 (defun fasta-last ()
-  "Go to the beginning of last fasta record"
+  "Go to the beginning of last fasta record."
   (interactive)
-  (while (= (fasta-forward 1) 0))
+  ;; (while (fasta-forward 1))
+  (goto-char (point-max))
   (fasta-backward 1))
 
 ;;;###autoload
 (defun fasta-first ()
-  "Go to the beginning of first fasta record"
+  "Go to the beginning of first fasta record."
   (interactive)
-  (while (= (fasta-backward 1) 0)))
+  ;; (while (fasta-backward 1)))
+  (goto-char (point-min))
+  (or (looking-at fasta-record-regexp)
+      (fasta-forward 1)))
 
 ;;;###autoload
 (defun fasta-count ()
@@ -156,7 +155,7 @@ returned.."
   (let ((total 0))
     (save-excursion
       (goto-char (point-max))
-      (while (= (fasta-backward 1) 0)
+      (while (fasta-backward 1)
         (setq total (1+ total))))
     (if (called-interactively-p 'interactive)
         (message "Total %d sequences." total))
@@ -181,9 +180,11 @@ the beginning of the fasta entry instead of the sequence."
 (defun fasta-format (&optional width)
   "Format the current sequence to contain WIDTH chars per line.
 
-By default, each sequence is one line if WIDTH is nil. The white spaces inside
+By default, each sequence is one line (WIDTH is nil). The white spaces inside
 will also be removed."
   (interactive "P")
+  (and width  (< width 1)
+       (error "Width should be nil or positive integer"))
   (save-excursion
     (let (beg end)
       (fasta-forward 1)
@@ -199,15 +200,12 @@ will also be removed."
       ;; insert newlines
       (if width
           (progn
-            (and (< width 0)
-                 (error "Width cannot be a negative number"))
-            (goto-char (- end width))
-            (setq end (point-marker))
             (goto-char beg)
             ;; (message "%d %d %d" width (point) (region-end))
+            (forward-char width)
             (while (< (point) end)
-              (forward-char width)
-              (insert-char ?\n)))))))
+              (insert-char ?\n)
+              (forward-char width)))))))
 
 
 (defun fasta-delete ()
@@ -226,14 +224,14 @@ at zero."
   (interactive)
   (if (looking-at fasta-record-regexp)
       (error "Point is not in the sequence region"))
-  (let ((pos   (point))
+  (let ((pos (point))
         (count 0))
     (save-excursion
-      (if (> (fasta-backward 1) 0)
+      (or (fasta-backward 1)
           (error "The start of the fasta record is not found"))
       (end-of-line)
       (while (< (point) pos)
-        (if (not (looking-at seq-cruft-regexp))
+        (or (looking-at seq-cruft-regexp)
             (setq count (1+ count)))
         (forward-char)))
     (if (called-interactively-p 'interactive)
@@ -241,8 +239,10 @@ at zero."
     count))
 
 
-(defun fasta-relative-position ()
-  "The point position counted from the beginning of the record."
+(defun fasta-geo-position ()
+  "The point position counted from the beginning of the record.
+
+It will count all the characters."
   (interactive)
   (if (looking-at fasta-record-regexp)
       (error "Point is not in the sequence region"))
@@ -348,41 +348,45 @@ If IS-RNA is nil, then assume the sequence is RNA; otherwise, DNA."
 
 
 ;;; column manipulations
-(defun fasta--column-action (snippet &optional n-p)
+(defmacro fasta--column-action (&rest fn)
   "A function called by other column manipulation functions.
 
-SNIPPET is a piece of code that does some specific manipulation
-at the current column. N-P is a boolean to indicate whether the
-column is allowed at the end of line. See `fasta-insert-column'
+FN is a piece of code that does some specific manipulation
+at the current column. See `fasta-insert-column'
 and `fasta-mark-column' for an example of usage."
-  (save-excursion
-    (condition-case ex
-        (let ((column   (current-column)))
-          (fasta-first)
-          (loop do
-                (forward-line) ; move to the sequence region
-                (if (or (< (move-to-column column) column)
-                        (and n-p (eolp)))
-                    (error "This sequence at line %d does not have this column"
-                           (line-number-at-pos)))
-                (eval snippet)
-                while (and (= (fasta-forward 1) 0) (not (eobp)))))
-      ;; return to the original state if error is met.
-      ('error
-       (primitive-undo 1 buffer-undo-list)
-       (eval ex)))))
+  `(save-excursion
+     (condition-case err
+         (let ((column (current-column))
+               pos)
+           (goto-char (point-max))
+           (setq pos (point-marker))
+           (while (fasta-backward 1)
+             (forward-line) ; move to the sequence region
+             (if (< (move-to-column column) column)
+                 (error "This sequence at line %d does not have enough columns at %d"
+                        (line-number-at-pos) column))
+             ,@fn
+             (or (> pos (point))
+                 (error "This sequence at line %d does not have enough columns at %d"
+                        (line-number-at-pos) column))
+             (fasta-backward 1)
+             (setq pos (point-marker))))
+       ;; return to the original state if error is met.
+       ('error ; the single quote is dispensable
+        (primitive-undo 1 buffer-undo-list)
+        (error "%s" err)))))
 
 
 (defun fasta-delete-column (&optional n)
   "Delete current column."
   (interactive "p")
-  (fasta--column-action `(delete-char n) t))
+  (fasta--column-action (delete-char n)))
 
 
 (defun fasta-insert-column (str)
   "Insert a string STR at the column."
-  (interactive "sInsert string:")
-  (fasta--column-action `(insert ,str)))
+  (interactive "sInsert string: ")
+  (fasta--column-action (insert str)))
 
 
 (defun fasta-highlight-column (&optional to-face)
@@ -398,7 +402,7 @@ and C-u \\[fasta-highlight-column] will unmark the column."
         ((numberp to-face)
          (setq to-face nil)))
   (fasta--column-action
-   `(silent-put-text-property (point) (1+ (point)) 'font-lock-face to-face) t))
+   (silent-put-text-property (point) (1+ (point)) 'font-lock-face to-face)))
 
 
 (defun fasta-paint-column (&optional case)
@@ -407,18 +411,19 @@ and C-u \\[fasta-highlight-column] will unmark the column."
 By default, lower and upper cases are painted in the same colors.
 C-u \\[fasta-paint-column] honors the cases"
   (interactive "P")
-  (let ((to-face 'format)
-        (current-char '(char-after)))
+  (let ((current-char '(char-after)) to-face)
     (or case
         (setq current-char (list 'upcase current-char)))
     (cond (nuc-mode
-           (setq to-face (list to-face "base-face-%c" current-char)))
+           (setq to-face (list 'format "base-face-%c" current-char)))
           (pro-mode
-           (setq to-face (list to-face "aa-face-%c" current-char)))
+           (setq to-face (list 'format "aa-face-%c" current-char)))
           (t
            (error "Unknown seq type")))
     (fasta--column-action
-     `(silent-put-text-property (point) (1+ (point)) 'font-lock-face (intern ,to-face)) t)))
+     (silent-put-text-property (point) (1+ (point))
+                               'font-lock-face
+                               (intern (eval to-face))))))
 
 
 (defun fasta-summary-column (&optional case)
@@ -428,15 +433,14 @@ If CASE is nil, the summary will be case insensitive."
   (interactive "P")
   (let ((my-hash (make-hash-table :test 'equal))
         count char)
-    (fasta--column-action `(progn (setq char (char-after))
-                                  (or case (setq char (upcase char)))
-                                  (setq count (gethash char my-hash))
-                                  (if count
-                                      (puthash char (1+ count) my-hash)
-                                    (puthash char 1 my-hash)))
-                          t)
+    (fasta--column-action (setq char (char-after))
+                          (or case (setq char (upcase char)))
+                          (setq count (gethash char my-hash))
+                          (if count
+                              (puthash char (1+ count) my-hash)
+                            (puthash char 1 my-hash)))
     (if (called-interactively-p 'interactive)
-        (maphash (lambda (x y) (princ (format "%c:%d " x y) t)) my-hash)
+        (maphash (lambda (x y) (princ (format "%c:%d " x y))) my-hash)
       my-hash)))
 
 (provide 'fasta-mode)

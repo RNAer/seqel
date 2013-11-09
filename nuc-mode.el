@@ -5,6 +5,7 @@
 
 
 (require 'seq)
+(require 'genetic-code)
 
 ;;;;;; USER CUSTOMIZABLE VARIABLES START HERE
 
@@ -342,6 +343,7 @@ the frequency of homopolymers in the sequence. "
 (defvar nuc-base-colors
   (mapcar* #'cons
            nuc-base
+           ;; this is circular list
            (setcdr (last color-pairs) color-pairs))
   "Background and foreground colors for each IUPAC bases.
 
@@ -374,7 +376,9 @@ otherwise, not. See `paint-seq-region' for details."
 (defalias 'nuc-unpaint 'unpaint-seq-region)
 
 
-(defconst translation-table (nuc-set-translation-table 1)
+
+
+(defconst translation-table nil
   "Define the translation table.
 
 This is hash table with codons as keys. It is set by
@@ -409,13 +413,15 @@ By default, this function set the table 1 as the translation table.
 For example, run `C-u 2 M-x nuc-set-translation-table' to set it to table 2."
   (interactive "p")
   (let (table)
-    (or (setq table (genetic-code n))
+    (or (setq table (get-translation-table n))
         (error "The translation table %d does not exist" n))
     (setq translation-table (hash-alist table))
     (message "Set to translation table %d" n)))
 
+;; set the default table to 1
+(nuc-set-translation-table 1)
 
-;;;###AUTOLOAD
+;;;###autoload
 (defun nuc-translate (beg end)
   "Translate the nuc seq to protein seq using current translation table.
 
@@ -451,10 +457,10 @@ then it will be translated into the amino acid."
 
 (defvar nuc-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map "\C-cf"     'nuc-move-forward)
+    ;; (define-key map "\C-cf"     'nuc-move-forward)
     (define-key map "\C-cb"     'nuc-move-backward)
     (define-key map "\C-c\C-r"  'nuc-rc)
-    (define-key map "\C-c\C-#"  'nuc-summary)
+    ;; (define-key map "\C-c\C-#"  'nuc-summary)
     (define-key map "\C-c\C-t"  'nuc-translate)
     map)
   "Keymap for `nuc-mode'.")

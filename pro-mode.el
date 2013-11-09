@@ -91,10 +91,10 @@ as the upper case will be added automatically.")
    (if (use-region-p) ; (region-active-p)
        (list (region-beginning) (region-end))
      (list (line-beginning-position) (line-end-position))))
-  (let ((sum-mw 0))
+  (let ((sum-mw 0) (times (- end beg)) current)
     (save-excursion
       (goto-char beg)
-      (while (< (point) end)
+      (dotimes (x times)
         (setq current (aref pro-aa-mw (downcase (char-after))))
         (cond (current
                (setq sum-mw (+ sum-mw current)))
@@ -193,7 +193,12 @@ protein sequence. Return the count if the region
    (if mark-active
        (list (region-beginning) (region-end))
      (list (line-beginning-position) (line-end-position))))
-  (seq-p beg end pro-aa-regexp))
+  (let ((length (seq-count beg end pro-aa-regexp)))
+    (and length
+         (called-interactively-p 'interactive)
+         (message "Base count: %d" length))
+    length))
+
 
 (defalias 'pro-p 'pro-count)
 

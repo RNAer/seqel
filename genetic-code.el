@@ -1,6 +1,6 @@
 ;;; genetic-code.el --- store tables of genetic code
 
-(defun genetic-code (n)
+(defun get-translation-table (n)
   "Return tranlation table.
 
 The tables are downloaded from"
