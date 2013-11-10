@@ -176,6 +176,10 @@ the beginning of the fasta entry instead of the sequence."
       (forward-line)))
 
 (defun fasta--format (width)
+  "Format the current sequence to contain WIDTH chars per line.
+
+By default, each sequence is one line (WIDTH is nil). The white spaces inside
+will also be removed."
   (and width  (< width 1)
        (error "Width should be nil or positive integer"))
   (let (beg end)
@@ -203,14 +207,16 @@ the beginning of the fasta entry instead of the sequence."
 (defun fasta-format (&optional width)
   "Format the current sequence to contain WIDTH chars per line.
 
-By default, each sequence is one line (WIDTH is nil). The white spaces inside
-will also be removed."
+It is just a wrapper around `fasta--format'."
   (interactive "P")
   (save-excursion
     (fasta--format width)))
 
 
 (defun fasta-format-all (&optional width)
+  "Format all fasta sequences in the buffer.
+
+It calls `fasta--format' on each fasta records."
   (interactive "P")
   (save-excursion
     (goto-char (point-max))
@@ -342,12 +348,16 @@ If IS-RNA is nil, then assume the sequence is RNA; otherwise, DNA."
 (defun fasta-rc (is-rna)
   "Reverse complement current fasta sequence if it is nuc sequence.
 
-If IS-RNA is nil, then assume the sequence is RNA; otherwise, DNA."
+If IS-RNA is nil, then assume the sequence is RNA; otherwise, DNA.
+It is just a wrapper on `fasta--rc'."
   (interactive "P")
   (save-excursion
     (fasta--rc is-rna)))
 
 (defun fasta-rc-all (is-rna)
+  "Reverse complement every fasta sequences in the buffer.
+
+It calls `fasta--rc' on each fasta record."
   (interactive "P")
   (save-excursion
     (goto-char (point-max))
@@ -365,13 +375,17 @@ If IS-RNA is nil, then assume the sequence is RNA; otherwise, DNA."
 
 ;;;###autoload
 (defun fasta-translate ()
-  "Translate the current fasta sequence to amino acids."
+  "Translate the current fasta sequence to amino acids.
+
+It is just a wrapper on `fasta--translate'."
   (interactive)
   (save-excursion
     (fasta--translate)))
 
 (defun fasta-translate-all ()
-  "Translate the current fasta sequence to amino acids."
+  "Translate the every fasta sequence in the buffer to amino acids.
+
+It calls `fasta--translate' on each fasta record."
   (interactive)
   (save-excursion
     (goto-char (point-max))
@@ -385,7 +399,7 @@ If IS-RNA is nil, then assume the sequence is RNA; otherwise, DNA."
   (interactive)
   (save-excursion
     (fasta-mark)
-    (if pro-mode  ; if nuc-mode is enabled
+    (if pro-mode  ; if pro-mode is enabled
         (pro-weight (region-beginning) (region-end))
       (error "pro mode is not enabled"))))
 
