@@ -340,11 +340,18 @@ the frequency of homopolymers in the sequence. "
 
 
 ;;; Per base colors
-(defvar nuc-base-colors
-  (mapcar* #'cons
-           nuc-base
-           ;; this is circular list
-           (setcdr (last color-pairs) color-pairs))
+(defvar nuc-base-colors2
+  (let ((colp (setcdr (last color-pairs) color-pairs))
+        (n (length nuc-base))
+        tmp)
+    (dotimes (i n)
+      (setq tmp (cons (cons (nth i nuc-base) (nth i colp)) tmp)))
+    tmp)
+  ;; Alternatively,
+  ;; (mapcar* #'cons
+  ;;          nuc-base
+  ;;          ;; this is circular list
+  ;;          (setcdr (last color-pairs) color-pairs))
   "Background and foreground colors for each IUPAC bases.
 
 This is a list of lists. For each inner list, it contains 3 atoms:
@@ -352,12 +359,11 @@ a nuc base in char type, hex-code colors for foreground and background")
 
 
 ;; define base faces belonging to base-face group
-(let ((letcol-alist nuc-base-colors))
-  (loop for elem in letcol-alist
-        for f = (nth 1 elem)
-        for b = (nth 2 elem)
-        for l = (format "%c" (nth 0 elem)) do
-        (eval (macroexpand `(def-char-face ,l ,b ,f "base-face")))))
+(loop for elem in nuc-base-colors
+      for f = (nth 1 elem)
+      for b = (nth 2 elem)
+      for l = (format "%c" (nth 0 elem)) do
+      (eval (macroexpand `(def-char-face ,l ,b ,f "base-face"))))
 
 
 ;;;###autoload

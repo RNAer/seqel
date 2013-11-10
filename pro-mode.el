@@ -228,20 +228,26 @@ such as 'acrt' would be transformed into '[a][ ]*[c][ ]*[ag][ ]*[t]."
 
 ;; define aa faces belonging to pro-aa-face group
 (defvar pro-aa-colors
-  (mapcar* #'cons
-           pro-aa
-           (setcdr (last color-pairs) color-pairs))
+  (let ((colp (setcdr (last color-pairs) color-pairs))
+        (n (length nuc-base))
+        tmp)
+    (dotimes (i n)
+      (setq tmp (cons (cons (nth i pro-aa) (nth i colp)) tmp)))
+    tmp)
+  ;; (mapcar* #'cons
+  ;;          pro-aa
+  ;;          (setcdr (last color-pairs) color-pairs))
   "Background and foreground colors for each IUPAC bases.
 
 This is a list of lists. For each inner list, it contains 3 atoms:
 a nuc base in char type, hex-code colors for foreground and background")
 
-(let ((letcol-alist pro-aa-colors))
-  (loop for elem in letcol-alist
-        for f = (nth 1 elem)
-        for b = (nth 2 elem)
-        for l = (format "%c" (nth 0 elem)) do
-        (eval (macroexpand `(def-char-face ,l ,b ,f "aa-face")))))
+
+(loop for elem in pro-aa-colors
+      for f = (nth 1 elem)
+      for b = (nth 2 elem)
+      for l = (format "%c" (nth 0 elem)) do
+      (eval (macroexpand `(def-char-face ,l ,b ,f "aa-face"))))
 
 
 ;;;###autoload
