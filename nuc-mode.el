@@ -358,7 +358,7 @@ the frequency of homopolymers in the sequence. "
 
 
 ;;; Per base colors
-(defvar nuc-base-colors2
+(defvar nuc-base-colors
   (let ((colp (setcdr (last color-pairs) color-pairs))
         (n (length nuc-base))
         tmp)
@@ -389,15 +389,15 @@ a nuc base in char type, hex-code colors for foreground and background")
   "Color the nucleic acid region BEG to END.
 
 If CASE is nil, upcase and lowercase base chars will be colored the same;
-otherwise, not. See `paint-seq-region' for details."
+otherwise, not. See `seq-paint' for details."
   (interactive "r\nP")
-  (paint-seq-region beg end "base-face" case))
+  (seq-paint beg end "base-face" case))
 
 ;;;###autoload
-(defalias 'nuc-unpaint 'unpaint-seq-region
+(defalias 'nuc-unpaint 'seq-unpaint
   "Uncolor the nucleotide sequence region.
 
-It is an alias to `unpaint-seq-region'.")
+It is an alias to `seq-unpaint'.")
 
 
 

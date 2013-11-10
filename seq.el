@@ -6,12 +6,13 @@
 ;; valid characters as alignment gaps in the sequences
 (defvar seq-gap
   '(?- ?.)
-  "*Chars that represent a gap")
+  "*Chars that represent a gap.")
 
 (defvar seq-space
   '(?  ?\t ?\n)
-  "*Chars that represent cruft which may appear between bases.
- It will be skipped during moving and search and anything involving counting bases.")
+  "*Chars that represent cruft which may appear between bases or amino acid.
+
+It will be skipped during moving and search and anything involving counting.")
 
 (defvar seq-space-regexp
   (regexp-opt (mapcar #'char-to-string seq-space))
@@ -39,27 +40,6 @@ or negative integer, indicating the proceeding direction."
           (funcall func direction)
         (error "Illegal char found! Moved %d bases" (* direction x))))
     count))
-
-
-(defun reverse-region-by-char (beg end)
-  "Reverse the sequence in the region."
-  (interactive
-   (if (use-region-p) ; (region-active-p)
-       (list (region-beginning) (region-end))
-     (list (line-beginning-position) (line-end-position))))
-  (let ((str-len (- end beg))
-        (old-pos (point)))
-    ;; (message "%d and %d" end old-pos)
-    (goto-char end)
-    (dotimes (x str-len)
-      (let (current-char)
-        (save-excursion
-          (goto-char (- end x 1))
-          (setq current-char (following-char)))
-        (insert current-char)))
-    (delete-region beg end)
-    (goto-char old-pos)
-    (if (/= old-pos end) (push-mark end nil t))))
 
 
 (defun region-summary (beg end &optional legal-char-regexp)
@@ -90,11 +70,12 @@ table to create dictionary-like data type. Return the hash table."
 
 
 (defun seq-count (beg end &optional legal-char-regexp)
-  "Test if the region between BEG and END is a legal
- sequence defined by LEGAL-CHAR-REGEXP and `seq-cruft-regexp'.
- Return the count if the region contains only legal characters;
- otherwise return nil and
- report the location of the invalid characters."
+  "Count the chars that belong to LEGAL-CHAR-REGEXP.
+
+Chars of `seq-cruft-regexp' will be skipped. Return the count if
+the region contains only legal characters; otherwise return nil and
+report the location of the invalid characters. This function is used
+by `nuc-count' and `pro-count'."
   (let ((count 0) (legal-p t))
     ;; allow any char if legal-char-regexp is not provided
     (or legal-char-regexp
@@ -119,7 +100,10 @@ table to create dictionary-like data type. Return the hash table."
     (if legal-p count)))
 
 (defun color-gradient-hsl (start stop step-number &optional s l)
-  "Return a list with (STEP-NUMBER + 1) colors from START to STOP in hex code.
+  "Return a list with (STEP-NUMBER + 1) number of colors in hex code.
+
+START and STOP should are the start and ending hue in the color gradient
+to create. And S and L are saturation and lightness.
 
 For example, \"(color-gradient-hsl 0 0.333 20)\" will produce color
 gradient from red to yellow to green. Please be aware that there is a
@@ -190,26 +174,30 @@ as foreground colors."
        (t (:background "gray")))
      ,(concat "Face for marking up " (upcase letter) "'s")))
 
-(defun paint-seq-region (beg end face-prefix &optional case)
+(defun seq-paint (beg end face-prefix &optional case)
   "Color the sequences in the region BEG to END.
 
 If CASE is nil, upcase and lowercase chars will be colored the same;
-otherwise, not. FACE-PREFIX decides what kind of face group to use."
+otherwise, not. FACE-PREFIX decides which face groups ('base-face' or
+'aa-face') to use."
   (save-excursion
     (let (char face)
       (goto-char beg)
-      (while (< beg end)
-        (setq char (char-after beg))
+      (while (< (point) end)
+        (setq char (char-after))
         (if case
             (setq face (format "%s-%c" face-prefix char))
           ;; let upcase base use the color of lowercase base color
           (setq face (format "%s-%c" face-prefix (upcase char))))
         (if (facep face)
             ;; use font-lock-face instead of face for font-lock-mode is enabled
-            (silent-put-text-property beg (+ beg 1) 'font-lock-face (intern face)))
-        (setq beg (+ beg 1))))))
+            (silent-put-text-property beg (+ beg 1)
+                                      'font-lock-face
+                                      (intern face))
+          (error "Face '%s' does not exist." face))
+        (forward-char)))))
 
-(defun unpaint-seq-region (beg end)
+(defun seq-unpaint (beg end)
   "Uncolor the sequences from BEG to END or the current line."
   (interactive
    (if (use-region-p) ; (region-active-p)
@@ -242,13 +230,15 @@ otherwise, not. FACE-PREFIX decides what kind of face group to use."
     (re-search-backward string bound noerror)))
 
 (defadvice isearch-message-prefix (after seq-isearch-ismp)
-  "Set the isearch prompt string to show seq search is active.
+  "Modify the isearch prompt string to show seq search is active.
+
 This serves as a warning that the string is being mangled."
   (setq ad-return-value (concat "MOTIF " ad-return-value)))
 
 (defvar seq-isearch-p nil)
 
-(defun toggle-seq-isearch ()
+(defun seq-toggle-isearch ()
+  "Toggle the sequence isearch."
   (interactive)
   (cond (seq-isearch-p
          (setq seq-isearch-p nil)
@@ -261,8 +251,7 @@ This serves as a warning that the string is being mangled."
   (ad-activate 'isearch-message-prefix))
 
 (defun seq-isearch-search-fun ()
-  "Set to `isearch-search-fun-function' when `nuc-mode' is
-  enabled."
+  "Set to `isearch-search-fun-function'."
   (if seq-isearch-p
       (if isearch-forward 'seq-isearch-forward 'seq-isearch-backward)
     (isearch-search-fun-default)))

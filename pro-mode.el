@@ -255,15 +255,15 @@ a nuc base in char type, hex-code colors for foreground and background")
   "Color the nucleic acid region BEG to END.
 
 If CASE is nil, upcase and lowercase base chars will be colored the same;
-otherwise, not. See `paint-seq-region' for details."
+otherwise, not. See `seq-paint' for details."
   (interactive
    (if (use-region-p) ; (region-active-p)
        (list (region-beginning) (region-end))
      (list (line-beginning-position) (line-end-position))))
-  (paint-seq-region beg end "aa-face" case))
+  (seq-paint beg end "aa-face" case))
 
 ;;;###autoload
-(defalias 'pro-unpaint 'unpaint-seq-region)
+(defalias 'pro-unpaint 'seq-unpaint)
 
 
 (defvar pro-mode-map
