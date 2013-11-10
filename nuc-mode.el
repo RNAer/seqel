@@ -92,6 +92,7 @@ defined in `nuc-base-alist'.")
 ;;;###autoload
 (defun nuc-move-forward (count)
   "Move forward COUNT bases. Move backward if negative.
+
 Skip `seq-cruft-regexp' but stop on the illegal base
 and report how many bases the point have been moved by.
 COUNT can be either positive or negative, indicating the
@@ -102,34 +103,38 @@ See `proceed-char-repeatedly'"
 
 ;;;###autoload
 (defun nuc-move-backward (count)
-  "Move backward COUNT bases, similar to `nuc-move-forward'. See also
- `proceed-char-repeatedly'."
+  "Move backward COUNT bases, similar to `nuc-move-forward'.
+
+See also `proceed-char-repeatedly'."
   (interactive "p")
   ;; (proceed-char-repeatedly count 'backward-char))
   (proceed-char-repeatedly (- count) #'forward-char nuc-base-regexp))
 
 ;;; delete
 (defun nuc-delete-forward (count)
-  "Delete COUNT number of bases starting from the point, similar to
-`nuc-move-forward' (just use delete instead of move)."
+  "Delete COUNT number of bases starting from the point.
+
+Similar to `nuc-move-forward' (just use delete instead of move)."
   (interactive "p")
   (proceed-char-repeatedly count #'delete-char nuc-base-regexp))
 
 (defun nuc-delete-backward (count)
-  "Delete backward COUNT number of bases from the point, similar to
-`nuc-move-forward' (just use delete backward instead of move forward).
-See `nuc-delete-forward' and `proceed-char-repeatedly'."
+  "Delete backward COUNT number of bases from the point.
+
+Similar to `nuc-move-forward' (just use delete backward instead of move
+forward). See `nuc-delete-forward' and `proceed-char-repeatedly'."
   (interactive "p")
   (proceed-char-repeatedly (- count) #'delete-char nuc-base-regexp))
 
 
 (defun nuc-count (beg end)
-  "Test if the region between BEG and END (or the line) is a legal nucleotide
-acid sequence. Return the count if the region
- contains only legal nucleic acid characters, including
- `nuc-base-regexp', `seq-cruft-regexp'; otherwise return nil and
- report the location of the invalid characters in the echo region.
-This function calls `seq-count'."
+  "Count the number of bases in the region or the current line.
+
+Check if each char is legal base. Return the count if the region
+contains only legal nucleic acid characters, which includes
+`nuc-base-regexp', `seq-cruft-regexp'; otherwise return nil and
+report the location of the invalid characters in the echo region.
+This function calls `seq-count'. `nuc-p' is an alias of this function."
   (interactive
    (if mark-active
        (list (region-beginning) (region-end))
@@ -140,10 +145,13 @@ This function calls `seq-count'."
          (message "Base count: %d" length))
     length))
 
-(defalias 'nuc-p 'nuc-count)
+(defalias 'nuc-p 'nuc-count
+  "Check the validity of the region as nucleotide sequence.
+
+This is an alias of `nuc-count'.")
 
 (defun nuc-rna-p (beg end)
-  "Return the point of 'u' or 'U' if they are found; otherwise return nil.
+  "Return the point of 'u' or 'U' if any is found; otherwise return nil.
 
 See also `nuc-dna-p' and `nuc-p'."
   (interactive
@@ -157,7 +165,7 @@ See also `nuc-dna-p' and `nuc-p'."
       ;; (re-search-forward "[uU]" end t))))
 
 (defun nuc-dna-p (beg end)
-  "Return the point of 't' or 'T' if they are found; otherwise return nil.
+  "Return the point of 't' or 'T' if any is found; otherwise return nil.
 
 See also `nuc-rna-p' and `nuc-p'."
   (interactive
@@ -172,6 +180,7 @@ See also `nuc-rna-p' and `nuc-p'."
 
 (defun nuc-base-complement-lookup (base)
   "Look up the complement of the BASE and print a message.
+
 See `dna-base-complement'."
   (interactive "cComplement of base:")
   (if (equal base ?u) (setq base ?t))
@@ -243,13 +252,18 @@ found. This function has some code redundancy with
         (insert-char (if c-base c-base base))))))
 
 
-(defalias 'nuc-rc 'nuc-reverse-complement)
+(defalias 'nuc-rc 'nuc-reverse-complement
+  "Reverse complement the current nucleotide sequence region."
+
+This is an alias of `nuc-reverse-complement'.)
 
 
 ;;;###autoload
 (defun nuc-2rna (beg end)
-  "Convert to RNA. It basically convert 'u' to 't' ('U' to 'T') in the
-sequence."
+  "Convert the region or current line to RNA.
+
+It basically converts 't' -> 'u' and 'T' -> 'U'.
+Similar to `nuc-2dna."
   (interactive
    (if (use-region-p) ; (region-active-p)
        (list (region-beginning) (region-end))
@@ -260,7 +274,10 @@ sequence."
       (replace-match "u" nil t))))
 
 (defun nuc-2dna (beg end)
-  "Convert to DNA. Similar to `nuc-2rna'."
+  "Convert the region or current line to DNA.
+
+It basically converts 'u' -> 't' and 'U' -> 'T'.
+Similar to `nuc-2rna'."
   (interactive
    (if (use-region-p) ; (region-active-p)
        (list (region-beginning) (region-end))
@@ -272,7 +289,7 @@ sequence."
 
 
 (defun nuc-summary (beg end)
-  "Print the frequencies of bases in the region BEG and END or the current line.
+  "Print the frequencies of bases in the region or the current line.
 
 See also `region-summary'."
   (interactive
@@ -373,14 +390,14 @@ a nuc base in char type, hex-code colors for foreground and background")
 
 If CASE is nil, upcase and lowercase base chars will be colored the same;
 otherwise, not. See `paint-seq-region' for details."
-  (interactive
-   (if (use-region-p) ; (region-active-p)
-       (list (region-beginning) (region-end))
-     (list (line-beginning-position) (line-end-position))))
+  (interactive "r\nP")
   (paint-seq-region beg end "base-face" case))
 
 ;;;###autoload
-(defalias 'nuc-unpaint 'unpaint-seq-region)
+(defalias 'nuc-unpaint 'unpaint-seq-region
+  "Uncolor the nucleotide sequence region.
+
+It is an alias to `unpaint-seq-region'.")
 
 
 
@@ -414,7 +431,7 @@ return (72 78) for translation table 1."
 
 
 (defun nuc-set-translation-table (n)
-  "Set translation table.
+  "Set translation table to N.
 
 By default, this function set the table 1 as the translation table.
 For example, run `C-u 2 M-x nuc-set-translation-table' to set it to table 2."
