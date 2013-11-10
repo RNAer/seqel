@@ -175,6 +175,29 @@ the beginning of the fasta entry instead of the sequence."
   (or whole
       (forward-line)))
 
+(defun fasta--format (width)
+  (and width  (< width 1)
+       (error "Width should be nil or positive integer"))
+  (let (beg end)
+    (fasta-forward 1)
+    (backward-char)
+    (setq end (point-marker))
+    (fasta-backward 1)
+    (setq beg (line-beginning-position 2)) ; the beg of next line
+    ;; remove seq-spaces
+    (goto-char beg)
+    (while (re-search-forward seq-space-regexp end t)
+      ;; (setq count (1+ count))
+      (replace-match "" nil nil))
+    ;; insert newlines
+    (if width
+        (progn
+          (goto-char beg)
+          ;; (message "%d %d %d" width (point) (region-end))
+          (forward-char width)
+          (while (< (point) end)
+            (insert-char ?\n)
+            (forward-char width))))))
 
 ;;;###autoload
 (defun fasta-format (&optional width)
@@ -183,29 +206,17 @@ the beginning of the fasta entry instead of the sequence."
 By default, each sequence is one line (WIDTH is nil). The white spaces inside
 will also be removed."
   (interactive "P")
-  (and width  (< width 1)
-       (error "Width should be nil or positive integer"))
   (save-excursion
-    (let (beg end)
-      (fasta-forward 1)
-      (backward-char)
-      (setq end (point-marker))
-      (fasta-backward 1)
-      (setq beg (line-beginning-position 2)) ; the beg of next line
-      ;; remove seq-spaces
-      (goto-char beg)
-      (while (re-search-forward seq-space-regexp end t)
-        ;; (setq count (1+ count))
-        (replace-match "" nil nil))
-      ;; insert newlines
-      (if width
-          (progn
-            (goto-char beg)
-            ;; (message "%d %d %d" width (point) (region-end))
-            (forward-char width)
-            (while (< (point) end)
-              (insert-char ?\n)
-              (forward-char width)))))))
+    (fasta--format width)))
+
+
+(defun fasta-format-all (&optional width)
+  (interactive "P")
+  (save-excursion
+    (goto-char (point-max))
+    (while (fasta-backward 1)
+      (fasta--format width)
+      (fasta-backward 1))))
 
 
 (defun fasta-delete ()
@@ -313,6 +324,19 @@ to be nuc"
            (setq type 'nuc)))
     type))
 
+(defun fasta--rc (is-rna)
+  "Reverse complement current fasta sequence if it is nuc sequence.
+
+If IS-RNA is nil, then assume the sequence is RNA; otherwise, DNA."
+  (condition-case err
+      (progn (fasta-mark)
+             (let ((beg (region-beginning))
+                   (end (region-end)))
+               (if nuc-mode  ; if nuc-mode is enabled
+                   (nuc-reverse-complement beg (1- end) is-rna)
+                 (error "nuc mode is not enabled"))))
+    ('error (primitive-undo 1 buffer-undo-list)
+            (error "%s" err))))
 
 ;;;###autoload
 (defun fasta-rc (is-rna)
@@ -321,21 +345,40 @@ to be nuc"
 If IS-RNA is nil, then assume the sequence is RNA; otherwise, DNA."
   (interactive "P")
   (save-excursion
-    (fasta-mark)
-    (let ((beg (region-beginning))
-          (end (region-end)))
-      (if nuc-mode  ; if nuc-mode is enabled
-          (nuc-reverse-complement beg (1- end) is-rna)
-        (error "nuc mode is not enabled")))))
+    (fasta--rc is-rna)))
 
+(defun fasta-rc-all (is-rna)
+  (interactive "P")
+  (save-excursion
+    (goto-char (point-max))
+    (while (fasta-backward 1)
+      (fasta--rc is-rna)
+      (fasta-backward 1))))
+
+
+(defun fasta--translate ()
+  "Translate the current fasta sequence to amino acids."
+  (fasta-mark)
+  (if nuc-mode  ; if nuc-mode is enabled
+      (nuc-translate (region-beginning) (region-end))
+    (error "nuc mode is not enabled")))
+
+;;;###autoload
 (defun fasta-translate ()
   "Translate the current fasta sequence to amino acids."
   (interactive)
   (save-excursion
-    (fasta-mark)
-    (if nuc-mode  ; if nuc-mode is enabled
-        (nuc-translate (region-beginning) (region-end))
-      (error "nuc mode is not enabled"))))
+    (fasta--translate)))
+
+(defun fasta-translate-all ()
+  "Translate the current fasta sequence to amino acids."
+  (interactive)
+  (save-excursion
+    (goto-char (point-max))
+    (while (fasta-backward 1)
+      (fasta--translate)
+      (fasta-backward 1))))
+
 
 (defun fasta-weight ()
   "Calculate the molecular weight of the current protein entry."
@@ -345,6 +388,7 @@ If IS-RNA is nil, then assume the sequence is RNA; otherwise, DNA."
     (if pro-mode  ; if nuc-mode is enabled
         (pro-weight (region-beginning) (region-end))
       (error "pro mode is not enabled"))))
+
 
 
 ;;; column manipulations

@@ -183,11 +183,11 @@ See `dna-base-complement'."
 (defun nuc-complement (beg end &optional is-rna)
   "Complement a region of bases from BEG to END.
 
-Complement a region of the buffer by
-inserting the complements, base by base, and by deleting the region.
-Non-base char are passed over unchanged. By default, it will complement
-to DNA sequence unless IS-RNA is true. C-u \\[nuc-complement] will complement
-as RNA while as DNA without C-u"
+Complement a region of the buffer by inserting the complements,
+base by base, and by deleting the region. Non-base char will be
+passed over unchanged. By default, it will complement to DNA
+sequence unless IS-RNA is true. C-u \\[nuc-complement] will complement
+as RNA while as DNA without C-u."
   (interactive "r\nP")
   (let* ((t-exist (nuc-dna-p beg end))
          (u-exist (nuc-rna-p beg end))
@@ -197,7 +197,8 @@ as RNA while as DNA without C-u"
                 ((and u-exist is-rna) rna-base-complement)
                 ((and t-exist (not is-rna)) dna-base-complement)
                 ((and u-exist (not is-rna))
-                 (error "U (at %d) exist!" u-exist))))
+                 (error "U (at %d) exist!" u-exist))
+                (t dna-base-complement))
           base c-base)
     (save-excursion
       (goto-char beg)
@@ -210,9 +211,10 @@ as RNA while as DNA without C-u"
 
 ;;;###autoload
 (defun nuc-reverse-complement (beg end &optional is-rna)
-  "Reverse complement a region of DNA (unless IS-RNA is true) from BEG to END.
-Works by deleting the region and inserting bases reversed
-and complemented, base by base while entering non-bases in the order
+  "Reverse complement a region of DNA (unless IS-RNA is true).
+
+It works by deleting the region and inserting bases reversed
+and complemented, base by base, while leaving non-bases unchanged
 found. This function has some code redundancy with
 `nuc-complement'."
   (interactive "r\nP")
@@ -225,21 +227,20 @@ found. This function has some code redundancy with
                 ((and u-exist is-rna) rna-base-complement)
                 ((and t-exist (not is-rna)) dna-base-complement)
                 ((and u-exist (not is-rna))
-                 (error "U (at %d) exist" u-exist))))
+                 (error "U (at %d) exist" u-exist))
+                (t dna-base-complement)))
          (str-len (- end beg))
-         (old-pos (point))
-         base c-base)
-    (goto-char end)
-    (let (current-char)
+         old-pos base c-base)
+    (save-excursion
+      (goto-char beg)
+      (setq old-pos (point-marker))
       (dotimes (x str-len)
-        (save-excursion
-          (goto-char (- end x 1))
-          (setq base (following-char)))
+        (goto-char end)
+        (setq base (char-before))
+        (delete-char -1)
         (setq c-base (aref complement-vector base))
-        (insert (if c-base c-base base))))
-    (delete-region beg end)
-    (goto-char old-pos)
-    (if (/= old-pos end) (push-mark end nil t))))
+        (goto-char old-pos)
+        (insert-char (if c-base c-base base))))))
 
 
 (defalias 'nuc-rc 'nuc-reverse-complement)
