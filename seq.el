@@ -3,6 +3,20 @@
 
 (require 'color)
 
+
+;; define a new error symbol
+(put 'end-of-col-err
+     'error-conditions
+     ;; This error has three condition names:
+     ;; 1) end-of-col-err, the narrowest classification;
+     ;; 2) my-own-errors, which we imagine is a wider classification;
+     ;; 3) and error, which is the widest of all.
+     '(error my-own-errors end-of-col-err))
+(put 'end-of-col-err
+     'error-message
+     "End of column error")
+
+
 ;; valid characters as alignment gaps in the sequences
 (defvar seq-gap
   '(?- ?.)

@@ -5,6 +5,8 @@
 (require 'pro-mode)
 (require 'genetic-code)
 
+
+
 (defvar fasta-mode-hook nil
   "*Hook to setup `fasta-mode'.")
 
@@ -341,8 +343,10 @@ If IS-RNA is nil, then assume the sequence is RNA; otherwise, DNA."
                (if nuc-mode  ; if nuc-mode is enabled
                    (nuc-reverse-complement beg (1- end) is-rna)
                  (error "nuc mode is not enabled"))))
-    ('error (primitive-undo 1 buffer-undo-list)
-            (error "%s" err))))
+    ((debug error)
+     (primitive-undo 1 buffer-undo-list)
+     ;; get the original error message
+     (error "%s" (error-message-string err)))))
 
 ;;;###autoload
 (defun fasta-rc (is-rna)
@@ -368,10 +372,15 @@ It calls `fasta--rc' on each fasta record."
 
 (defun fasta--translate ()
   "Translate the current fasta sequence to amino acids."
-  (fasta-mark)
-  (if nuc-mode  ; if nuc-mode is enabled
-      (nuc-translate (region-beginning) (region-end))
-    (error "nuc mode is not enabled")))
+  (condition-case err
+      (progn (fasta-mark)
+             (if nuc-mode  ; if nuc-mode is enabled
+                 (nuc-translate (region-beginning) (region-end))
+               (error "nuc mode is not enabled")))
+    ((debug error)
+     (primitive-undo 1 buffer-undo-list)
+     ;; get the original error message
+     (error "%s" (error-message-string err)))))
 
 ;;;###autoload
 (defun fasta-translate ()
@@ -407,32 +416,33 @@ It calls `fasta--translate' on each fasta record."
 
 ;;; column manipulations
 (defmacro fasta--column-action (&rest fn)
-  "A function called by other column manipulation functions.
+  "A macro called by other column manipulation functions.
 
 FN is a piece of code that does some specific manipulation
-at the current column. See `fasta-insert-column'
-and `fasta-mark-column' for an example of usage."
+at the current column of all fasta records. See `fasta-insert-column'
+and `fasta-delete-column' for an example of usage."
   `(save-excursion
-     (condition-case err
-         (let ((column (current-column))
-               pos)
-           (goto-char (point-max))
-           (setq pos (point-marker))
-           (while (fasta-backward 1)
-             (forward-line) ; move to the sequence region
-             (if (< (move-to-column column) column)
-                 (error "This sequence at line %d does not have enough columns at %d"
-                        (line-number-at-pos) column))
-             ,@fn
-             (or (> pos (point))
-                 (error "This sequence at line %d does not have enough columns at %d"
-                        (line-number-at-pos) column))
-             (fasta-backward 1)
-             (setq pos (point-marker))))
+     (let ((column (current-column))
+           pos ln)
+       (condition-case err
+           (progn (goto-char (point-max))
+                  (setq pos (point-marker))
+                  (while (fasta-backward 1)
+                    (forward-line) ; move to the sequence region
+                    (setq ln (line-number-at-pos))
+                    (if (< (move-to-column column) column)
+                        (signal 'end-of-col-err '(move-to-column)))
+                    ,@fn
+                    (or (> pos (point))
+                        (signal 'end-of-col-err '((> pos (point)))))
+                    (fasta-backward 1)
+                    (setq pos (point-marker))))
        ;; return to the original state if error is met.
-       ('error ; the single quote is dispensable
+       (end-of-col-err ; the single quote is dispensable
         (primitive-undo 1 buffer-undo-list)
-        (error "%s" err)))))
+        (error "%s Line %d does not have enough columns at %d."
+                 (error-message-string err)
+                 ln column))))))
 
 
 (defun fasta-delete-column (&optional n)
