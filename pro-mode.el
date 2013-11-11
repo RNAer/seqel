@@ -30,7 +30,7 @@
     (?x  "Xaa"  nil)  ; unknown aa
     (?y  "Tyr"  163.18)
     (?z  "Glx"  nil)) ; Glu Gln
-  "*A association list of one-letter, three-letter IUPAC code of AA and their molecular weight.
+  "*A association list of 1-letter, 3-letter IUPAC AA codes and molecular weights.
 
 For each inner list, the first element is allowed AA; the second element
 is the three-letter code of the first, and the last is the molecular weight.
@@ -44,13 +44,12 @@ for the first. Only for lowercase, as the upcased will be added automatically.")
                     x)
                   pro-aa--alist)
           pro-aa--alist)
-  "Similar to `pro-aa--alist', just with upcase bases added.")
+  "Similar to `pro-aa--alist', just with upcase 1-letter code added.")
 
 
 (defvar pro-aa
   (mapcar #'car pro-aa-alist)
-  "All char for a single base, following IUPAC code. It should be in lower case
-as the upper case will be added automatically.")
+  "All 1-letter IUPAC AA code, including lower and upper cases.")
 
 (defvar pro-aa-acidic "de")
 (defvar pro-aa-basic "rhk")
@@ -71,14 +70,18 @@ as the upper case will be added automatically.")
     (dolist (element pro-aa-alist)
       (aset vec (car element) (nth 1 element)))
     vec)
-  "A vector of 3-letter amino acid codes.")
+  "A vector of 3-letter amino acid codes.
+
+It is used to convert 1-letter codes to 3-letter codes.")
 
 (defvar pro-aa-3-hash
   (let ((my-hash (make-hash-table :test 'equal)))
     (dolist (element pro-aa--alist)
       (puthash (nth 1 element) (car element) my-hash))
     my-hash)
-  "A hash table with 3-letter code as key and 1-letter code as value.")
+  "A hash table with 3-letter code as key and 1-letter code as value.
+
+It is used to convert 3-letter codes to 1-letter codes.")
 
 (defvar pro-aa-regexp
   (regexp-opt (mapcar #'char-to-string pro-aa))
@@ -91,13 +94,13 @@ as the upper case will be added automatically.")
    (if (use-region-p) ; (region-active-p)
        (list (region-beginning) (region-end))
      (list (line-beginning-position) (line-end-position))))
-  (let ((sum-mw 0) (times (- end beg)) current)
+  (let ((sum-mw 0) (times (- end beg)) mw)
     (save-excursion
       (goto-char beg)
       (dotimes (x times)
-        (setq current (aref pro-aa-mw (downcase (char-after))))
-        (cond (current
-               (setq sum-mw (+ sum-mw current)))
+        (setq mw (aref pro-aa-mw (downcase (char-after))))
+        (cond (mw
+               (setq sum-mw (+ sum-mw mw)))
               ((not (looking-at seq-cruft-regexp))
                (error "Ambiguous or illegal char at position %d, %d"
                       (line-number-at-pos) (current-column))))
@@ -108,7 +111,7 @@ as the upper case will be added automatically.")
 
 
 (defun pro-1-2-3 (beg end)
-  "Convert 1-letter IUPAC code to 3-letter IUPAC code"
+  "Convert the region of 1-letter IUPAC code to 3-letter IUPAC code"
   (interactive
    (if (use-region-p) ; (region-active-p)
        (list (region-beginning) (region-end))
@@ -117,19 +120,23 @@ as the upper case will be added automatically.")
       (let ((times (- end beg)))
         (goto-char beg)
         (dotimes (x times)
-          (if (looking-at pro-aa-regexp)
-              (progn (insert (aref pro-aa-1-vec (char-after)))
-                     (delete-char 1))
-            (forward-char))))
-    (error (primitive-undo 1 buffer-undo-list)
-           (message "Failed: %s" err))))
+          (cond ((looking-at pro-aa-regexp)
+                 (insert (aref pro-aa-1-vec (char-after)))
+                 (delete-char 1))
+                ((not (looking-at seq-cruft-regexp))
+                 (error "Ambiguous or illegal char at position %d, %d"
+                      (line-number-at-pos) (current-column))))
+          (forward-char)))
+    ((debug error)
+     (primitive-undo 1 buffer-undo-list)
+     (error "%s" (error-message-string err)))))
 
 
 (defun pro-3-2-1 (beg end)
   "Convert 3-letter IUPAC code to 1-letter IUPAC code.
 
 Currently it only converts 3-letter codes without any characters
-between them."
+separating them."
   (interactive
    (if (use-region-p) ; (region-active-p)
        (list (region-beginning) (region-end))
@@ -146,49 +153,55 @@ between them."
             (error "Unknown code '%s' at position %d" code (point)))
           (delete-char 3)))
     ;; return to the original state if error is met.
-    (error (primitive-undo 1 buffer-undo-list)
-           (message "Failed: %s" err))))
+    ((debug error)
+     (primitive-undo 1 buffer-undo-list)
+     (error "%s" (error-message-string err)))))
+
 
 
 ;;;###autoload
 (defun pro-move-forward (count)
-  "Move forward COUNT bases. Move backward if negative.
-Skip `seq-cruft-regexp' but stop on the illegal base
-and report how many bases the point have been moved by.
+  "Move forward COUNT AA. Move backward if COUNT is negative.
+
+Skip `seq-cruft-regexp' but stop on the illegal AA code
+and report how many AA the point have been moved by.
 COUNT can be either positive or negative, indicating the
-moving direction. Return the number of bases that are moved thru.
+moving direction. Return the number of AA that are moved thru.
 See `proceed-char-repeatedly'"
   (interactive "p")
   (proceed-char-repeatedly count #'forward-char pro-aa-regexp))
 
 (defun pro-move-backward (count)
-  "Move backward COUNT bases, similar to `pro-aa-move-forward'. See also
- `proceed-char-repeatedly'."
+  "Move backward COUNT number of AA, similar to `pro-aa-move-forward'.
+
+See also `proceed-char-repeatedly'."
   (interactive "p")
   ;; (proceed-char-repeatedly count 'backward-char))
   (proceed-char-repeatedly (- count) #'forward-char pro-aa-regexp))
 
 ;;; delete
 (defun pro-delete-forward (count)
-  "Delete COUNT number of bases starting from the point, similar to
-`pro-aa-move-forward' (just use delete instead of move)."
+  "Delete COUNT number of AA starting from the point.
+
+Similar to `pro-aa-move-forward' (just use delete instead of move)."
   (interactive "p")
   (proceed-char-repeatedly count #'delete-char pro-aa-regexp))
 
 (defun pro-delete-backward (count)
-  "Delete backward COUNT number of bases from the point, similar to
-`pro-aa-move-forward' (just use delete backward instead of move forward).
-See `pro-aa-delete-forward' and `proceed-char-repeatedly'."
+  "Delete backward COUNT number of AA from the point.
+
+Similar to `pro-aa-move-forward' (just use delete backward instead of
+move forward). See `pro-aa-delete-forward' and `proceed-char-repeatedly'."
   (interactive "p")
   (proceed-char-repeatedly (- count) #'delete-char pro-aa-regexp))
 
 
 (defun pro-count (beg end)
-  "Test if the region between BEG and END (or the line) is a legal
-protein sequence. Return the count if the region
- contains only legal nucleic acid characters, including
- `pro-aa-regexp', `seq-cruft-regexp'; otherwise return nil and
- report the location of the invalid characters in the echo region."
+  "Test if the region from BEG to END (or the line) is a legal protein sequence.
+
+Return the count if the region contains only legal nucleic acid characters,
+including `pro-aa-regexp', `seq-cruft-regexp'; otherwise return nil and
+report the location of the invalid characters in the echo region."
   (interactive
    (if mark-active
        (list (region-beginning) (region-end))
@@ -200,7 +213,8 @@ protein sequence. Return the count if the region
     length))
 
 
-(defalias 'pro-p 'pro-count)
+(defalias 'pro-p 'pro-count
+  "This is an alias of `pro-count'.")
 
 
 (defun pro-summary (beg end)
@@ -218,10 +232,9 @@ See also `region-summary'."
 
 (defun seq-isearch-mangle-str (str)
   "Mangle the string STR into a regexp to search over cruft in sequence.
-Inserts a regexp between each base which matches sequence formatting cruft.
-For example, if `seq-cruft-regexp' is '[ ]', the search string 'acgt' would be
-transformed into 'a[ ]*c[ ]*g[ ]*t' and the search string containing IUPAC code
-such as 'acrt' would be transformed into '[a][ ]*[c][ ]*[ag][ ]*[t]."
+Inserts a regexp between each AA which matches sequence formatting cruft.
+For example, if `seq-cruft-regexp' is '[ ]', the search string 'ALPR' would be
+transformed into 'A[ ]*L[ ]*P[ ]*R'."
   ;; (mapconcat 'identity (split-string str "" t) (concat seq-cruft-regexp "*")))
     (mapconcat 'char-to-string str (concat seq-cruft-regexp "*")))
 
@@ -252,18 +265,18 @@ a nuc base in char type, hex-code colors for foreground and background")
 
 ;;;###autoload
 (defun pro-paint (beg end &optiona case)
-  "Color the nucleic acid region BEG to END.
+  "Color the AA region from BEG to END.
 
 If CASE is nil, upcase and lowercase base chars will be colored the same;
 otherwise, not. See `seq-paint' for details."
-  (interactive
-   (if (use-region-p) ; (region-active-p)
-       (list (region-beginning) (region-end))
-     (list (line-beginning-position) (line-end-position))))
+  (interactive "r\nP")
   (seq-paint beg end "aa-face" case))
 
 ;;;###autoload
-(defalias 'pro-unpaint 'seq-unpaint)
+(defalias 'pro-unpaint 'seq-unpaint
+  "Uncolor the AA region.
+
+This is an alias to `seq-unpaint'.")
 
 
 (defvar pro-mode-map

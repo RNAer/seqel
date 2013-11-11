@@ -402,7 +402,7 @@ It is an alias to `seq-unpaint'.")
 
 
 
-(defconst translation-table nil
+(defvar translation-table nil
   "Define the translation table.
 
 This is hash table with codons as keys. It is set by
@@ -442,8 +442,6 @@ For example, run `C-u 2 M-x nuc-set-translation-table' to set it to table 2."
     (setq translation-table (hash-alist table))
     (message "Set to translation table %d" n)))
 
-;; set the default table to 1
-(nuc-set-translation-table 1)
 
 ;;;###autoload
 (defun nuc-translate (beg end)
@@ -499,7 +497,9 @@ It should not be enabled with `pro-mode' at the same time."
   ;; the name, a string, to show in the modeline
   :lighter " nuc"
   :keymap nuc-mode-map
-  :global t)
+  :global t
+  ;; set the default table to 1
+  (nuc-set-translation-table 1))
 
 (provide 'nuc-mode)
 
