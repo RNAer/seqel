@@ -2,6 +2,7 @@
 
 (require 'nuc-mode)
 (require 'seq)
+(require 'genetic-code)
 (require 'ert)
 
 
@@ -180,6 +181,7 @@
 
 (ert-deftest nuc-translate-test ()
   :tags '(nuc-mode)
+  ;; http://in-silico.net/tools/biology/sequence_conversion
   (let ((cases '(("accatttcm mtc" . "TISX")))
         tmp)
     (with-temp-buffer

@@ -16,15 +16,8 @@
     (define-key map "\C-cd"     'genbank-delete)
     (define-key map "\C-ce"     'genbank-last)
     (define-key map "\C-cf"     'genbank-format)
-    (define-key map "\C-cl"     'genbank-seq-length)
     ;; (define-key map "\C-cm"     'genbank-mark)
     (define-key map "\C-cp"     'genbank-position)
-    (define-key map "\C-cr"     'genbank-rc)
-    (define-key map "\C-c\C-d"  'genbank-delete-column)
-    (define-key map "\C-c\C-i"  'genbank-insert-column)
-    (define-key map "\C-c\C-h"  'genbank-highlight-column)
-    (define-key map "\C-c\C-p"  'genbank-paint-column)
-    (define-key map "\C-c\C-s"  'genbank-summary-column)
     map)
  "The local keymap for `genbank-mode'")
 
@@ -34,19 +27,27 @@
      (1 font-lock-keyword-face)
      (2 font-lock-function-name-face))
 
-    ("^\\(VERSION\\) +\\([-_.a-zA-Z_0-9]+\\) +\\([Gg][Ii]\\):\\([0-9]+\\)" ;; are '-_.' allowed?
+    ;; are '-_.' allowed?
+    ("^\\(VERSION\\) +\\([-_.a-zA-Z_0-9]+\\) +\\([Gg][Ii]\\):\\([0-9]+\\)"
      (1 font-lock-keyword-face)
      (2 font-lock-function-name-face)
      (3 font-lock-keyword-face)
      (4 font-lock-function-name-face))
 
     ;; more genbank keywords...
-    "ORIGIN" "ACCESSION" "AUTHORS" "BASE COUNT" "DEFINITION"
-    "FEATURES" "JOURNAL" "KEYWORDS" "MEDLINE" "NID "
-    "ORGANISM" "REFERENCE" "SEGMENT" "SOURCE" "TITLE"
-    "DBLINK" "PUBMED" "REMARK" "COMMENT" "CONSRTM"
+    ;; will be font-lock-keyword-face by default
+    "DEFINITION" "ACCESSION" "DBLINK" "ORIGIN"
+    "KEYWORDS" "SOURCE" "REFERENCE" "FEATURES"
+    "COMMENT"
 
-    ;; line numbers...
+    ("^ +\\(ORGANISM\\)" . font-lock-doc-face)
+    ("^ +\\(AUTHORS\\)"  . font-lock-doc-face)
+    ("^ +\\(TITLE\\)"    . font-lock-doc-face)
+    ("^ +\\(JOURNAL\\)"  . font-lock-doc-face)
+    ("^ +\\(PUBMED\\)"   . font-lock-doc-face)
+
+
+    ;; line numbers at the beginning of sequence...
     ("^[ \t]*\\([0-9]+\\)"
      (1 font-lock-string-face)))
   "Expressions to hilight in `genbank-mode'.")
@@ -75,75 +76,100 @@ Special commands:
   (run-hooks 'genbank-mode-hook))
 
 
+(defvar genbank-record-regexp "^//[ \t]*$"
+  "Genbank label that delimits records.")
+
+
 ;;;###autoload
 (add-to-list 'auto-mode-alist
              '("\\.\\(genbank\\|gb\\)\\'" . genbank-mode))
 
 
-(defun genbank-mark (&optional whole)
-  "Put point at the beginning of the sequence and mark the end.
+(defun genbank-forward (count)
+  "Move forward to the end genbank record.
+
+It works in the style of `forward-paragraph'. Count need to be positive integer.
+Return current point if it moved over COUNT of records; otherwise return nil."
+  (interactive "p")
+  (if (< count 1)
+      (error "The parameter count should be positive integer."))
+  (beginning-of-line)
+  (if (re-search-forward genbank-record-regexp nil 'move-to-point-max count)
+      (progn (re-search-backward genbank-record-regexp nil 2)
+             (forward-line)))
+  (if (equal (point) (point-max))
+      nil
+    (point)))
+
+(defun genbank-backward (count)
+  "Move the point the beginning of the genbank record.
+
+It works in the style of `backward-paragraph'. COUNT need to be positive integer.
+Return current point if it moved over COUNT of records; otherwise return nil."
+  (interactive "p")
+  (if (< count 1)
+      (error "The parameter count should be positive integer."))
+  (if (eq (current-column) 0) (forward-line -1))
+  (if (eolp) (backward-char))
+  (if (re-search-backward genbank-record-regexp nil 'move-to-point-max count)
+      (progn (forward-line) (point))
+    nil))
+
+
+(defun genbank-first ()
+  "Go to the beginning of first genbank record."
+  (interactive)
+  (goto-char (point-min)))
+
+(defun genbank-last ()
+  "Go to the beginning of last genbank record."
+  (interactive)
+  (goto-char (point-max))
+  (genbank-backward 1))
+
+(defun genbank-count ()
+  (interactive)
+  (let ((total 0))
+    (save-excursion
+      (goto-char (point-min))
+      (while (genbank-forward 1)
+        (setq total (1+ total))))
+    (if (called-interactively-p 'interactive)
+        (message "Total %d records." total))
+    total))
+
+
+(defun genbank-mark-seq ()
+  "Mark the whole sequence under ORIGIN section."
+  (interactive)
+  (genbank-forward 1)
+  (forward-line -1)
+  (push-mark nil nil t)
+  (re-search-backward "^ORIGIN *$" nil)
+  (forward-line 1))
+
+(defun genbank-mark ()
+  "Put point at the beginning of the record and mark the end.
 
 If a prefix arg is provided or WHOLE is t, then put the point at
 the beginning of the genbank entry instead of the sequence."
-  (interactive "P")
+  (interactive)
   (genbank-forward 1)
-  (push-mark)
-  (genbank-backward 1)
-  (or whole
-      (forward-line)))
+  (push-mark nil nil t)
+  (genbank-backward 1))
 
 
-(defun genbank-position ()
-  "Return the position of point in the current sequence.
-
-It will not count white spaces and seq gaps. The count starts
-at zero."
+(defun genbank-delete ()
+  "Delete the current genbank record."
   (interactive)
-  (if (looking-at genbank-record-regexp)
-      (error "Point is not in the sequence region"))
-  (let ((pos   (point))
-        (count 0))
-    (save-excursion
-      (if (> (genbank-backward 1) 0)
-          (error "The start of the genbank record is not found"))
-      (end-of-line)
-      (while (< (point) pos)
-        (if (not (looking-at seq-cruft-regexp))
-            (setq count (1+ count)))
-        (forward-char)))
-    (if (called-interactively-p 'interactive)
-        (message "Position %d" count))
-    count))
+  (delete-region (region-beginning) (region-end)))
 
-
-(defun genbank-seq-length ()
-  "Return the length of current sequence."
-  (interactive)
-  (let (length)
-    (save-excursion
-      (genbank-forward 1)
-      (backward-char)
-      (setq length (genbank-position)))
-    (if (called-interactively-p 'interactive)
-        (message "Length %d" length))
-    length))
-
-
-;;;###autoload
-(defun genbank-rc (is-rna)
-  "Reverse complement current genbank sequence if it is nuc sequence."
-  (interactive "P")
-  (save-excursion
-    (genbank-mark)
-    (let ((beg (region-beginning))
-          (end (region-end)))
-      (if nuc-mode  ; if nuc-mode is enabled
-          (nuc-reverse-complement beg (1- end) is-rna)
-        (error "nuc mode is not enabled")))))
 
 ;;;###autoload
 (defun genbank-2-fasta ()
-  (interactive))
+  "Convert current genbank record to fasta format"
+  (interactive)
+  (goto-char (point-max))  )
 
 
 (provide 'genbank-mode)

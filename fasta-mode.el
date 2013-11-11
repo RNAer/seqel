@@ -12,7 +12,7 @@
 
 ;;;###autoload
 (defvar fasta-setup-on-load nil
-  "*If not nil, set up fasta mode on buffer load.")
+  "*If not nil, set up fasta mode on buffer load by guessing buffer content.")
 
 (defvar fasta-mode-map
   ;; use `make-keymap' if there are lots of keybindings
@@ -153,6 +153,7 @@ Return current point if it moved over COUNT of records; otherwise return nil."
 
 ;;;###autoload
 (defun fasta-count ()
+  "Count the number of fasta records in the buffer."
   (interactive)
   (let ((total 0))
     (save-excursion
@@ -230,9 +231,8 @@ It calls `fasta--format' on each fasta records."
 (defun fasta-delete ()
   "Delete current fasta entry."
   (interactive)
-  (save-excursion
-    (fasta-mark t)
-    (kill-region (region-beginning) (region-end))))
+  (fasta-mark t)
+  (delete-region (region-beginning) (region-end))))
 
 
 (defun fasta-position ()
