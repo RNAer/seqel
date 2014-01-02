@@ -1,5 +1,11 @@
 ;;; aa-mode.el --- a minor mode for editing protein sequences
-;;; It should be not enabled with nuc-mode at the same time.
+
+;;; license: GPLv3
+
+;;; Commentary:
+;;  * It should be not enabled with nuc-mode at the same time.
+
+;;; Author: Zech Xu <zhenjiang dot xu at gmail dot com>
 
 ;;;;;; USER CUSTOMIZABLE VARIABLES START HERE
 
@@ -303,4 +309,4 @@ It should be not enabled with `nuc-mode' at the same time."
 
 (provide 'pro-mode)
 
-;;; nuc-mode.el ends here
+;;; pro-mode.el ends here

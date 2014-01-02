@@ -1,8 +1,13 @@
 ;;; nuc-mode.el --- a minor mode for editing nucleic acid sequences
-;;; It should not be enabled with pro-mode at the same time.
-;;; Commentary:
-;; * A collection of functions for editing DNA and RNA sequences.
 
+;;; license: GPLv3
+
+;;; Author: Zech Xu <zhenjiang dot xu at gmail dot com>
+
+;;; Commentary:
+;;  * A collection of functions for editing DNA and RNA sequences.
+;;  * It should not be enabled with pro-mode at the same time.
+;;  * Borrows a few ideas/lines of code from dna-mode.el
 
 (require 'seq)
 (require 'genetic-code)

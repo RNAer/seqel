@@ -8,4 +8,4 @@
                "nuc-mode.el"
                "pro-mode.el"
                "README.md"
-               "genetic_code.txt"))
+               "genetic_code.el"))

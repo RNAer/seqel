@@ -1,5 +1,9 @@
-;;; seq.el --- functions and variables shared by nuc-mode.el and
-;;; aa-mode.el.
+;;; seq.el --- util functions and variables shared by nuc-mode.el and aa-mode.el.
+
+;;; license: GPLv3
+
+;;; Author: Zech Xu <zhenjiang dot xu at gmail dot com>
+
 
 (require 'color)
 

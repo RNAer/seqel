@@ -1,5 +1,10 @@
 ;;; fasta-mode -- a major mode for editing fasta files
 
+;;; license: GPLv3
+
+;;; Author: Zech Xu <zhenjiang dot xu at gmail dot com>
+
+
 (require 'seq)
 (require 'nuc-mode)
 (require 'pro-mode)

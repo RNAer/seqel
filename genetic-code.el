@@ -1,5 +1,13 @@
 ;;; genetic-code.el --- store tables of genetic code
 
+;;; License: GPLv3
+
+;;; Commentary:
+;;  * The translation tables are downloaded from
+;;    http://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi
+
+;;; Author: Zech Xu <zhenjiang dot xu at gmail dot com>
+
 (defun get-translation-table (n)
   "Return tranlation table.
 
