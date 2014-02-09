@@ -49,12 +49,12 @@ The next char has to belong to LEGAL-CHAR-REGEXP; otherwise, stop and report
 error. The `seq-cruft-regexp' char will be skipped, i.e., not counted.
  Return the actual count of legal char. COUNT can be either positive
 or negative integer, indicating the proceeding direction."
-  (let ((direction (if (< count 0) -1 1)))
-    (fset 'looking (if (< count 0) 'looking-back 'looking-at))
+  (let ((direction (if (< count 0) -1 1))
+	(looking (if (< count 0) 'looking-back 'looking-at)))
     (dotimes (x (abs count))
-      (while (looking seq-cruft-regexp)
+      (while (funcall looking seq-cruft-regexp)
         (funcall func direction))
-      (if (looking legal-char-regexp)
+      (if (funcall looking legal-char-regexp)
           (funcall func direction)
         (error "Illegal char found! Moved %d bases" (* direction x))))
     count))
@@ -209,9 +209,9 @@ otherwise, not. FACE-PREFIX decides which face groups ('base-face' or
           (setq face (format "%s-%c" face-prefix (upcase char))))
         (if (facep face)
             ;; use font-lock-face instead of face for font-lock-mode is enabled
-            (silent-put-text-property beg (+ beg 1)
-                                      'font-lock-face
-                                      (intern face))
+            (put-text-property beg (+ beg 1)
+			       'font-lock-face
+			       (intern face))
           (error "Face '%s' does not exist." face))
         (forward-char)))))
 

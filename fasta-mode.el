@@ -38,7 +38,7 @@
     (define-key map "\C-c\C-p"  'fasta-paint-column)
     (define-key map "\C-c\C-s"  'fasta-summary-column)
     map)
- "The local keymap for `fasta-mode'")
+  "The local keymap for `fasta-mode'")
 
 ;;;###autoload
 (add-to-list 'auto-mode-alist
@@ -237,7 +237,7 @@ It calls `fasta--format' on each fasta records."
   "Delete current fasta entry."
   (interactive)
   (fasta-mark t)
-  (delete-region (region-beginning) (region-end))))
+  (delete-region (region-beginning) (region-end)))
 
 
 (defun fasta-position ()
@@ -475,7 +475,7 @@ and C-u \\[fasta-highlight-column] will unmark the column."
         ((numberp to-face)
          (setq to-face nil)))
   (fasta--column-action
-   (silent-put-text-property (point) (1+ (point)) 'font-lock-face to-face)))
+   (put-text-property (point) (1+ (point)) 'font-lock-face to-face)))
 
 
 (defun fasta-paint-column (&optional case)
@@ -494,7 +494,7 @@ C-u \\[fasta-paint-column] honors the cases"
           (t
            (error "Unknown seq type")))
     (fasta--column-action
-     (silent-put-text-property (point) (1+ (point))
+     (put-text-property (point) (1+ (point))
                                'font-lock-face
                                (intern (eval to-face))))))
 

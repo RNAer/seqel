@@ -219,8 +219,7 @@ report the location of the invalid characters in the echo region."
     length))
 
 
-(defalias 'pro-p 'pro-count
-  "This is an alias of `pro-count'.")
+(defalias 'pro-p 'pro-count)
 
 
 (defun pro-summary (beg end)

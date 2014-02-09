@@ -183,7 +183,7 @@
   :tags '(nuc-mode)
   ;; http://in-silico.net/tools/biology/sequence_conversion
   (let ((cases '(("accatttcm mtc" . "TISX")))
-        tmp)
+        nuc tmp)
     (with-temp-buffer
       (dolist (test cases)
         (setq nuc (car test))

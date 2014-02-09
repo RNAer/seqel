@@ -2,10 +2,5 @@
 ;; https://github.com/milkypostman/melpa
 (seqel :fetcher github
        :repo "rnaer/seqel"
-       :files ("seq.el"
-               "fasta-mode.el"
-               "genbank-mode.el"
-               "nuc-mode.el"
-               "pro-mode.el"
-               "README.md"
-               "genetic_code.el"))
+       :files ("*.el" "test/*"
+               "README.md"))

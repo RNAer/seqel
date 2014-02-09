@@ -212,7 +212,7 @@ as RNA while as DNA without C-u."
                 ((and t-exist (not is-rna)) dna-base-complement)
                 ((and u-exist (not is-rna))
                  (error "U (at %d) exist!" u-exist))
-                (t dna-base-complement))
+                (t dna-base-complement)))
           base c-base)
     (save-excursion
       (goto-char beg)
@@ -257,10 +257,7 @@ found. This function has some code redundancy with
         (insert-char (if c-base c-base base))))))
 
 
-(defalias 'nuc-rc 'nuc-reverse-complement
-  "Reverse complement the current nucleotide sequence region."
-
-This is an alias of `nuc-reverse-complement'.)
+(defalias 'nuc-rc 'nuc-reverse-complement)
 
 
 ;;;###autoload
@@ -403,7 +400,6 @@ otherwise, not. See `seq-paint' for details."
   "Uncolor the nucleotide sequence region.
 
 It is an alias to `seq-unpaint'.")
-
 
 
 

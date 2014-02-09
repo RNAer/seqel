@@ -24,17 +24,23 @@
 
 (ert-deftest pro-3-2-1-test ()
   :tags '(pro-mode)
->sequence1
-AlaCysAspGluPheGlyHisIleLysAsxXaaGlx
-
->sequence2
-AsnProGlnArgSerThrValTrpTyr***
-
->sequence1
-ACDEFGHIKBXZ
-
->sequence2
-NPQRSTVWY*)
+  (let ((cases '((
+">sequence1
+AlaCysAspGluPheGlyHisIleLysAsxXaaGlx" .
+">sequence1
+ACDEFGHIKBXZ") (
+">sequence2
+AsnProGlnArgSerThrValTrpTyr***" .
+">sequence2
+NPQRSTVWY*"))))
+    (with-temp-buffer
+      (dolist (test cases)
+	(insert (car test))
+        (set-mark (point-min))
+        (goto-char (point-max))
+	(call-interactively 'pro-3-2-1)
+	(should (equal (buffer-string) (cdr test)))
+	(delete-region (point-min) (point-max))))))
 
 
 (ert-deftest pro-summary-test ()
