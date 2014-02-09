@@ -15,12 +15,10 @@
 (defvar fasta-mode-hook nil
   "*Hook to setup `fasta-mode'.")
 
-;;;###autoload
-(defvar fasta-setup-on-load nil
-  "*If not nil, set up fasta mode on buffer load by guessing buffer content.")
 
 (defvar fasta-mode-map
-  ;; use `make-keymap' if there are lots of keybindings
+  ;; use `make-keymap' instead of `make-sparse-keymap'
+  ;; if there are lots of keybindings
   (let ((map (make-sparse-keymap)))
     ;; Ctrl bindings
     (define-key map "\C-ca"     'fasta-first)
@@ -91,20 +89,31 @@
   (run-hooks 'fasta-mode-hook))
 
 
+(defvar fasta-setup-on-load t
+  "If not nil, set up fasta mode on buffer load by guessing buffer content.")
+
 (defun fasta-find-file ()
   "Invoke `fasta-mode' if the buffer look like a fasta.
-and another mode is not active.
-This function is added to `find-file-hooks'."
+
+Only if the major mode is `fundermental. This function is added to
+`find-file-hooks'."
   (save-excursion
     (goto-char (point-min))
     (if (and (eq major-mode 'fundamental-mode)
              (looking-at fasta-record-regexp))
         (fasta-mode))))
 
-
 ;;;###autoload
-(if fasta-setup-on-load
-    (add-hook 'find-file-hook 'fasta-find-file))
+(defun fasta-guess-on-load ()
+  "Whether to enable `fasta-mode' by guessing buffer content."
+  (interactive)
+  (if fasta-setup-on-load 
+      (progn (remove-hook 'find-file-hook 'fasta-find-file)
+	     (setq fasta-setup-on-load nil)
+	     (message "Turned off fasta format guessing on load"))
+    (progn (add-hook 'find-file-hook 'fasta-find-file)
+	   (setq fasta-setup-on-load t)
+	   (message "Turned on fasta format guessing on load"))))
 
 
 ;;;###autoload
@@ -112,7 +121,7 @@ This function is added to `find-file-hooks'."
              '("\\.\\(fasta\\|fa\\|fna\\|faa\\)\\'" . fasta-mode))
 
 
-;;;###autoload
+
 (defun fasta-backward (count)
   "Move the point the beginning of the fasta record.
 
