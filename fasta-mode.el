@@ -309,42 +309,47 @@ It will search all the sequence residues for unique nuc base and unique
 protein amino acid IUPAC code. If found, the type is determined. Or if
 more than (1000) number or all of them are \"atugc\", then it is determined
 to be nuc"
-  (interactive)
-  (let ((pro-uniq (set-difference pro-aa nuc-base))
-        (nuc-uniq (set-difference nuc-base pro-aa))
+  (let ((pro-uniq pro-aa)
+        (nuc-uniq nuc-base)
         (atugc    '(?a ?t ?u ?g ?c ?A ?T ?U ?G ?C))
         (smallest 1000)
         (count    0)
-        (atugc-p  t)
-        pos  current type)
+        (atugc-only-p  t)
+        current)
+    (mapc (lambda (x) (setq pro-uniq (remq x pro-uniq))) nuc-base)
+    (mapc (lambda (x) (setq nuc-uniq (remq x nuc-uniq))) pro-aa)
     (save-excursion
-      (goto-char (point-max))
-      (setq pos (point))
-      (setq type (catch 'seq-type
-                   (while (> (fasta-backward 1) 0)
-                     ;; (message "%d" (line-number-at-pos))
-                     (forward-line) ; move to the sequence region
-                     (while (< (point) pos)
-                       (setq current (char-after))
-                       (cond ((memq current pro-uniq)
-                              (throw 'seq-type 'pro))
-                             ((memq current nuc-uniq)
-                              (throw 'seq-type 'nuc)))
-                       (or (not atugc-p)
-                           (memq current seq-gap)
-                           (memq current seq-space)
-                           (if (memq current atugc) (setq count (1+ count)))
-                           (setq atugc-p nil))
-                       (forward-char)
-                       ;; (message "%c %S" current atugc-p)
-                       (and (> count smallest)
-                            atugc-p
-                            (throw 'seq-type 'nuc))
-                     (fasta-backward 1)
-                     (setq pos (point))))))
-      (and atugc-p
-           (setq type 'nuc)))
-    type))
+      (goto-char (point-min))
+      (catch 'seq-type
+	(while (setq current (char-after))
+	  ;; (message "%d" (line-number-at-pos))
+	  ;; move from ">" line to the sequence region
+	  (if (looking-at fasta-record-regexp) (forward-line))
+	  (cond ((memq current pro-uniq)
+		 (pro-mode)
+		 (throw 'seq-type 'pro))
+		((memq current nuc-uniq)
+		 (nuc-mode)
+		 (throw 'seq-type 'nuc)))
+
+	  (or (not atugc-only-p)
+	      (memq current seq-gap)
+	      (memq current seq-space)
+	      (if (memq current atugc) (setq count (1+ count)))
+	      (setq atugc-only-p nil))
+
+	  ;; have enough AUGCTs to call it a nuc sequence
+	  (and (> count smallest)
+	       atugc-only-p
+	       (nuc-mode)
+	       (throw 'seq-type 'nuc))
+
+	  (forward-char))
+	;; went thru all the sequences
+	(and atugc-only-p
+	     (nuc-mode)
+	     (throw 'seq-type 'nuc))))))
+
 
 (defun fasta--rc (is-rna)
   "Reverse complement current fasta sequence if it is nuc sequence.
@@ -524,6 +529,10 @@ If CASE is nil, the summary will be case insensitive."
     (if (called-interactively-p 'interactive)
         (maphash (lambda (x y) (princ (format "%c:%d " x y))) my-hash)
       my-hash)))
+
+
+(add-hook 'fasta-mode-hook 'fasta-seq-type)
+
 
 (provide 'fasta-mode)
 
