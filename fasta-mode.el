@@ -253,7 +253,7 @@ It calls `fasta--format' on each fasta records."
   "Return the position of point in the current sequence.
 
 It will not count white spaces and seq gaps. The count starts
-at zero."
+at zero. See also `fasta-position-ali'."
   (interactive)
   (if (looking-at fasta-record-regexp)
       (error "Point is not in the sequence region"))
@@ -272,10 +272,11 @@ at zero."
     count))
 
 
-(defun fasta-geo-position ()
-  "The point position counted from the beginning of the record.
+(defun fasta-position-ali ()
+  "Return position counted from the beginning of the current sequence.
 
-It will count all the characters."
+The difference from `fasta-position' is that this function will
+count all the characters."
   (interactive)
   (if (looking-at fasta-record-regexp)
       (error "Point is not in the sequence region"))
@@ -432,6 +433,53 @@ It calls `fasta--translate' on each fasta record."
       (error "pro mode is not enabled"))))
 
 
+(defun fasta--paint (&optional case)
+  "Paint current fasta sequence by their residue identity.
+
+By default, lower and upper cases are painted in the same colors.
+C-u \\[fasta-paint] honors the cases."
+  (condition-case err
+      (progn (fasta-mark)
+	     (goto-char (region-beginning))
+	     (let ((times (- (region-end) (region-beginning)))
+		   current-char  to-face)
+	       (dotimes (x times)
+		 (if case
+		     (setq current-char (char-after))
+		   (setq current-char (upcase (char-after))))
+		 (cond (nuc-mode
+			(setq to-face (format "base-face-%c" current-char)))
+		       (pro-mode
+			(setq to-face (format "aa-face-%c" current-char)))
+		       (t
+			(error "Unknown seq type")))
+		 (put-text-property (point) (1+ (point))
+				    'font-lock-face
+				    to-face)
+		 (forward-char))))
+    ((debug error)
+     (primitive-undo 1 buffer-undo-list)
+     ;; get the original error message
+     (error "%s" (error-message-string err)))))
+
+(defun fasta-paint (&optional case)
+  "Paint current sequence.
+
+It is just a wrapper around `fasta--paint'."
+  (interactive "P")
+  (save-excursion
+    (fasta--paint case)))
+
+(defun fasta-paint-all (&optional case)
+  "Paint all sequences.
+
+It calls `fasta--paint' on each fasta record."
+  (interactive "P")
+  (save-excursion
+    (goto-char (point-max))
+    (while (fasta-backward 1)
+      (fasta--paint case)
+      (fasta-backward 1))))
 
 ;;; column manipulations
 (defmacro fasta--column-action (&rest fn)
