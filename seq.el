@@ -201,19 +201,20 @@ otherwise, not. FACE-PREFIX decides which face groups ('base-face' or
   (save-excursion
     (let (char face)
       (goto-char beg)
-      (while (< (point) end)
-        (setq char (char-after))
-        (if case
-            (setq face (format "%s-%c" face-prefix char))
-          ;; let upcase base use the color of lowercase base color
-          (setq face (format "%s-%c" face-prefix (upcase char))))
-        (if (facep face)
-            ;; use font-lock-face instead of face for font-lock-mode is enabled
-            (put-text-property beg (+ beg 1)
-			       'font-lock-face
-			       (intern face))
-          (error "Face '%s' does not exist." face))
-        (forward-char)))))
+      (while (< beg end)
+        (setq char (char-after beg))
+	;; skip whitespaces and gap symbols
+	(if (not (or (memq char seq-space) (memq char seq-gap)))
+	    (progn (if case
+		       (setq face (format "%s-%c" face-prefix char))
+		     ;; let upcase base use the color of lowercase base color
+		     (setq face (format "%s-%c" face-prefix (upcase char))))
+		   (if (facep face)
+		       ;; use font-lock-face instead of face for font-lock-mode is enabled
+		       (with-silent-modifications
+			 (put-text-property beg (+ beg 1) 'font-lock-face (intern face)))
+		     (message "Face '%s' does not exist." face))))
+	(setq beg (1+ beg))))))
 
 (defun seq-unpaint (beg end)
   "Uncolor the sequences from BEG to END or the current line."

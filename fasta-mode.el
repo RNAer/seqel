@@ -440,27 +440,25 @@ By default, lower and upper cases are painted in the same colors.
 C-u \\[fasta-paint] honors the cases."
   (condition-case err
       (progn (fasta-mark)
-	     (goto-char (region-beginning))
-	     (let ((times (- (region-end) (region-beginning)))
-		   current-char  to-face)
-	       (dotimes (x times)
-		 (if case
-		     (setq current-char (char-after))
-		   (setq current-char (upcase (char-after))))
-		 (cond (nuc-mode
-			(setq to-face (format "base-face-%c" current-char)))
-		       (pro-mode
-			(setq to-face (format "aa-face-%c" current-char)))
-		       (t
-			(error "Unknown seq type")))
-		 (put-text-property (point) (1+ (point))
-				    'font-lock-face
-				    to-face)
-		 (forward-char))))
+	     (cond (nuc-mode
+		    (nuc-paint (region-beginning) (region-end) case))
+		   (pro-mode
+		    (pro-paint (region-beginning) (region-end) case))
+		   (t
+		    (error "Unknown seq type"))))
     ((debug error)
      (primitive-undo 1 buffer-undo-list)
      ;; get the original error message
      (error "%s" (error-message-string err)))))
+
+(defun fasta-unpaint ()
+  "Unpaint current sequence.
+
+It calls `seq-unpaint'."
+  (interactive)
+  (save-excursion
+    (fasta-mark)
+    (seq-unpaint (region-beginning) (region-end))))
 
 (defun fasta-paint (&optional case)
   "Paint current sequence.
@@ -469,6 +467,18 @@ It is just a wrapper around `fasta--paint'."
   (interactive "P")
   (save-excursion
     (fasta--paint case)))
+
+(defun fasta-unpaint-all ()
+  "Unpaint all the sequences.
+
+It calls `seq-unpaint' on each fasta record."
+  (interactive)
+  (save-excursion
+    (goto-char (point-max))
+    (while (fasta-backward 1)
+      (fasta-mark)
+      (seq-unpaint (region-beginning) (region-end))
+      (fasta-backward 1))))
 
 (defun fasta-paint-all (&optional case)
   "Paint all sequences.
@@ -579,6 +589,7 @@ If CASE is nil, the summary will be case insensitive."
       my-hash)))
 
 
+;; this can slow the loading of a large fasta file
 (add-hook 'fasta-mode-hook 'fasta-seq-type)
 
 

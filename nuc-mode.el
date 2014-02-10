@@ -499,8 +499,8 @@ It should not be enabled with `pro-mode' at the same time."
   :lighter " nuc"
   :keymap nuc-mode-map
   :global t
-  ;; set the default table to 1
-  (nuc-set-translation-table 1))
+  ;; set the translation table to 1 if it is nil
+  (or translation-table (nuc-set-translation-table 1)))
 
 (provide 'nuc-mode)
 
