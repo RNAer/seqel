@@ -228,9 +228,8 @@ as RNA while as DNA without C-u."
   "Reverse complement a region of DNA (unless IS-RNA is true).
 
 It works by deleting the region and inserting bases reversed
-and complemented, base by base, while leaving non-bases unchanged
-found. This function has some code redundancy with
-`nuc-complement'."
+and complemented, base by base, while leaving non-bases unchanged.
+This function has some code redundancy with `nuc-complement'."
   (interactive "r\nP")
   (let* ((t-exist (nuc-dna-p beg end))
          (u-exist (nuc-rna-p beg end))
@@ -253,7 +252,7 @@ found. This function has some code redundancy with
         (setq base (char-before))
         (setq c-base (aref complement-vector base))
         (delete-char -1)
-        (goto-char old-pos)
+        (goto-char (+ x old-pos))
         (insert-char (or c-base base))))))
 
 
