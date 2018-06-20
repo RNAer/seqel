@@ -219,7 +219,7 @@ as RNA while as DNA without C-u."
       (while (< (point) end)
         (setq base (following-char))
         (setq c-base (aref complement-vector base))
-        (insert (if c-base c-base base))
+        (insert (or c-base base))
         (delete-char 1)))))
 
 
@@ -235,7 +235,7 @@ found. This function has some code redundancy with
   (let* ((t-exist (nuc-dna-p beg end))
          (u-exist (nuc-rna-p beg end))
          (complement-vector
-          ;; decide it's DNA or RNA
+          ;; determine if it's DNA or RNA
           (cond ((and t-exist is-rna)
                  (error "T (at %d) exist" t-exist))
                 ((and u-exist is-rna) rna-base-complement)
@@ -251,10 +251,10 @@ found. This function has some code redundancy with
       (dotimes (x str-len)
         (goto-char end)
         (setq base (char-before))
-        (delete-char -1)
         (setq c-base (aref complement-vector base))
+        (delete-char -1)
         (goto-char old-pos)
-        (insert-char (if c-base c-base base))))))
+        (insert-char (or c-base base))))))
 
 
 (defalias 'nuc-rc 'nuc-reverse-complement)

@@ -517,8 +517,7 @@ and `fasta-delete-column' for an example of usage."
        ;; return to the original state if error is met.
        (end-of-col-err ; the single quote is dispensable
         (primitive-undo 1 buffer-undo-list)
-        (error "%s Line %d does not have enough columns at %d."
-                 (error-message-string err)
+        (error "Abort: line %d is shorter than the column (%d)."
                  ln column))))))
 
 

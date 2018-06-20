@@ -130,7 +130,7 @@ augcAUGCTaugct
 
 >seq_name b
 augc")
-                 (2   ; should-error case
+                 (2   ; should-error case: the 2nd seq don't have any nuc in that column to delete
                   ">seq_name a
 augctAUGCTaugct
 
@@ -144,8 +144,10 @@ augct"
         (insert (nth 1 test))
         (goto-char (nth 2 test))
         (cond ((= type-test 1)
+               (princ "run ttt")
                (call-interactively 'fasta-delete-column)
                (setq tmp (buffer-string))
+               (princ "run aaa")
                (should (equal tmp (nth 3 test))))
               ((= type-test 2)
                (should-error (call-interactively 'fasta-delete-column))))
