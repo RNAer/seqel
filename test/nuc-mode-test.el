@@ -5,6 +5,41 @@
 (require 'genetic-code)
 (require 'ert)
 
+(ert-deftest nuc-move-test ()
+  ;; the tags is used to group the tests together.
+  :tags '(nuc-mode)
+  (let ((cases '(("ATGC" 1 2)
+                 (" ATGC" 1 3)
+                 ("A TGC" 2 4))))
+    (with-temp-buffer
+      (dolist (test cases)
+        (insert (nth 0 test))
+        (goto-char 0)
+        ;; set the numeric prefix
+        (setq current-prefix-arg (nth 1 test))
+        (call-interactively 'nuc-move-forward)
+        (should (equal (point) (nth 2 test)))
+        ;; important to clean up the buffer
+        (delete-region (point-min) (point-max))))))
+
+(ert-deftest nuc-delete-test ()
+  ;; the tags is used to group the tests together.
+  :tags '(nuc-mode)
+  ;; seq, set initial poin position (1-based), func args, expected res
+  (let ((cases '(("ATGC" 1 1 "TGC")
+                 (" ATGC" 1 1 "TGC")
+                 ("ATGC" 3 -1 "AGC")
+                 ("A TG C" 1 2 "G C"))))
+    (with-temp-buffer
+      (dolist (test cases)
+        (insert (nth 0 test))
+        (goto-char (nth 1 test))
+        ;; set the numeric prefix
+        (setq current-prefix-arg (nth 2 test))
+        (call-interactively 'nuc-delete-forward)
+        (should (equal (buffer-string) (nth 3 test)))
+        ;; important to clean up the buffer
+        (delete-region (point-min) (point-max))))))
 
 (ert-deftest nuc-whr-test ()
   ;; the tags is used to group the tests together.
@@ -14,6 +49,7 @@
     (with-temp-buffer ; create a temp buffer
       (dolist (test cases)
         (insert (car test))
+        ;; create the mark region
         (set-mark (point-min))
         (goto-char (point-max))
         (should (equal (call-interactively 'nuc-whr)
@@ -174,7 +210,8 @@
       (dolist (test cases)
         (insert (car test))
         (should
-         (equal (region-summary (point-min) (point-max) nuc-base-regexp)
+         ;; `equal' can compare hash tables
+         (hash-equal (region-summary (point-min) (point-max) nuc-base-regexp)
                 (hash-alist (cdr test))))
         (delete-region (point-min) (point-max))))))
 

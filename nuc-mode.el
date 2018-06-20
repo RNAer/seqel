@@ -14,7 +14,7 @@
 
 ;;;;;; USER CUSTOMIZABLE VARIABLES START HERE
 
-(defvar nuc-base--alist
+(defvar nuc--base-alist
   '((?a  ?t ?a)
     (?t  ?a ?t)
     (?u  ?a ?u)
@@ -45,9 +45,9 @@ for the first. Only for lowercase, as the upcased will be added automatically.")
 (defvar nuc-base-alist
   (append (mapcar (lambda (x)
                     (mapcar #'upcase x))
-                  nuc-base--alist)
-          nuc-base--alist)
-  "Similar to `nuc-base--alist', just with upcase bases added.")
+                  nuc--base-alist)
+          nuc--base-alist)
+  "Similar to `nuc--base-alist', just with uppercase bases added.")
 
 (defvar nuc-base
   (mapcar #'car nuc-base-alist)
@@ -119,31 +119,28 @@ See also `proceed-char-repeatedly'."
 (defun nuc-delete-forward (count)
   "Delete COUNT number of bases starting from the point.
 
-Similar to `nuc-move-forward' (just use delete instead of move)."
+Similar to `nuc-move-forward' (just delete instead of move)."
   (interactive "p")
   (proceed-char-repeatedly count #'delete-char nuc-base-regexp))
 
 (defun nuc-delete-backward (count)
   "Delete backward COUNT number of bases from the point.
 
-Similar to `nuc-move-forward' (just use delete backward instead of move
+Similar to `nuc-move-forward' (just delete backward instead of move
 forward). See `nuc-delete-forward' and `proceed-char-repeatedly'."
   (interactive "p")
   (proceed-char-repeatedly (- count) #'delete-char nuc-base-regexp))
 
 
 (defun nuc-count (beg end)
-  "Count the number of bases in the region or the current line.
+  "Count the number of bases in the region or in the current line.
 
 Check if each char is legal base. Return the count if the region
 contains only legal nucleic acid characters, which includes
 `nuc-base-regexp', `seq-cruft-regexp'; otherwise return nil and
 report the location of the invalid characters in the echo region.
 This function calls `seq-count'. `nuc-p' is an alias of this function."
-  (interactive
-   (if mark-active
-       (list (region-beginning) (region-end))
-     (list (line-beginning-position) (line-end-position))))
+  (interactive-region-or-line)
   (let ((length (seq-count beg end nuc-base-regexp)))
     (and length
          (called-interactively-p 'interactive)
@@ -159,10 +156,7 @@ This is an alias of `nuc-count'.")
   "Return the point of 'u' or 'U' if any is found; otherwise return nil.
 
 See also `nuc-dna-p' and `nuc-p'."
-  (interactive
-   (if (use-region-p)
-       (list (region-beginning) (region-end))
-     (list (line-beginning-position) (line-end-position))))
+  (interactive-region-or-line)
   (let ((case-fold-search t))           ; enable case insensitive search
     (save-excursion
       (goto-char beg)
@@ -173,10 +167,7 @@ See also `nuc-dna-p' and `nuc-p'."
   "Return the point of 't' or 'T' if any is found; otherwise return nil.
 
 See also `nuc-rna-p' and `nuc-p'."
-  (interactive
-   (if (use-region-p)
-       (list (region-beginning) (region-end))
-     (list (line-beginning-position) (line-end-position))))
+  (interactive-region-or-line)
   (let ((case-fold-search t))
     (save-excursion
       (goto-char beg)
@@ -195,14 +186,18 @@ See `dna-base-complement'."
 
 
 (defun nuc-complement (beg end &optional is-rna)
-  "Complement a region of bases from BEG to END.
+  "Complement a region (or a line ) of bases from BEG to END.
 
-Complement a region of the buffer by inserting the complements,
-base by base, and by deleting the region. Non-base char will be
+Complement a region of the buffer by replacing char
+base by base. Non-base char will be
 passed over unchanged. By default, it will complement to DNA
 sequence unless IS-RNA is true. C-u \\[nuc-complement] will complement
 as RNA while as DNA without C-u."
   (interactive "r\nP")
+  (if (not (use-region-p))
+      (setq beg (line-beginning-position)
+            end (line-end-position)))
+
   (let* ((t-exist (nuc-dna-p beg end))
          (u-exist (nuc-rna-p beg end))
          (complement-vector
@@ -231,6 +226,10 @@ It works by deleting the region and inserting bases reversed
 and complemented, base by base, while leaving non-bases unchanged.
 This function has some code redundancy with `nuc-complement'."
   (interactive "r\nP")
+  (if (not (use-region-p))
+      (setq beg (line-beginning-position)
+            end (line-end-position)))
+
   (let* ((t-exist (nuc-dna-p beg end))
          (u-exist (nuc-rna-p beg end))
          (complement-vector
@@ -252,8 +251,10 @@ This function has some code redundancy with `nuc-complement'."
         (setq base (char-before))
         (setq c-base (aref complement-vector base))
         (delete-char -1)
-        (goto-char (+ x old-pos))
-        (insert-char (or c-base base))))))
+        (goto-char (+ x beg))
+        (insert-char (or c-base base)))))
+  (if (called-interactively-p 'interactive)
+      (message "Reverse complemented the selected region")))
 
 
 (defalias 'nuc-rc 'nuc-reverse-complement)
@@ -261,14 +262,11 @@ This function has some code redundancy with `nuc-complement'."
 
 ;;;###autoload
 (defun nuc-2rna (beg end)
-  "Convert the region or current line to RNA.
+  "Convert the region or the current line to RNA.
 
 It basically converts 't' -> 'u' and 'T' -> 'U'.
 Similar to `nuc-2dna."
-  (interactive
-   (if (use-region-p) ; (region-active-p)
-       (list (region-beginning) (region-end))
-     (list (line-beginning-position) (line-end-position))))
+  (interactive-region-or-line)
   (save-excursion
     (goto-char beg)
     (while (search-forward "t" end t)  ;(case-fold-search t)
@@ -279,10 +277,7 @@ Similar to `nuc-2dna."
 
 It basically converts 'u' -> 't' and 'U' -> 'T'.
 Similar to `nuc-2rna'."
-  (interactive
-   (if (use-region-p) ; (region-active-p)
-       (list (region-beginning) (region-end))
-     (list (line-beginning-position) (line-end-position))))
+  (interactive-region-or-line)
   (save-excursion
     (goto-char beg)
     (while (search-forward "u" end t)   ;(case-fold-search t)
@@ -293,10 +288,7 @@ Similar to `nuc-2rna'."
   "Print the frequencies of bases in the region or the current line.
 
 See also `region-summary'."
-  (interactive
-   (if (use-region-p) ; (region-active-p)
-       (list (region-beginning) (region-end))
-     (list (line-beginning-position) (line-end-position))))
+  (interactive-region-or-line)
   (let ((my-hash (region-summary beg end nuc-base-regexp)))
     (maphash (lambda (x y) (princ (format "%c:%d " x y) t))
              my-hash)))
@@ -331,10 +323,7 @@ such as 'acrt' would be transformed into '[a][ ]*[c][ ]*[ag][ ]*[t]."
 A homopolymer is a sequence of identical bases, like AAAA or TTTTTTTT.
 The weighted homopolymer rate (WHR) of a sequence is a measure of
 the frequency of homopolymers in the sequence. "
-  (interactive
-   (if (use-region-p) ; (region-active-p)
-       (list (region-beginning) (region-end))
-     (list (line-beginning-position) (line-end-position))))
+  (interactive-region-or-line)
   (let ((n  1.0)  (ni 0) (nis 0)
         old cur)
     (save-excursion
@@ -392,6 +381,9 @@ a nuc base in char type, hex-code colors for foreground and background")
 If CASE is nil, upcase and lowercase base chars will be colored the same;
 otherwise, not. See `seq-paint' for details."
   (interactive "r\nP")
+  (if (not (use-region-p))
+      (setq beg (line-beginning-position)
+            end (line-end-position)))
   (seq-paint beg end "base-face" case))
 
 ;;;###autoload
@@ -409,10 +401,10 @@ This is hash table with codons as keys. It is set by
 `nuc-set-translation-table'.")
 
 
-(defun decode (codons)
+(defun nuc-decode (codons)
   "Return the list of amino acid(s) that are coded by the CODONS.
 
-Example: (decode '(?t ?c ?m) should return (83) and (decode '(?m ?a ?t)) should
+Example: (nuc-decode '(?t ?c ?m) should return (83) and (nuc-decode '(?m ?a ?t)) should
 return (72 78) for translation table 1."
   (let ((case-fold-search t)
         codon aas aa)
@@ -450,10 +442,7 @@ For example, run `C-u 2 M-x nuc-set-translation-table' to set it to table 2."
 The ambiguous codon will be handled correctly: if it is mapped to multiple
 amino acids, 'X' will be output; if it is still mapped to single amino acide,
 then it will be translated into the amino acid."
-  (interactive
-   (if (use-region-p) ; (region-active-p)
-       (list (region-beginning) (region-end))
-     (list (line-beginning-position) (line-end-position))))
+  (interactive-region-or-line)
   (let (;; check valid of the sequence and
         ;; count the number of bases
         (n (nuc-count beg end))
@@ -467,7 +456,7 @@ then it will be translated into the amino acid."
             (if (looking-at nuc-base-regexp)
                 (setq codon (cons (char-after) codon)))
             (if (equal (length codon) 3)
-                (progn (setq aa (decode (nreverse codon)))
+                (progn (setq aa (nuc-decode (nreverse codon)))
                        (if (> (length aa) 1)
                            (setq aa ?X)
                          (setq aa (car aa)))
@@ -495,7 +484,7 @@ It should not be enabled with `pro-mode' at the same time."
   ;; and this key value set its initial value
   :init-value nil
   ;; the name, a string, to show in the modeline
-  :lighter " nuc"
+  :lighter " nucleotide"
   :keymap nuc-mode-map
   :global t
   ;; set the translation table to 1 if it is nil
