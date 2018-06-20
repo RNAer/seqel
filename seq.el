@@ -50,13 +50,14 @@ error. The `seq-cruft-regexp' char will be skipped, i.e., not counted.
  Return the actual count of legal char. COUNT can be either positive
 or negative integer, indicating the proceeding direction."
   (let ((direction (if (< count 0) -1 1))
-	(looking (if (< count 0) 'looking-back 'looking-at)))
+        (looking (if (< count 0) 'looking-back 'looking-at)))
     (dotimes (x (abs count))
       (while (funcall looking seq-cruft-regexp)
         (funcall func direction))
+      ;; `looking' will fail it reaches the end or the current char does not match regexp
       (if (funcall looking legal-char-regexp)
           (funcall func direction)
-        (error "Illegal char found! Moved %d bases" (* direction x))))
+        (error "Failed to complete the move! Moved %d bases" (* direction x))))
     count))
 
 
@@ -65,10 +66,7 @@ or negative integer, indicating the proceeding direction."
 
 Ignore char that does not belong to LEGAL-CHAR-REGEXP. Use hash
 table to create dictionary-like data type. Return the hash table."
-  (interactive
-   (if (use-region-p) ; (region-active-p)
-       (list (region-beginning) (region-end))
-     (list (line-beginning-position) (line-end-position))))
+  (interactive-region-or-line)
   (let ((my-hash (make-hash-table :test 'equal))
         char count)
     ;; any char is allowed if legal char is not provided
@@ -192,6 +190,13 @@ as foreground colors."
        (t (:background "gray")))
      ,(concat "Face for marking up " (upcase letter) "'s")))
 
+(defmacro interactive-region-or-line ()
+  `(interactive
+    (if (use-region-p) ; mark-active
+        (list (region-beginning) (region-end))
+      (list (line-beginning-position) (line-end-position)))))
+
+
 (defun seq-paint (beg end face-prefix &optional case)
   "Color the sequences in the region BEG to END.
 
@@ -203,25 +208,22 @@ otherwise, not. FACE-PREFIX decides which face groups ('base-face' or
       (goto-char beg)
       (while (< beg end)
         (setq char (char-after beg))
-	;; skip whitespaces and gap symbols
-	(if (not (or (memq char seq-space) (memq char seq-gap)))
-	    (progn (if case
-		       (setq face (format "%s-%c" face-prefix char))
-		     ;; let upcase base use the color of lowercase base color
-		     (setq face (format "%s-%c" face-prefix (upcase char))))
-		   (if (facep face)
-		       ;; use font-lock-face instead of face for font-lock-mode is enabled
-		       (with-silent-modifications
-			 (put-text-property beg (+ beg 1) 'font-lock-face (intern face)))
-		     (message "Face '%s' does not exist." face))))
-	(setq beg (1+ beg))))))
+        ;; skip whitespaces and gap symbols
+        (if (not (or (memq char seq-space) (memq char seq-gap)))
+            (progn (if case
+                       (setq face (format "%s-%c" face-prefix char))
+                     ;; let upcase base use the color of lowercase base color
+                     (setq face (format "%s-%c" face-prefix (upcase char))))
+                   (if (facep face)
+                       ;; use font-lock-face instead of face for font-lock-mode is enabled
+                       (with-silent-modifications
+                         (put-text-property beg (+ beg 1) 'font-lock-face (intern face)))
+                     (message "Face '%s' does not exist." face))))
+        (setq beg (1+ beg))))))
 
 (defun seq-unpaint (beg end)
   "Uncolor the sequences from BEG to END or the current line."
-  (interactive
-   (if (use-region-p) ; (region-active-p)
-       (list (region-beginning) (region-end))
-     (list (line-beginning-position) (line-end-position))))
+  (interactive-region-or-line)
   (remove-text-properties beg end '(font-lock-face nil)))
 
 
