@@ -53,13 +53,13 @@
                                fasta-mode-map
                                (current-global-map))))
 
-
+;; this slows down the mode loading
 (defvar fasta-font-lock-keywords
   '(("^\\(>\\)\\([-_.|a-zA-Z0-9]+\\)\\(.*\\)?"
      (1 font-lock-keyword-face)
      (2 font-lock-function-name-face)
      (3 font-lock-comment-face)))
-  "Expressions to hilight in `fasta-mode'.")
+  "Expressions to highlight in `fasta-mode'.")
 
 
 (defvar fasta-record-regexp "^>.*$"
@@ -70,10 +70,10 @@
 (define-derived-mode fasta-mode text-mode "fasta"
   "Major mode for editing sequences in fasta format.
 
-￼Special commands:
-￼\\{fasta-mode-map}
-  \\{nuc-mode-map}
-  \\{pro-mode-map}"
+Special commands:
+\\{fasta-mode-map}
+\\{nuc-mode-map}
+\\{pro-mode-map}"
   ;; This runs the normal hook change-major-mode-hook, then gets rid of
   ;; the buffer-local variables of the major mode previously in effect.
   ;; (kill-all-local-variables)
@@ -83,7 +83,7 @@
   ;; The above are automatically done if the mode is defined using
   ;; `define-derived-mode'.
   ;; the variable automatically becomes buffer-local when set
-  (setq font-lock-defaults '(fasta-font-lock-keywords))
+  ;; (setq font-lock-defaults '(fasta-font-lock-keywords))
   (flyspell-mode -1)
   ;; (set-syntax-table fasta-mode-syntax-table)
   (run-hooks 'fasta-mode-hook))
@@ -107,13 +107,13 @@ Only if the major mode is `fundermental. This function is added to
 (defun fasta-guess-on-load ()
   "Whether to enable `fasta-mode' by guessing buffer content."
   (interactive)
-  (if fasta-setup-on-load 
+  (if fasta-setup-on-load
       (progn (remove-hook 'find-file-hook 'fasta-find-file)
-	     (setq fasta-setup-on-load nil)
-	     (message "Turned off fasta format guessing on load"))
+             (setq fasta-setup-on-load nil)
+             (message "Turned off fasta format guessing on load"))
     (progn (add-hook 'find-file-hook 'fasta-find-file)
-	   (setq fasta-setup-on-load t)
-	   (message "Turned on fasta format guessing on load"))))
+           (setq fasta-setup-on-load t)
+           (message "Turned on fasta format guessing on load"))))
 
 
 ;;;###autoload
@@ -322,34 +322,34 @@ to be nuc"
     (save-excursion
       (goto-char (point-min))
       (catch 'seq-type
-	(while (setq current (char-after))
-	  ;; (message "%d" (line-number-at-pos))
-	  ;; move from ">" line to the sequence region
-	  (if (looking-at fasta-record-regexp) (forward-line))
-	  (cond ((memq current pro-uniq)
-		 (pro-mode)
-		 (throw 'seq-type 'pro))
-		((memq current nuc-uniq)
-		 (nuc-mode)
-		 (throw 'seq-type 'nuc)))
+        (while (setq current (char-after))
+          ;; (message "%d" (line-number-at-pos))
+          ;; move from ">" line to the sequence region
+          (if (looking-at fasta-record-regexp) (forward-line))
+          (cond ((memq current pro-uniq)
+                 (pro-mode)
+                 (throw 'seq-type 'pro))
+                ((memq current nuc-uniq)
+                 (nuc-mode)
+                 (throw 'seq-type 'nuc)))
 
-	  (or (not atugc-only-p)
-	      (memq current seq-gap)
-	      (memq current seq-space)
-	      (if (memq current atugc) (setq count (1+ count)))
-	      (setq atugc-only-p nil))
+          (or (not atugc-only-p)
+              (memq current seq-gap)
+              (memq current seq-space)
+              (if (memq current atugc) (setq count (1+ count)))
+              (setq atugc-only-p nil))
 
-	  ;; have enough AUGCTs to call it a nuc sequence
-	  (and (> count smallest)
-	       atugc-only-p
-	       (nuc-mode)
-	       (throw 'seq-type 'nuc))
+          ;; have enough AUGCTs to call it a nuc sequence
+          (and (> count smallest)
+               atugc-only-p
+               (nuc-mode)
+               (throw 'seq-type 'nuc))
 
-	  (forward-char))
-	;; went thru all the sequences
-	(and atugc-only-p
-	     (nuc-mode)
-	     (throw 'seq-type 'nuc))))))
+          (forward-char))
+        ;; went thru all the sequences
+        (and atugc-only-p
+             (nuc-mode)
+             (throw 'seq-type 'nuc))))))
 
 
 (defun fasta--rc (is-rna)
@@ -440,12 +440,12 @@ By default, lower and upper cases are painted in the same colors.
 C-u \\[fasta-paint] honors the cases."
   (condition-case err
       (progn (fasta-mark)
-	     (cond (nuc-mode
-		    (nuc-paint (region-beginning) (region-end) case))
-		   (pro-mode
-		    (pro-paint (region-beginning) (region-end) case))
-		   (t
-		    (error "Unknown seq type"))))
+             (cond (nuc-mode
+                    (nuc-paint (region-beginning) (region-end) case))
+                   (pro-mode
+                    (pro-paint (region-beginning) (region-end) case))
+                   (t
+                    (error "Unknown seq type"))))
     ((debug error)
      (primitive-undo 1 buffer-undo-list)
      ;; get the original error message

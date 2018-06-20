@@ -1,4 +1,4 @@
-;;; seq.el --- util functions and variables shared by nuc-mode.el and aa-mode.el.
+;;; seq.el --- util functions and variables shared by nuc-mode.el and pro-mode.el.
 
 ;;; license: GPLv3
 

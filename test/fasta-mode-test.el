@@ -118,7 +118,7 @@ GCAU	 gcau")))
 
 (ert-deftest fasta-delete-column-test ()
   :tags '(fasta-mode)
-  (let ((cases '((1   ; should case
+  (let ((cases '((1   ; should case: test the buffer after deletion
                   ">seq_name a
 augctAUGCTaugct
 
@@ -135,7 +135,8 @@ augc")
 augctAUGCTaugct
 
 >seq_name b
-augct" 18)))
+augct"
+                  18)))
         tmp   type-test)
     (with-temp-buffer
       (dolist (test cases)
