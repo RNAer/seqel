@@ -1,6 +1,6 @@
 ;;; aa-mode.el --- a minor mode for editing protein sequences
 
-;;; license: GPLv3
+;;; license: BSD-3
 
 ;;; Commentary:
 ;;  * It should be not enabled with nuc-mode at the same time.
@@ -11,32 +11,35 @@
 
 (require 'seq)
 
-(defvar pro-aa--alist
-  '((?a  "Ala"  71.09)
-    (?b  "Asx"  nil)  ; Asn Asp
-    (?c  "Cys"  103.15)
-    (?d  "Asp"  115.09)
-    (?e  "Glu"  129.12)
-    (?f  "Phe"  147.18)
-    (?g  "Gly"  57.05)
-    (?h  "His"  137.14)
-    (?i  "Ile"  113.16)
-    (?j  "Xle"  nil)  ;Leu Ile
-    (?k  "Lys"  128.17)
-    (?l  "Leu"  113.16)
-    (?m  "Met"  131.19)
-    (?n  "Asn"  114.11)
-    (?p  "Pro"  97.12 )
-    (?q  "Gln"  128.14)
-    (?r  "Arg"  156.19)
-    (?s  "Ser"  87.08 )
-    (?t  "Thr"  101.11)
-    (?v  "Val"  99.14 )
-    (?w  "Trp"  186.21)
-    (?x  "Xaa"  nil)  ; unknown aa
-    (?y  "Tyr"  163.18)
-    (?z  "Glx"  nil)) ; Glu Gln
+(defvar pro--aa-alist
+  ;; put a question mark before the char will evaluate it to digit ascii code
+  '((?a  "Ala"  71.09   ?a)
+    (?b  "Asx"  114     ?n ?d)  ; Asn Asp
+    (?c  "Cys"  103.15  ?c)
+    (?d  "Asp"  115.09  ?d)
+    (?e  "Glu"  129.12  ?e)
+    (?f  "Phe"  147.18  ?f)
+    (?g  "Gly"  57.05   ?g)
+    (?h  "His"  137.14  ?h)
+    (?i  "Ile"  113.16  ?i)
+    (?j  "Xle"  113.16  ?i ?l)  ;Leu Ile
+    (?k  "Lys"  128.17  ?k)
+    (?l  "Leu"  113.16  ?l)
+    (?m  "Met"  131.19  ?m)
+    (?n  "Asn"  114.11  ?n)
+    (?p  "Pro"  97.12   ?p)
+    (?q  "Gln"  128.14  ?q)
+    (?r  "Arg"  156.19  ?r)
+    (?s  "Ser"  87.08   ?s)
+    (?t  "Thr"  101.11  ?t)
+    (?v  "Val"  99.14   ?v)
+    (?w  "Trp"  186.21  ?w)
+    (?x  "Xaa"  92      ?.)  ; unknown aa; set it weight to average weight
+    (?y  "Tyr"  163.18  ?y)
+    (?z  "Glx"  128     ?e ?q)) ; Glu Gln
   "*A association list of 1-letter, 3-letter IUPAC AA codes and molecular weights.
+
+This is the molecular weight with H2O subtracted.
 
 For each inner list, the first element is allowed AA; the second element
 is the three-letter code of the first, and the last is the molecular weight.
@@ -44,17 +47,16 @@ for the first. Only for lowercase, as the upcased will be added automatically.")
 
 ;;;;; END OF USER CUSTOMIZABLE VARIABLES
 
-(defvar pro-aa-alist
+(setq pro-aa-alist
   (append (mapcar (lambda (x)
-                    (setcar x (upcase (car x)))
-                    x)
-                  pro-aa--alist)
-          pro-aa--alist)
-  "Similar to `pro-aa--alist', just with upcase 1-letter code added.")
+                    (cons (upcase (car x)) (cdr x)))
+                  pro--aa-alist)
+          pro--aa-alist))
+  "Similar to `pro-aa--alist', just with uppercase 1-letter code added.")
 
 
-(defvar pro-aa
-  (mapcar #'car pro-aa-alist)
+(setq pro-aa
+  (mapcar #'car pro-aa-alist))
   "All 1-letter IUPAC AA code, including lower and upper cases.")
 
 (defvar pro-aa-acidic "de")
@@ -64,11 +66,19 @@ for the first. Only for lowercase, as the upcased will be added automatically.")
 (defvar pro-aa-amphipathic "")
 
 
-(defvar pro-aa-mw
+(defvar pro-aa-degeneracy
+  (let ((d-vec (make-vector 256 nil)))
+    (dolist (element pro-aa-alist)
+      (aset d-vec (car element) (cddr element)))
+  d-vec)
+  "A vector of degeneracies for each upper and lower case valid bases
+defined in `nuc-base-alist'.")
+
+(setq pro-aa-mw
   (let ((mw-vec (make-vector 256 nil)))
     (dolist (element pro-aa-alist)
       (aset mw-vec (car element) (nth 2 element)))
-    mw-vec)
+    mw-vec))
   "A vector of AA molecular weights in Dalton.")
 
 (defvar pro-aa-1-vec
@@ -96,20 +106,18 @@ It is used to convert 3-letter codes to 1-letter codes.")
 
 (defun pro-weight (beg end)
   "Return molecular weight of the region BEG and END or the current line."
-  (interactive
-   (if (use-region-p) ; (region-active-p)
-       (list (region-beginning) (region-end))
-     (list (line-beginning-position) (line-end-position))))
-  (let ((sum-mw 0) (times (- end beg)) mw)
+  (interactive-region-or-line)
+  (let ((sum-mw 0) (times (- end beg)) char mw)
     (save-excursion
       (goto-char beg)
       (dotimes (x times)
-        (setq mw (aref pro-aa-mw (downcase (char-after))))
+        (setq char (char-after))
+        (setq mw (aref pro-aa-mw char))
         (cond (mw
                (setq sum-mw (+ sum-mw mw)))
-              ((not (looking-at seq-cruft-regexp))
-               (error "Ambiguous or illegal char at position %d, %d"
-                      (line-number-at-pos) (current-column))))
+              ((not (looking-at pro-aa-regexp))
+               (error "Ambiguous or illegal char %s at position line %d column %d"
+                      char (line-number-at-pos) (current-column))))
         (forward-char)))
     (if (called-interactively-p 'interactive)
         (message "The molecular weight is %.2f" sum-mw))
@@ -118,21 +126,17 @@ It is used to convert 3-letter codes to 1-letter codes.")
 
 (defun pro-1-2-3 (beg end)
   "Convert the region of 1-letter IUPAC code to 3-letter IUPAC code"
-  (interactive
-   (if (use-region-p) ; (region-active-p)
-       (list (region-beginning) (region-end))
-     (list (line-beginning-position) (line-end-position))))
+  (interactive-region-or-line)
   (condition-case err
-      (let ((times (- end beg)))
+      (let ((times (- end beg)) char)
         (goto-char beg)
         (dotimes (x times)
           (cond ((looking-at pro-aa-regexp)
                  (insert (aref pro-aa-1-vec (char-after)))
                  (delete-char 1))
-                ((not (looking-at seq-cruft-regexp))
-                 (error "Ambiguous or illegal char at position %d, %d"
-                      (line-number-at-pos) (current-column))))
-          (forward-char)))
+                (t
+                 (error "Ambiguous or illegal char %c at line %d column %d"
+                        (char-after) (line-number-at-pos) (current-column))))))
     ((debug error)
      (primitive-undo 1 buffer-undo-list)
      (error "%s" (error-message-string err)))))
@@ -143,10 +147,7 @@ It is used to convert 3-letter codes to 1-letter codes.")
 
 Currently it only converts 3-letter codes without any characters
 separating them."
-  (interactive
-   (if (use-region-p) ; (region-active-p)
-       (list (region-beginning) (region-end))
-     (list (line-beginning-position) (line-end-position))))
+  (interactive-region-or-line)
   (condition-case err
       (let ((times (/ (- end beg) 3))
             code letter)
@@ -162,7 +163,6 @@ separating them."
     ((debug error)
      (primitive-undo 1 buffer-undo-list)
      (error "%s" (error-message-string err)))))
-
 
 
 ;;;###autoload
@@ -203,19 +203,16 @@ move forward). See `pro-aa-delete-forward' and `proceed-char-repeatedly'."
 
 
 (defun pro-count (beg end)
-  "Test if the region from BEG to END (or the line) is a legal protein sequence.
+  "Count the amino acid in the region or in the current line).
 
-Return the count if the region contains only legal nucleic acid characters,
+Return the count if the region contains only legal amino acid characters,
 including `pro-aa-regexp', `seq-cruft-regexp'; otherwise return nil and
 report the location of the invalid characters in the echo region."
-  (interactive
-   (if mark-active
-       (list (region-beginning) (region-end))
-     (list (line-beginning-position) (line-end-position))))
+  (interactive-region-or-line)
   (let ((length (seq-count beg end pro-aa-regexp)))
     (and length
          (called-interactively-p 'interactive)
-         (message "Base count: %d" length))
+         (message "Amino acid count: %d" length))
     length))
 
 
@@ -226,11 +223,10 @@ report the location of the invalid characters in the echo region."
   "Summarize the frequencies of AA in the region BEG and END or the current line.
 
 See also `region-summary'."
-  (interactive
-   (if (use-region-p) ; (region-active-p)
-       (list (region-beginning) (region-end))
-     (list (line-beginning-position) (line-end-position))))
-  (region-summary beg end pro-aa-regexp))
+  (interactive-region-or-line)
+  (let ((my-hash (region-summary beg end pro-aa-regexp)))
+    (maphash (lambda (x y) (princ (format "%c:%d " x y) t))
+             my-hash)))
 
 
 ;;;;;; isearch motif
@@ -302,7 +298,7 @@ This is an alias to `seq-unpaint'.")
 It should be not enabled with `nuc-mode' at the same time."
   :init-value nil
   ;; the name, a string, to show in the modeline
-  :lighter " pro"
+  :lighter " protein"
   :keymap pro-mode-map
   :global t)
 
