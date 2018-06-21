@@ -1,6 +1,6 @@
 ;;; nuc-mode.el --- a minor mode for editing nucleic acid sequences
 
-;;; license: GPLv3
+;;; license: BSD-3
 
 ;;; Author: Zech Xu <zhenjiang dot xu at gmail dot com>
 
@@ -185,30 +185,16 @@ See `dna-base-complement'."
     (message "Complement of '%c' is '%c'." base c-base)))
 
 
-(defun nuc-complement (beg end &optional is-rna)
+(defun nuc-complement (beg end)
   "Complement a region (or a line ) of bases from BEG to END.
 
-Complement a region of the buffer by replacing char
-base by base. Non-base char will be
-passed over unchanged. By default, it will complement to DNA
-sequence unless IS-RNA is true. C-u \\[nuc-complement] will complement
-as RNA while as DNA without C-u."
-  (interactive "r\nP")
-  (if (not (use-region-p))
-      (setq beg (line-beginning-position)
-            end (line-end-position)))
-
-  (let* ((t-exist (nuc-dna-p beg end))
-         (u-exist (nuc-rna-p beg end))
-         (complement-vector
-          (cond ((and t-exist is-rna)
-                 (error "T (at %d) exist!" t-exist))
-                ((and u-exist is-rna) rna-base-complement)
-                ((and t-exist (not is-rna)) dna-base-complement)
-                ((and u-exist (not is-rna))
-                 (error "U (at %d) exist!" u-exist))
-                (t dna-base-complement)))
-          base c-base)
+Complement a region of the buffer by replacing nucleotide char
+base by base. Non-base char will be passed over unchanged."
+  (interactive-region-or-line)
+  (let* ((complement-vector dna-base-complement)
+         (is-rna (nuc-rna-p beg end)))
+    (if is-rna
+        (setq complement-vector rna-base-complement))
     (save-excursion
       (goto-char beg)
       (while (< (point) end)
@@ -219,42 +205,18 @@ as RNA while as DNA without C-u."
 
 
 ;;;###autoload
-(defun nuc-reverse-complement (beg end &optional is-rna)
-  "Reverse complement a region of DNA (unless IS-RNA is true).
+(defun nuc-reverse-complement (beg end)
+  "Reverse complement a region of DNA or RNA sequence.
 
-It works by deleting the region and inserting bases reversed
-and complemented, base by base, while leaving non-bases unchanged.
-This function has some code redundancy with `nuc-complement'."
-  (interactive "r\nP")
-  (if (not (use-region-p))
-      (setq beg (line-beginning-position)
-            end (line-end-position)))
-
-  (let* ((t-exist (nuc-dna-p beg end))
-         (u-exist (nuc-rna-p beg end))
-         (complement-vector
-          ;; determine if it's DNA or RNA
-          (cond ((and t-exist is-rna)
-                 (error "T (at %d) exist" t-exist))
-                ((and u-exist is-rna) rna-base-complement)
-                ((and t-exist (not is-rna)) dna-base-complement)
-                ((and u-exist (not is-rna))
-                 (error "U (at %d) exist" u-exist))
-                (t dna-base-complement)))
-         (str-len (- end beg))
-         old-pos base c-base)
+See also `nuc-complement'."
+  (interactive-region-or-line)
+  (let ((region (buffer-substring-no-properties beg end)))
     (save-excursion
-      (goto-char beg)
-      (setq old-pos (point-marker))
-      (dotimes (x str-len)
-        (goto-char end)
-        (setq base (char-before))
-        (setq c-base (aref complement-vector base))
-        (delete-char -1)
-        (goto-char (+ x beg))
-        (insert-char (or c-base base)))))
-  (if (called-interactively-p 'interactive)
-      (message "Reverse complemented the selected region")))
+      (delete-region beg end)
+      (insert (nreverse region))
+      (nuc-complement beg end))
+    (if (called-interactively-p 'interactive)
+      (message "Reverse complemented the selected region"))))
 
 
 (defalias 'nuc-rc 'nuc-reverse-complement)
@@ -292,7 +254,6 @@ See also `region-summary'."
   (let ((my-hash (region-summary beg end nuc-base-regexp)))
     (maphash (lambda (x y) (princ (format "%c:%d " x y) t))
              my-hash)))
-
 
 
 (defun seq-isearch-mangle-str (str)
@@ -393,7 +354,6 @@ otherwise, not. See `seq-paint' for details."
 It is an alias to `seq-unpaint'.")
 
 
-
 (defvar translation-table nil
   "Define the translation table.
 
@@ -440,7 +400,7 @@ For example, run `C-u 2 M-x nuc-set-translation-table' to set it to table 2."
   "Translate the nuc seq to protein seq using current translation table.
 
 The ambiguous codon will be handled correctly: if it is mapped to multiple
-amino acids, 'X' will be output; if it is still mapped to single amino acide,
+amino acids, 'X' will be output; if it is mapped to a single amino acid,
 then it will be translated into the amino acid."
   (interactive-region-or-line)
   (let (;; check valid of the sequence and
@@ -489,6 +449,7 @@ It should not be enabled with `pro-mode' at the same time."
   :global t
   ;; set the translation table to 1 if it is nil
   (or translation-table (nuc-set-translation-table 1)))
+
 
 (provide 'nuc-mode)
 

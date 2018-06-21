@@ -131,69 +131,36 @@
 
 (ert-deftest nuc-complement-test ()
   :tags '(nuc-mode)
-  (let ((cases '((1 "acgtmrwsykvhdbnACGTMRWSYKVHDBN" nil "tgcakywsrmbdhvnTGCAKYWSRMBDHVN") ; for should
-                 (1 "acgumrwsykvhdbnACGUMRWSYKVHDBN" t   "ugcakywsrmbdhvnUGCAKYWSRMBDHVN")
-                 (2 "acug" nil)     ; for should-error
-                 (2 "actg" t)))
-        type-test
-        tmp
-        func)
+  (let ((cases '(("Atg C" . "Tac G")
+                 ("acgtmrwsykvhdbnACGTMRWSYKVHDBN" . "tgcakywsrmbdhvnTGCAKYWSRMBDHVN")
+                 ("acgumrwsykvhdbnACGUMRWSYKVHDBN" . "ugcakywsrmbdhvnUGCAKYWSRMBDHVN"))))
     (with-temp-buffer
       (dolist (test cases)
-        (setq type-test (nth 0 test))
-        (insert (nth 1 test))
+        (insert (car test))
         (set-mark (point-min))
         (goto-char (point-max))
-        (if (nth 2 test)
-            (setq current-prefix-arg '(4))
-          (setq current-prefix-arg nil))
-        (cond ((= type-test 1)
-               (call-interactively 'nuc-complement)
-               (setq tmp (buffer-string))
-               (should (equal tmp (nth 3 test))))
-              ((= type-test 2)
-               (should-error (call-interactively 'nuc-complement))))
+        (call-interactively 'nuc-complement)
+        (should (equal (buffer-string) (cdr test)))
         (delete-region (point-min) (point-max))))))
 
 
 (ert-deftest nuc-rc-test ()
   :tags '(nuc-mode)
-  ;; (should/should-error, test case, DNA/RNA, result)
-  (let ((cases '((1 "acgtmrwsykvhdbnACGTMRWSYKVHDBN" nil "NVHDBMRSWYKACGTnvhdbmrswykacgt") ; for should
-                 (1 "acgumrwsykvhdbnACGUMRWSYKVHDBN" t   "NVHDBMRSWYKACGUnvhdbmrswykacgu")
-                 (2 "acug" nil)     ; for should-error
-                 (2 "actg" t)))
-        type-test
-        tmp
-        func)
+  ;; (should, test case, result)
+  (let ((cases '(("A1 a" . "t 1T")
+                 ("acgtmrwsykvhdbnACGTMRWSYKVHDBN" . "NVHDBMRSWYKACGTnvhdbmrswykacgt")
+                 ("acgumrwsykvhdbnACGUMRWSYKVHDBN" . "NVHDBMRSWYKACGUnvhdbmrswykacgu"))))
     (with-temp-buffer
       (dolist (test cases)
-        (setq type-test (nth 0 test))
-        (insert (nth 1 test))
+        (insert (car test))
         (set-mark (point-min))
         (goto-char (point-max))
-        (if (nth 2 test)
-            (setq current-prefix-arg '(4))
-          (setq current-prefix-arg nil))
-        (cond ((= type-test 1)
-               (call-interactively 'nuc-rc)
-               (setq tmp (buffer-string))
-               (should (equal tmp (nth 3 test))))
-              ((= type-test 2)
-               (should-error (call-interactively 'nuc-rc))))
+        (call-interactively 'nuc-rc)
+        (should (equal (buffer-string) (cdr test)))
+        ;; check the cursor has not moved
+        ;; (should (equal (point) (point-max)))
         (delete-region (point-min) (point-max))))))
 
-;; (defun foo ()
-;;   (let ((cases '(("acgt" .
-;;                   ((?a . 1) (?c . 1) (?g . 1) (?t . 1))))))
-;;     (with-temp-buffer
-;;       (dolist (test cases)
-;;         (insert (car test))
-;;         (maphash (lambda (x y) (princ (format "%c:%d " x y) t))
-;;                  (region-summary (point-min) (point-max) nuc-base-regexp))
-;;         (maphash (lambda (x y) (princ (format "%c:%d " x y) t))
-;;                  (hash-alist (cdr test)))
-;;         (delete-region (point-min) (point-max))))))
 
 (ert-deftest nuc-summary-test ()
   :tags '(nuc-mode)
@@ -231,6 +198,7 @@
         (setq tmp (buffer-string))
         (should (equal tmp (cdr test)))
         (delete-region (point-min) (point-max))))))
+
 
 (provide 'nuc-mode-test)
 
