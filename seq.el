@@ -1,6 +1,6 @@
 ;;; seq.el --- util functions and variables shared by nuc-mode.el and pro-mode.el.
 
-;;; license: GPLv3
+;;; license: BSD-3
 
 ;;; Author: Zech Xu <zhenjiang dot xu at gmail dot com>
 
@@ -238,6 +238,18 @@ otherwise, not. FACE-PREFIX decides which face groups ('base-face' or
 ;;     (isearch-search-and-update)))
 
 ;; (define-key isearch-mode-map (kbd "C-c C-t") 'seq-isearch-transform-string)
+
+
+(defun seq-isearch-mangle-str (str)
+  "Mangle the string STR into a regexp to search over cruft in sequence.
+
+Inserts a regexp between each base which matches sequence
+formatting cruft, namely, you don't need to worry about if there
+is any spaces separating between 'A' and 'T' if you'd like to
+find all the 'AT's in the sequence.  More technically, if
+`seq-cruft-regexp' is '[ ]', the search string 'acgt' would be
+transformed into 'a[ ]*c[ ]*g[ ]*t'."
+  (mapconcat 'identity (split-string str "" 'omit-empty) (concat seq-cruft-regexp "*")))
 
 
 (defun seq-isearch-forward (motif &optional bound noerror)
