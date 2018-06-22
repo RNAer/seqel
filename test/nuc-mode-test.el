@@ -186,18 +186,26 @@
 (ert-deftest nuc-translate-test ()
   :tags '(nuc-mode)
   ;; http://in-silico.net/tools/biology/sequence_conversion
-  (let ((cases '(("accatttcm mtc" . "TISX")))
-        nuc tmp)
+  (let ((cases '(("accatttcm mtc" . "TISX"))))
     (with-temp-buffer
       (dolist (test cases)
-        (setq nuc (car test))
-        (insert nuc)
+        (insert (car test))
         (set-mark (point-min))
         (goto-char (point-max))
         (call-interactively 'nuc-translate)
-        (setq tmp (buffer-string))
-        (should (equal tmp (cdr test)))
+        (should (equal (buffer-string) (cdr test)))
         (delete-region (point-min) (point-max))))))
+
+
+(ert-deftest seq-isearch-mangle-str-test ()
+  :tags '(nuc-mode)
+  (let ((cases '(
+                 ("mR" . "[ac][\t\n .-]*[AG]")
+                 ("aTGc" . "[a][\t\n .-]*[T][\t\n .-]*[G][\t\n .-]*[c]"))))
+    (dolist (test cases)
+      (should
+       (equal (seq-isearch-mangle-str (car test))
+              (cdr test))))))
 
 
 (provide 'nuc-mode-test)

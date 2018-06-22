@@ -261,19 +261,18 @@ See also `region-summary'."
 
 Inserts a regexp between each base which matches sequence formatting cruft.
 For example, if `seq-cruft-regexp' is '[ ]', the search string 'acgt' would be
-transformed into 'a[ ]*c[ ]*g[ ]*t' and the search string containing IUPAC code
-such as 'acrt' would be transformed into '[a][ ]*[c][ ]*[ag][ ]*[t]."
+transformed into 'a[ ]*c[ ]*g[ ]*t'."
   ;; (mapconcat 'identity (split-string str "" t) (concat seq-cruft-regexp "*")))
-  (let (degenerate-str-list  tmp)
+  (let (degenerate-str-list  degeneracies)
     ;; 'ar' will return as ("[a]", "[ag]")
     (setq degenerate-str-list
           (mapcar #'(lambda (x)
-                      (setq tmp (aref nuc-base-degeneracy x))
-                      (if (not tmp)
+                      (setq degeneracies (aref nuc-base-degeneracy x))
+                      (if (not degeneracies)
                           (error "%c is not a valid nuc base character!" x))
-                      (concat "["  (mapconcat 'char-to-string (cdr tmp) "") "]"))
+                      (concat "["  (mapconcat 'char-to-string degeneracies "") "]"))
                   (string-to-list str)))
-    ;; (print degenerate-str-list)
+    (print degenerate-str-list)
     (mapconcat 'identity degenerate-str-list (concat seq-cruft-regexp "*"))))
 
 
