@@ -197,25 +197,14 @@
         (delete-region (point-min) (point-max))))))
 
 
-(ert-deftest seq-isearch-mangle-str-test ()
-  :tags '(nuc-mode)
-  (let ((cases '(
-                 ("mR" . "m[\t\n .-]*R")
-                 ("aTGc" . "a[\t\n .-]*T[\t\n .-]*G[\t\n .-]*c"))))
-    (dolist (test cases)
-      (should
-       (equal (seq-isearch-mangle-str (car test))
-              (cdr test))))))
-
-
-(ert-deftest seq-isearch-mangle-str-test-2 ()
+(ert-deftest seq-isearch-mangle-str-degeneracy-test ()
   :tags '(nuc-mode)
   (let ((cases '(
                  ("mR" . "[ac][\t\n .-]*[AG]")
                  ("aTGc" . "[a][\t\n .-]*[T][\t\n .-]*[G][\t\n .-]*[c]"))))
     (dolist (test cases)
       (should
-       (equal (seq-isearch-mangle-str (car test))
+       (equal (seq-isearch-mangle-str-degeneracy (car test))
               (cdr test))))))
 
 

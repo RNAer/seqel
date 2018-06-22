@@ -256,19 +256,7 @@ See also `region-summary'."
              my-hash)))
 
 
-(defun seq-isearch-mangle-str (str)
-  "Mangle the string STR into a regexp to search over cruft in sequence.
-
-Inserts a regexp between each base which matches sequence
-formatting cruft, namely, you don't need to worry about if there
-is any spaces separating between 'A' and 'T' if you'd like to
-find all the 'AT's in the sequence.  More technically, if
-`seq-cruft-regexp' is '[ ]', the search string 'acgt' would be
-transformed into 'a[ ]*c[ ]*g[ ]*t'."
-  (mapconcat 'identity (split-string str "" 'omit-empty) (concat seq-cruft-regexp "*")))
-
-
-(defun seq-isearch-mangle-str-2 (str)
+(defun seq-isearch-mangle-str-degeneracy (str)
   "Mangle the string STR into a regexp to search over cruft in sequence.
 
 Inserts a regexp between each base which matches sequence
