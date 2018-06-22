@@ -138,7 +138,7 @@ from red to green without yellow) besides other differences."
                           collect i)))))
 
 
-(defvar color-pairs
+(defvar color--pairs
   '(("#ffffff" "#000000")  ; white    on black
     ("#ff0000" "#000000")  ; red
     ("#00ff00" "#000000")  ; green
@@ -172,6 +172,12 @@ from red to green without yellow) besides other differences."
 
 The first one is the text color and the second is the background.")
 
+(defvar color-pairs-cycle
+  (setcdr (last color--pairs) color--pairs)
+    "Color pairs that pass WCAG AAA test.
+
+The first one is the text color and the second is the background.")
+
 
 (defmacro def-char-face (letter backgrnd foregrnd grp)
   "A macro used to define faces.
@@ -189,6 +195,7 @@ as foreground colors."
         (:background ,backgrnd :foreground ,foregrnd))
        (t (:background "gray")))
      ,(concat "Face for marking up " (upcase letter) "'s")))
+
 
 (defmacro interactive-region-or-line ()
   `(interactive
@@ -228,7 +235,6 @@ otherwise, not. FACE-PREFIX decides which face groups ('base-face' or
 
 
 ;;;;;; isearch motif
-
 
 ;; (defun seq-isearch-transform-string ()
 ;;   (interactive)
@@ -316,5 +322,6 @@ reported."
                         (throw 'flag nil)))
                   hash1)
          (throw 'flag t))))
+
 
 (provide 'seq)

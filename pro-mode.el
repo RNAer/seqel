@@ -41,22 +41,23 @@
 
 This is the molecular weight with H2O subtracted.
 
-For each inner list, the first element is allowed AA; the second element
-is the three-letter code of the first, and the last is the molecular weight.
-for the first. Only for lowercase, as the upcased will be added automatically.")
+For each inner list, the first element is allowed AA; the second
+element is the three-letter code of the first, and the last is
+the molecular weight.  for the first.  Only for lowercase, as the
+upcased will be added automatically.")
 
 ;;;;; END OF USER CUSTOMIZABLE VARIABLES
 
-(setq pro-aa-alist
+(defvar pro-aa-alist
   (append (mapcar (lambda (x)
                     (cons (upcase (car x)) (cdr x)))
                   pro--aa-alist)
-          pro--aa-alist))
+          pro--aa-alist)
   "Similar to `pro-aa--alist', just with uppercase 1-letter code added.")
 
 
-(setq pro-aa
-  (mapcar #'car pro-aa-alist))
+(defvar pro-aa
+  (mapcar #'car pro-aa-alist)
   "All 1-letter IUPAC AA code, including lower and upper cases.")
 
 (defvar pro-aa-acidic "de")
@@ -66,19 +67,11 @@ for the first. Only for lowercase, as the upcased will be added automatically.")
 (defvar pro-aa-amphipathic "")
 
 
-(defvar pro-aa-degeneracy
-  (let ((d-vec (make-vector 256 nil)))
-    (dolist (element pro-aa-alist)
-      (aset d-vec (car element) (cddr element)))
-  d-vec)
-  "A vector of degeneracies for each upper and lower case valid bases
-defined in `nuc-base-alist'.")
-
-(setq pro-aa-mw
+(defvar pro-aa-mw
   (let ((mw-vec (make-vector 256 nil)))
     (dolist (element pro-aa-alist)
       (aset mw-vec (car element) (nth 2 element)))
-    mw-vec))
+    mw-vec)
   "A vector of AA molecular weights in Dalton.")
 
 (defvar pro-aa-1-vec
@@ -92,7 +85,7 @@ It is used to convert 1-letter codes to 3-letter codes.")
 
 (defvar pro-aa-3-hash
   (let ((my-hash (make-hash-table :test 'equal)))
-    (dolist (element pro-aa--alist)
+    (dolist (element pro--aa-alist)
       (puthash (nth 1 element) (car element) my-hash))
     my-hash)
   "A hash table with 3-letter code as key and 1-letter code as value.
@@ -125,7 +118,9 @@ It is used to convert 3-letter codes to 1-letter codes.")
 
 
 (defun pro-1-2-3 (beg end)
-  "Convert the region of 1-letter IUPAC code to 3-letter IUPAC code"
+  "Convert the region of 1-letter IUPAC code to 3-letter IUPAC code.
+
+BEG and END defines the region to operate on."
   (interactive-region-or-line)
   (condition-case err
       (let ((times (- end beg)) char)
@@ -135,7 +130,7 @@ It is used to convert 3-letter codes to 1-letter codes.")
                  (insert (aref pro-aa-1-vec (char-after)))
                  (delete-char 1))
                 (t
-                 (error "Ambiguous or illegal char %c at line %d column %d"
+                 (error "Ambiguous or illegal amino acid letter %c at line %d column %d"
                         (char-after) (line-number-at-pos) (current-column))))))
     ((debug error)
      (primitive-undo 1 buffer-undo-list)
@@ -157,7 +152,8 @@ separating them."
           (setq letter (gethash code pro-aa-3-hash))
           (if letter
               (insert-char letter)
-            (error "Unknown code '%s' at position %d" code (point)))
+            (error "Unknown 3-letter amino acid code '%s' at position %d"
+                   code (point)))
           (delete-char 3)))
     ;; return to the original state if error is met.
     ((debug error)
@@ -167,13 +163,13 @@ separating them."
 
 ;;;###autoload
 (defun pro-move-forward (count)
-  "Move forward COUNT AA. Move backward if COUNT is negative.
+  "Move forward COUNT number of amino acids.
 
-Skip `seq-cruft-regexp' but stop on the illegal AA code
-and report how many AA the point have been moved by.
-COUNT can be either positive or negative, indicating the
-moving direction. Return the number of AA that are moved thru.
-See `proceed-char-repeatedly'"
+Move backward if COUNT is negative.  Skip `seq-cruft-regexp' but
+stop on the illegal AA code and report how many AA the point have
+been moved by.  COUNT can be either positive or negative,
+indicating the moving direction.  Return the number of AA that are
+moved thru.  See `proceed-char-repeatedly'"
   (interactive "p")
   (proceed-char-repeatedly count #'forward-char pro-aa-regexp))
 
@@ -196,8 +192,9 @@ Similar to `pro-aa-move-forward' (just use delete instead of move)."
 (defun pro-delete-backward (count)
   "Delete backward COUNT number of AA from the point.
 
-Similar to `pro-aa-move-forward' (just use delete backward instead of
-move forward). See `pro-aa-delete-forward' and `proceed-char-repeatedly'."
+Similar to `pro-aa-move-forward' (just use delete backward
+instead of move forward).  See `pro-aa-delete-forward' and
+`proceed-char-repeatedly'."
   (interactive "p")
   (proceed-char-repeatedly (- count) #'delete-char pro-aa-regexp))
 
@@ -229,31 +226,19 @@ See also `region-summary'."
              my-hash)))
 
 
-;;;;;; isearch motif
-
-(defun seq-isearch-mangle-str (str)
-  "Mangle the string STR into a regexp to search over cruft in sequence.
-Inserts a regexp between each AA which matches sequence formatting cruft.
-For example, if `seq-cruft-regexp' is '[ ]', the search string 'ALPR' would be
-transformed into 'A[ ]*L[ ]*P[ ]*R'."
-  ;; (mapconcat 'identity (split-string str "" t) (concat seq-cruft-regexp "*")))
-    (mapconcat 'char-to-string str (concat seq-cruft-regexp "*")))
-
-
 ;; define aa faces belonging to pro-aa-face group
 (defvar pro-aa-colors
-  (let ((colp (setcdr (last color-pairs) color-pairs))
-        (n (length nuc-base))
+  (let ((n (length pro-aa))
         tmp)
     (dotimes (i n)
-      (setq tmp (cons (cons (nth i pro-aa) (nth i colp)) tmp)))
+      (setq tmp (cons (cons (nth i pro-aa) (nth i color-pairs-cycle)) tmp)))
     tmp)
   ;; (mapcar* #'cons
   ;;          pro-aa
   ;;          (setcdr (last color-pairs) color-pairs))
   "Background and foreground colors for each IUPAC bases.
 
-This is a list of lists. For each inner list, it contains 3 atoms:
+This is a list of lists.  For each inner list, it contains 3 atoms:
 a nuc base in char type, hex-code colors for foreground and background")
 
 
@@ -261,21 +246,24 @@ a nuc base in char type, hex-code colors for foreground and background")
       for f = (nth 1 elem)
       for b = (nth 2 elem)
       for l = (format "%c" (nth 0 elem)) do
-      (eval (macroexpand `(def-char-face ,l ,b ,f "aa-face"))))
+      (eval (macroexpand `(def-char-face ,l ,b ,f "pro-aa-face"))))
 
 
 ;;;###autoload
-(defun pro-paint (beg end &optiona case)
-  "Color the AA region from BEG to END.
+(defun pro-paint (beg end &optional case)
+  "Color the protein sequence from BEG to END.
 
-If CASE is nil, upcase and lowercase base chars will be colored the same;
-otherwise, not. See `seq-paint' for details."
+If the CASE is nil, upcase and lowercase base chars will be colored the same;
+otherwise, not.  See `seq-paint' for details."
   (interactive "r\nP")
-  (seq-paint beg end "aa-face" case))
+  (if (not (use-region-p))
+      (setq beg (line-beginning-position)
+            end (line-end-position)))
+  (seq-paint beg end "pro-aa-face" case))
 
 ;;;###autoload
 (defalias 'pro-unpaint 'seq-unpaint
-  "Uncolor the AA region.
+  "Uncolor the region of protein sequence.
 
 This is an alias to `seq-unpaint'.")
 
@@ -301,6 +289,7 @@ It should be not enabled with `nuc-mode' at the same time."
   :lighter " protein"
   :keymap pro-mode-map
   :global t)
+
 
 (provide 'pro-mode)
 

@@ -192,7 +192,8 @@ Complement a region of the buffer by replacing nucleotide char
 base by base. Non-base char will be passed over unchanged."
   (interactive-region-or-line)
   (let* ((complement-vector dna-base-complement)
-         (is-rna (nuc-rna-p beg end)))
+         (is-rna (nuc-rna-p beg end))
+         base c-base)
     (if is-rna
         (setq complement-vector rna-base-complement))
     (save-excursion
@@ -256,7 +257,7 @@ See also `region-summary'."
              my-hash)))
 
 
-(defun seq-isearch-mangle-str-degeneracy (str)
+(defun nuc-seq-isearch-mangle-str-degeneracy (str)
   "Mangle the string STR into a regexp to search over cruft in sequence.
 
 Inserts a regexp between each base which matches sequence
@@ -309,11 +310,10 @@ the frequency of homopolymers in the sequence. "
 
 ;;; Per base colors
 (defvar nuc-base-colors
-  (let ((colp (setcdr (last color-pairs) color-pairs))
-        (n (length nuc-base))
+  (let ((n (length nuc-base))
         tmp)
     (dotimes (i n)
-      (setq tmp (cons (cons (nth i nuc-base) (nth i colp)) tmp)))
+      (setq tmp (cons (cons (nth i nuc-base) (nth i color-pairs-cycle)) tmp)))
     tmp)
   ;; Alternatively,
   ;; (mapcar* #'cons
@@ -322,8 +322,9 @@ the frequency of homopolymers in the sequence. "
   ;;          (setcdr (last color-pairs) color-pairs))
   "Background and foreground colors for each IUPAC bases.
 
-This is a list of lists. For each inner list, it contains 3 atoms:
-a nuc base in char type, hex-code colors for foreground and background")
+This is a list of lists.  For each inner list, it contains 3
+atoms: a nuc base in char type, hex-code colors for foreground
+and background")
 
 
 ;; define base faces belonging to base-face group
@@ -331,7 +332,7 @@ a nuc base in char type, hex-code colors for foreground and background")
       for f = (nth 1 elem)
       for b = (nth 2 elem)
       for l = (format "%c" (nth 0 elem)) do
-      (eval (macroexpand `(def-char-face ,l ,b ,f "base-face"))))
+      (eval (macroexpand `(def-char-face ,l ,b ,f "nuc-base-face"))))
 
 
 ;;;###autoload
@@ -344,7 +345,7 @@ otherwise, not. See `seq-paint' for details."
   (if (not (use-region-p))
       (setq beg (line-beginning-position)
             end (line-end-position)))
-  (seq-paint beg end "base-face" case))
+  (seq-paint beg end "nuc-base-face" case))
 
 ;;;###autoload
 (defalias 'nuc-unpaint 'seq-unpaint

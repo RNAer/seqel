@@ -197,10 +197,34 @@
         (delete-region (point-min) (point-max))))))
 
 
-(ert-deftest seq-isearch-mangle-str-degeneracy-test ()
+(ert-deftest nuc-paint-test ()
   :tags '(nuc-mode)
-  (let ((cases '(
-                 ("mR" . "[ac][\t\n .-]*[AG]")
+  (let ((cases '(("aAt" t (nuc-base-face-a nuc-base-face-A nuc-base-face-t))
+                 ("aAt" nil (nuc-base-face-A nuc-base-face-A nuc-base-face-T)))))
+    (with-temp-buffer
+      (dolist (test cases)
+        (insert (nth 0 test))
+        (set-mark (point-min))
+        (goto-char (point-max))
+        ;; set the optional case argument
+        (setq current-prefix-arg (nth 1 test))
+        (call-interactively 'nuc-paint)
+        ;; the painting does not change buffer content
+        (should
+         (equal (buffer-string)
+                (nth 0 test)))
+        ;; check the right face is on
+        (goto-char (point-min))
+        (dolist (face (nth 2 test))
+          (should
+           (equal face (get-char-property (point) 'font-lock-face)))
+          (forward-char))
+        (erase-buffer)))))
+
+
+(ert-deftest nuc-seq-isearch-mangle-str-degeneracy-test ()
+  :tags '(nuc-mode)
+  (let ((cases '(("mR" . "[ac][\t\n .-]*[AG]")
                  ("aTGc" . "[a][\t\n .-]*[T][\t\n .-]*[G][\t\n .-]*[c]"))))
     (dolist (test cases)
       (should
