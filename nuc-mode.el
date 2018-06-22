@@ -259,9 +259,22 @@ See also `region-summary'."
 (defun seq-isearch-mangle-str (str)
   "Mangle the string STR into a regexp to search over cruft in sequence.
 
-Inserts a regexp between each base which matches sequence formatting cruft.
-For example, if `seq-cruft-regexp' is '[ ]', the search string 'acgt' would be
+Inserts a regexp between each base which matches sequence
+formatting cruft, namely, you don't need to worry about if there
+is any spaces separating between 'A' and 'T' if you'd like to
+find all the 'AT's in the sequence.  More technically, if
+`seq-cruft-regexp' is '[ ]', the search string 'acgt' would be
 transformed into 'a[ ]*c[ ]*g[ ]*t'."
+  (mapconcat 'identity (split-string str "" 'omit-empty) (concat seq-cruft-regexp "*")))
+
+
+(defun seq-isearch-mangle-str-2 (str)
+  "Mangle the string STR into a regexp to search over cruft in sequence.
+
+Inserts a regexp between each base which matches sequence
+formatting cruft.  For example, if `seq-cruft-regexp' is '[ ]',
+the search string 'at' would be transformed into '[a][ ]*[t]';
+and 'mR' will be transformed to '[ac][ ]*[AG]'."
   ;; (mapconcat 'identity (split-string str "" t) (concat seq-cruft-regexp "*")))
   (let (degenerate-str-list  degeneracies)
     ;; 'ar' will return as ("[a]", "[ag]")
@@ -272,7 +285,6 @@ transformed into 'a[ ]*c[ ]*g[ ]*t'."
                           (error "%c is not a valid nuc base character!" x))
                       (concat "["  (mapconcat 'char-to-string degeneracies "") "]"))
                   (string-to-list str)))
-    (print degenerate-str-list)
     (mapconcat 'identity degenerate-str-list (concat seq-cruft-regexp "*"))))
 
 
