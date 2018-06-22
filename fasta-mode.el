@@ -1,6 +1,6 @@
 ;;; fasta-mode -- a major mode for editing fasta files
 
-;;; license: GPLv3
+;;; license: BSD-3
 
 ;;; Author: Zech Xu <zhenjiang dot xu at gmail dot com>
 
@@ -9,7 +9,6 @@
 (require 'nuc-mode)
 (require 'pro-mode)
 (require 'genetic-code)
-
 
 
 (defvar fasta-mode-hook nil
@@ -130,7 +129,7 @@ Return current point if it moved over COUNT of records; otherwise return nil."
   (interactive "p")
   (if (> count 0)
       (re-search-backward fasta-record-regexp nil 'move-to-point-min count)
-    (error "The parameter count should be positive integer.")))
+    (error "The argument COUNT should be positive integer.")))
 
 ;;;###autoload
 (defun fasta-forward (count)
@@ -167,7 +166,7 @@ Return current point if it moved over COUNT of records; otherwise return nil."
 
 ;;;###autoload
 (defun fasta-count ()
-  "Count the number of fasta records in the buffer."
+  "Count the number of fasta sequences in the buffer."
   (interactive)
   (let ((total 0))
     (save-excursion
@@ -179,17 +178,17 @@ Return current point if it moved over COUNT of records; otherwise return nil."
     total))
 
 
-(defun fasta-mark (&optional whole)
+(defun fasta-mark (&optional incude-header)
   "Put point at the beginning of the sequence and mark the end.
 
-If a prefix arg is provided or WHOLE is t, then put the point at
+If a prefix arg is provided or INCLUDE-HEADER is t, then put the point at
 the beginning of the fasta entry instead of the sequence."
   (interactive "P")
   (push-mark) ; mark current position
   (fasta-forward 1)
   (push-mark nil nil t)
   (fasta-backward 1)
-  (or whole
+  (or include-header
       (forward-line)))
 
 (defun fasta--format (width)
@@ -376,7 +375,8 @@ If IS-RNA is nil, then assume the sequence is RNA; otherwise, DNA.
 It is just a wrapper on `fasta--rc'."
   (interactive "P")
   (save-excursion
-    (fasta--rc is-rna)))
+    (fasta--rc is-rna))
+  (message "Reverse complemented the current sequence."))
 
 (defun fasta-rc-all (is-rna)
   "Reverse complement every fasta sequences in the buffer.
@@ -387,7 +387,8 @@ It calls `fasta--rc' on each fasta record."
     (goto-char (point-max))
     (while (fasta-backward 1)
       (fasta--rc is-rna)
-      (fasta-backward 1))))
+      (fasta-backward 1)))
+  (message "Reverse complemented all the sequences in the buffer."))
 
 
 (defun fasta--translate ()
@@ -432,6 +433,16 @@ It calls `fasta--translate' on each fasta record."
         (pro-weight (region-beginning) (region-end))
       (error "pro mode is not enabled"))))
 
+(defun fasta-summary ()
+  "Print the frequencies of characters in the fasta sequence.
+
+See also `region-summary', `nuc-summary', `pro-summary'."
+  (interactive)
+  (save-excursion
+    (fasta-mark)
+    (if pro-mode
+        (pro-summary)
+      (nuc-summary))))
 
 (defun fasta--paint (&optional case)
   "Paint current fasta sequence by their residue identity.
