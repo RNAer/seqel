@@ -217,30 +217,46 @@ See also `nuc-complement'."
 
 (defalias 'nuc-rc 'nuc-reverse-complement)
 
+(defvar nuc--u2t
+  (let ((c-vec (vconcat (number-sequence 0 256))))  ; all alphabets chars are < 256
+    (aset c-vec ?u ?t)
+    (aset c-vec ?U ?T)
+    c-vec)
+  "A vector used to replace U/u with T/t.")
+
+
+(defvar nuc--t2u
+  (let ((c-vec (vconcat (number-sequence 0 256))))  ; all alphabets chars are < 256
+    (aset c-vec ?t ?u)
+    (aset c-vec ?T ?U)
+    c-vec)
+  "A vector used to replace T/t with U/u")
 
 ;;;###autoload
-(defun nuc-2rna (beg end)
+(defun nuc-2rna (beg end &optional negate)
   "Convert the region or the current line to RNA.
 
 It basically converts 't' -> 'u' and 'T' -> 'U'.
-Similar to `nuc-2dna."
+See also `nuc-2dna'."
   (interactive-region-or-line)
-  (save-excursion
-    (goto-char beg)
-    (while (search-forward "t" end t)  ;(case-fold-search t)
-      (replace-match "u" nil t))))
+  (let ((sequence (buffer-substring-no-properties beg end))
+        (replace-vector (if negate nuc--u2t nuc--t2u)))
+    (delete-region beg end)
+    (dotimes (i (- end beg))
+      ;; replace the sequence inplace. this is the fastest and also
+      ;; requires least mem. It reduces 12s to 2s and 200mb to 30mb
+      ;; for a genome of 5M bp.
+      (aset sequence i (aref replace-vector (aref sequence i))))
+    (insert sequence)))
+
 
 (defun nuc-2dna (beg end)
   "Convert the region or current line to DNA.
 
 It basically converts 'u' -> 't' and 'U' -> 'T'.
-Similar to `nuc-2rna'."
+See also `nuc-2rna'."
   (interactive-region-or-line)
-  (save-excursion
-    (goto-char beg)
-    (while (search-forward "u" end t)   ;(case-fold-search t)
-      (replace-match "t" nil t))))
-
+  (nuc-2rna beg end t))
 
 (defun nuc-summary (beg end)
   "Print the frequencies of bases in the region or the current line.
