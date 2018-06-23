@@ -186,24 +186,22 @@ See `dna-base-complement'."
 
 
 (defun nuc-complement (beg end)
-  "Complement a region (or a line ) of bases from BEG to END.
+  "Complement a region (or a line) of bases from BEG to END.
 
 Complement a region of the buffer by replacing nucleotide char
 base by base. Non-base char will be passed over unchanged."
   (interactive-region-or-line)
-  (let* ((complement-vector dna-base-complement)
-         (is-rna (nuc-rna-p beg end))
-         base c-base)
+
+  (let ((complement-vector dna-base-complement)
+        (is-rna (nuc-rna-p beg end))
+        (sequence (buffer-substring-no-properties beg end))
+        base)
     (if is-rna
         (setq complement-vector rna-base-complement))
-    (save-excursion
-      (goto-char beg)
-      (while (< (point) end)
-        (setq base (following-char))
-        (setq c-base (aref complement-vector base))
-        (insert (or c-base base))
-        (delete-char 1)))))
-
+    (delete-region beg end)
+    (dotimes (i (- end beg))
+      (setq base (aref sequence i))
+      (insert (or (aref complement-vector base) base)))))
 
 ;;;###autoload
 (defun nuc-reverse-complement (beg end)
