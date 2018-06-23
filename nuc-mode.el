@@ -71,7 +71,7 @@ in `nuc-base-alist'.")
 defined in `nuc-base-alist'.")
 
 (defvar dna-base-complement
-  (let ((c-vec (make-vector 256 nil)))  ; all alphabets chars are < 256
+  (let ((c-vec (vconcat (number-sequence 0 256))))  ; all alphabets chars are < 256
     (dolist (element nuc-base-alist)
       (aset c-vec (car element) (nth 1 element)))
     c-vec)
@@ -86,8 +86,6 @@ defined in `nuc-base-alist'.")
     (aset c-vec ?A ?U)
     (aset c-vec ?u ?a)
     (aset c-vec ?U ?A)
-    (aset c-vec ?t nil)
-    (aset c-vec ?T nil)
     c-vec)
   "A vector of upper and lower case bases and their complements.
  rna-base-complement[base] returns the complement of the base. see also
@@ -185,23 +183,26 @@ See `dna-base-complement'."
     (message "Complement of '%c' is '%c'." base c-base)))
 
 
-(defun nuc-complement (beg end)
+(defun nuc-complement (beg end &optional reverse)
   "Complement a region (or a line) of bases from BEG to END.
 
 Complement a region of the buffer by replacing nucleotide char
 base by base. Non-base char will be passed over unchanged."
   (interactive-region-or-line)
-
   (let ((complement-vector dna-base-complement)
         (is-rna (nuc-rna-p beg end))
-        (sequence (buffer-substring-no-properties beg end))
-        base)
+        (sequence (buffer-substring-no-properties beg end)))
     (if is-rna
         (setq complement-vector rna-base-complement))
+    (if reverse
+        (setq sequence (nreverse sequence)))
     (delete-region beg end)
     (dotimes (i (- end beg))
-      (setq base (aref sequence i))
-      (insert (or (aref complement-vector base) base)))))
+      ;; replace the sequence inplace. this is the fastest and also
+      ;; requires least mem. It reduces 12s to 2s and 200mb to 30mb
+      ;; for a genome of 5M bp.
+      (aset sequence i (aref complement-vector (aref sequence i))))
+    (insert sequence)))
 
 ;;;###autoload
 (defun nuc-reverse-complement (beg end)
@@ -209,13 +210,9 @@ base by base. Non-base char will be passed over unchanged."
 
 See also `nuc-complement'."
   (interactive-region-or-line)
-  (let ((region (buffer-substring-no-properties beg end)))
-    (save-excursion
-      (delete-region beg end)
-      (insert (nreverse region))
-      (nuc-complement beg end))
-    (if (called-interactively-p 'interactive)
-      (message "Reverse complemented the selected region"))))
+  (nuc-complement beg end t)
+  (if (called-interactively-p 'interactive)
+      (message "Reverse complemented the selected region")))
 
 
 (defalias 'nuc-rc 'nuc-reverse-complement)
