@@ -105,7 +105,7 @@ Skip `seq-cruft-regexp' but stop on the illegal base
 and report how many bases the point have been moved by.
 COUNT can be either positive or negative, indicating the
 moving direction. Return the number of bases that are moved thru.
-See `proceed-char-repeatedly'"
+See `seq-forward-char'"
   (interactive "p")
   (seq-forward-char count nuc-alphabet-set))
 
@@ -113,7 +113,8 @@ See `proceed-char-repeatedly'"
 (defun nuc-move-backward (count)
   "Move backward COUNT bases, similar to `nuc-move-forward'.
 
-See also `seq-forward-char'."
+See also `seq-forward-char'. `(nuc-move-backward -1)'
+and `(nuc-move-forward 1)' are equvialent."
   (interactive "p")
   ;; (proceed-char-repeatedly count 'backward-char))
   (seq-forward-char (- count) nuc-alphabet-set))
@@ -122,19 +123,20 @@ See also `seq-forward-char'."
 (defun nuc-delete-forward (count)
   "Delete COUNT number of bases starting from the point.
 
-Similar to `nuc-move-forward' (just delete instead of move)."
+See also `nuc-delete-backward' and `nuc-move-forward'."
   (interactive "p")
   (let ((pos (point)))
-    (proceed-char-repeatedly count #'forward-char nuc-base-regexp)
+    (seq-forward-char count nuc-alphabet-set)
     (delete-region pos (point))))
 
 (defun nuc-delete-backward (count)
   "Delete backward COUNT number of bases from the point.
 
-Similar to `nuc-move-forward' (just delete backward instead of move
-forward). See `nuc-delete-forward' and `proceed-char-repeatedly'."
+See `nuc-delete-forward'."
   (interactive "p")
-  (proceed-char-repeatedly (- count) #'delete-char nuc-base-regexp))
+  (let ((pos (point)))
+    (seq-forward-char (- count) nuc-alphabet-set)
+    (delete-region pos (point))))
 
 
 (defun nuc-count (beg end)

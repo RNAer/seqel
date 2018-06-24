@@ -11,7 +11,8 @@
   ;; buffer content, how many to move, cursor position (not point is 1-based)
   (let ((cases '(("ATGC" 1 2)
                  (" ATGC" 1 3)
-                 ("A TGC" 2 4))))
+                 ("A TGC" 2 4)
+                 ("ATGC  " 4 5))))
     (with-temp-buffer
       (dolist (test cases)
         (insert (nth 0 test))
@@ -44,7 +45,7 @@
         ;; important to clean up the buffer
         (delete-region (point-min) (point-max))))))
 
-(ert-deftest nuc-delete-test ()
+(ert-deftest nuc-delete-forward-test ()
   ;; the tags is used to group the tests together.
   :tags '(nuc-mode)
   ;; seq, set initial poin position (1-based), func args, expected res
