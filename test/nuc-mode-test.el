@@ -5,9 +5,10 @@
 (require 'genetic-code)
 (require 'ert)
 
-(ert-deftest nuc-move-test ()
+(ert-deftest nuc-move-forward-test ()
   ;; the tags is used to group the tests together.
   :tags '(nuc-mode)
+  ;; buffer content, how many to move, cursor position (not point is 1-based)
   (let ((cases '(("ATGC" 1 2)
                  (" ATGC" 1 3)
                  ("A TGC" 2 4))))
@@ -18,6 +19,27 @@
         ;; set the numeric prefix
         (setq current-prefix-arg (nth 1 test))
         (call-interactively 'nuc-move-forward)
+        (should (equal (point) (nth 2 test)))
+        ;; important to clean up the buffer
+        (delete-region (point-min) (point-max))))))
+
+
+(ert-deftest nuc-move-backward-test ()
+  ;; test nuc-move-forward
+  ;; the tags is used to group the tests together.
+  :tags '(nuc-mode)
+  ;; buffer content, how many to move backward, cursor position (1-based)
+  (let ((cases '(("ATGC" 1 4)
+                 ("ATGC " 1 4)
+                 ("A TGC" 3 3))))
+    (with-temp-buffer
+      (dolist (test cases)
+        (insert (nth 0 test))
+        (goto-char (point-max))
+        ;; set the numeric prefix
+        (setq current-prefix-arg (nth 1 test))
+        (call-interactively 'nuc-move-backward)
+        (message "%d %d %d" (point) (point-min) (point-max))
         (should (equal (point) (nth 2 test)))
         ;; important to clean up the buffer
         (delete-region (point-min) (point-max))))))

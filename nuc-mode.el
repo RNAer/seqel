@@ -49,15 +49,20 @@ for the first. Only for lowercase, as the upcased will be added automatically.")
           nuc--base-alist)
   "Similar to `nuc--base-alist', just with uppercase bases added.")
 
-(defvar nuc-base
-  (mapcar #'car nuc-base-alist)
-  "All the bases that are allowed.
 
-This is a list of chars. Only lower cases.")
+(defvar nuc-alphabet-set
+  (let ((alphabet-set (make-hash-table :test 'eq :size (length nuc-base-alist))))
+    (dolist (l nuc-base-alist)
+      (puthash (car l) t alphabet-set))
+    alphabet-set)
+  "The set of all legal alphabets in DNA or RNA sequences.
+
+This is a hash table: keys are char and values are `t'. It serves
+like a set object similar in Python language.")
 
 
 (defvar nuc-base-regexp
-    (regexp-opt (mapcar #'char-to-string nuc-base))
+    (regexp-opt (mapcar #'char-to-string (car nuc-base-alist)))
   "A regexp that matches a valid nucleotide base symbol defined
 in `nuc-base-alist'.")
 
@@ -102,16 +107,16 @@ COUNT can be either positive or negative, indicating the
 moving direction. Return the number of bases that are moved thru.
 See `proceed-char-repeatedly'"
   (interactive "p")
-  (proceed-char-repeatedly count #'forward-char nuc-base-regexp))
+  (seq-forward-char count nuc-alphabet-set))
 
 ;;;###autoload
 (defun nuc-move-backward (count)
   "Move backward COUNT bases, similar to `nuc-move-forward'.
 
-See also `proceed-char-repeatedly'."
+See also `seq-forward-char'."
   (interactive "p")
   ;; (proceed-char-repeatedly count 'backward-char))
-  (proceed-char-repeatedly (- count) #'forward-char nuc-base-regexp))
+  (seq-forward-char (- count) nuc-alphabet-set))
 
 ;;; delete
 (defun nuc-delete-forward (count)
@@ -119,7 +124,9 @@ See also `proceed-char-repeatedly'."
 
 Similar to `nuc-move-forward' (just delete instead of move)."
   (interactive "p")
-  (proceed-char-repeatedly count #'delete-char nuc-base-regexp))
+  (let ((pos (point)))
+    (proceed-char-repeatedly count #'forward-char nuc-base-regexp)
+    (delete-region pos (point))))
 
 (defun nuc-delete-backward (count)
   "Delete backward COUNT number of bases from the point.
@@ -178,9 +185,8 @@ See also `nuc-rna-p' and `nuc-p'."
 See `dna-base-complement'."
   (interactive "cComplement of base:")
   (if (equal base ?u) (setq base ?t))
-  (let ((c-base (or (elt dna-base-complement base)
-                    ??)))     ; return '?' if there's no complement base
-    (message "Complement of '%c' is '%c'." base c-base)))
+  ;; use aref or elt
+  (message "Complement of '%c' is '%c'." base (aref dna-base-complement base)))
 
 
 (defun nuc-complement (beg end &optional reverse)
@@ -321,16 +327,8 @@ the frequency of homopolymers in the sequence. "
 
 ;;; Per base colors
 (defvar nuc-base-colors
-  (let ((n (length nuc-base))
-        tmp)
-    (dotimes (i n)
-      (setq tmp (cons (cons (nth i nuc-base) (nth i color-pairs-cycle)) tmp)))
-    tmp)
-  ;; Alternatively,
-  ;; (mapcar* #'cons
-  ;;          nuc-base
-  ;;          ;; this is circular list
-  ;;          (setcdr (last color-pairs) color-pairs))
+    (mapcar* #'(lambda (x y) (cons (car x) y)) nuc-base-alist color-pairs-cycle)
+
   "Background and foreground colors for each IUPAC bases.
 
 This is a list of lists.  For each inner list, it contains 3
