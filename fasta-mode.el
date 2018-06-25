@@ -67,7 +67,7 @@
 
 ;;;###autoload
 (define-derived-mode fasta-mode text-mode "fasta"
-  "Major mode for editing sequences in fasta format.
+  "Major mode for editing biological sequences in fasta format.
 
 Special commands:
 \\{fasta-mode-map}
@@ -82,8 +82,7 @@ Special commands:
   ;; The above are automatically done if the mode is defined using
   ;; `define-derived-mode'.
   ;; the variable automatically becomes buffer-local when set
-  ;; (setq font-lock-defaults '(fasta-font-lock-keywords))
-  (flyspell-mode -1)
+  (setq font-lock-defaults '(fasta-font-lock-keywords))
   ;; (set-syntax-table fasta-mode-syntax-table)
   (run-hooks 'fasta-mode-hook))
 
@@ -120,9 +119,8 @@ Only if the major mode is `fundermental. This function is added to
              '("\\.\\(fasta\\|fa\\|fna\\|faa\\)\\'" . fasta-mode))
 
 
-
 (defun fasta-backward (count)
-  "Move the point the beginning of the fasta record.
+  "Move the point to the beginning of the fasta record.
 
 It works in the style of `backward-paragraph'. COUNT need to be positive integer.
 Return current point if it moved over COUNT of records; otherwise return nil."
@@ -177,8 +175,8 @@ Return current point if it moved over COUNT of records; otherwise return nil."
         (message "Total %d sequences." total))
     total))
 
-
-(defun fasta-mark (&optional incude-header)
+;;;###autoload
+(defun fasta-mark (&optional include-header)
   "Put point at the beginning of the sequence and mark the end.
 
 If a prefix arg is provided or INCLUDE-HEADER is t, then put the point at
@@ -194,8 +192,8 @@ the beginning of the fasta entry instead of the sequence."
 (defun fasta--format (width)
   "Format the current sequence to contain WIDTH chars per line.
 
-By default, each sequence is one line (WIDTH is nil). The white spaces inside
-will also be removed."
+By default, each sequence is one line (if WIDTH is nil). The
+white spaces will all be removed."
   (and width  (< width 1)
        (error "Width should be nil or positive integer"))
   (let (beg end)
@@ -244,7 +242,7 @@ It calls `fasta--format' on each fasta records."
 (defun fasta-delete ()
   "Delete current fasta entry."
   (interactive)
-  (fasta-mark t)
+  (fasta-mark 'include-header)
   (delete-region (region-beginning) (region-end)))
 
 
@@ -288,7 +286,7 @@ count all the characters."
         (- pos (point))))))
 
 
-(defun fasta-seq-length ()
+(defun fasta-length ()
   "Return the length of current sequence."
   (interactive)
   (let (length)
@@ -301,57 +299,7 @@ count all the characters."
     length))
 
 
-(defun fasta-seq-type ()
-  "Return the type of sequence, either 'pro (protein), 'nuc (nucleic acid) or
-nil (undetermined).
-
-It will search all the sequence residues for unique nuc base and unique
-protein amino acid IUPAC code. If found, the type is determined. Or if
-more than (1000) number or all of them are \"atugc\", then it is determined
-to be nuc"
-  (let ((pro-uniq pro-aa)
-        (nuc-uniq nuc-base)
-        (atugc    '(?a ?t ?u ?g ?c ?A ?T ?U ?G ?C))
-        (smallest 1000)
-        (count    0)
-        (atugc-only-p  t)
-        current)
-    (mapc (lambda (x) (setq pro-uniq (remq x pro-uniq))) nuc-base)
-    (mapc (lambda (x) (setq nuc-uniq (remq x nuc-uniq))) pro-aa)
-    (save-excursion
-      (goto-char (point-min))
-      (catch 'seq-type
-        (while (setq current (char-after))
-          ;; (message "%d" (line-number-at-pos))
-          ;; move from ">" line to the sequence region
-          (if (looking-at fasta-record-regexp) (forward-line))
-          (cond ((memq current pro-uniq)
-                 (pro-mode)
-                 (throw 'seq-type 'pro))
-                ((memq current nuc-uniq)
-                 (nuc-mode)
-                 (throw 'seq-type 'nuc)))
-
-          (or (not atugc-only-p)
-              (memq current seq-gap)
-              (memq current seq-space)
-              (if (memq current atugc) (setq count (1+ count)))
-              (setq atugc-only-p nil))
-
-          ;; have enough AUGCTs to call it a nuc sequence
-          (and (> count smallest)
-               atugc-only-p
-               (nuc-mode)
-               (throw 'seq-type 'nuc))
-
-          (forward-char))
-        ;; went thru all the sequences
-        (and atugc-only-p
-             (nuc-mode)
-             (throw 'seq-type 'nuc))))))
-
-
-(defun fasta--rc (is-rna)
+(defun fasta--rc ()
   "Reverse complement current fasta sequence if it is nuc sequence.
 
 If IS-RNA is nil, then assume the sequence is RNA; otherwise, DNA."
@@ -360,7 +308,7 @@ If IS-RNA is nil, then assume the sequence is RNA; otherwise, DNA."
              (let ((beg (region-beginning))
                    (end (region-end)))
                (if nuc-mode  ; if nuc-mode is enabled
-                   (nuc-reverse-complement beg (1- end) is-rna)
+                   (nuc-reverse-complement beg (1- end))
                  (error "nuc mode is not enabled"))))
     ((debug error)
      (primitive-undo 1 buffer-undo-list)
@@ -368,14 +316,13 @@ If IS-RNA is nil, then assume the sequence is RNA; otherwise, DNA."
      (error "%s" (error-message-string err)))))
 
 ;;;###autoload
-(defun fasta-rc (is-rna)
+(defun fasta-rc ()
   "Reverse complement current fasta sequence if it is nuc sequence.
 
-If IS-RNA is nil, then assume the sequence is RNA; otherwise, DNA.
 It is just a wrapper on `fasta--rc'."
-  (interactive "P")
+  (interactive)
   (save-excursion
-    (fasta--rc is-rna))
+    (fasta--rc))
   (message "Reverse complemented the current sequence."))
 
 (defun fasta-rc-all (is-rna)
@@ -436,7 +383,7 @@ It calls `fasta--translate' on each fasta record."
 (defun fasta-summary ()
   "Print the frequencies of characters in the fasta sequence.
 
-See also `region-summary', `nuc-summary', `pro-summary'."
+See also `seq-summary', `nuc-summary', `pro-summary'."
   (interactive)
   (save-excursion
     (fasta-mark)
@@ -599,8 +546,39 @@ If CASE is nil, the summary will be case insensitive."
       my-hash)))
 
 
-;; this can slow the loading of a large fasta file
-(add-hook 'fasta-mode-hook 'fasta-seq-type)
+(defun fasta-seq-type (&optional threshold)
+  "Enable the minor mode for either protein or nucleic acid.
+
+It will search the first 100 sequence residues (or the first
+sequence record, whichever is smaller) for unique nucletide base
+and unique protein amino acid IUPAC code. If found, the minor
+mode of `nuc-mode' or `pro-mode' will be enabled. If it is
+ambiguous, enable `nuc-mode' by default."
+  (let ((pro-aa-uniq '(?E ?F ?I ?J ?L ?P ?Q ?Z ?e ?f ?i ?j ?l ?p ?q ?z))
+        current)
+    (save-mark-and-excursion
+        (catch 'seq-type
+          (fasta-mark)
+          (dotimes (i (min (or threshold 2) (- (region-end) (region-beginning))))
+            (setq current (char-after))
+            (cond ((memq current pro-aa-uniq)
+                   (pro-mode)
+                   (throw 'seq-type 'pro))
+                  ((= ?U (upcase current))
+                   (nuc-mode)
+                   (throw 'seq-type 'nuc)))
+            (forward-char))
+        ;; if no uniq char found for pro or nuc sequences; enable nuc-mode by default
+        (nuc-mode)
+        (throw 'seq-type 'nuc)))))
+
+
+(add-hook 'fasta-mode-hook
+          (lambda () ((fasta-seq-type)
+                      ;; this can slow the loading of a large fasta file
+                      ;; disable these minor modes
+                      (flyspell-mode -1)
+                      (linum-mode -1))))
 
 
 (provide 'fasta-mode)
