@@ -5,6 +5,13 @@
 (require 'genetic-code)
 (require 'ert)
 
+
+(ert-deftest nuc-variables-test ()
+  :tags '(nuc-mode)
+  ;; test global variables defined
+  (should (equal nuc-base-regexp "[A-DGHKMNR-Ya-dghkmnr-y]")))
+
+
 (ert-deftest nuc-move-forward-test ()
   ;; the tags is used to group the tests together.
   :tags '(nuc-mode)
@@ -63,6 +70,25 @@
         (should (equal (buffer-string) (nth 3 test)))
         ;; important to clean up the buffer
         (delete-region (point-min) (point-max))))))
+
+(ert-deftest nuc-delete-error-test ()
+  ;; test if there is illegal char in the seq, error will be raised
+  ;; and seq is not changed
+  :tags '(nuc-mode)
+  ;; seq, set initial poin position (1-based), func args
+  (let ((cases '(("AETGC" 1 2))))
+    (with-temp-buffer
+      (dolist (test cases)
+        (insert (nth 0 test))
+        (goto-char (nth 1 test))
+        ;; set the numeric prefix
+        (setq current-prefix-arg (nth 2 test))
+        (should-error (call-interactively 'nuc-delete-forward))
+        ;; the original str should be unchanged
+        (should (equal (buffer-string) (nth 0 test)))
+        ;; important to clean up the buffer
+        (delete-region (point-min) (point-max))))))
+
 
 (ert-deftest nuc-whr-test ()
   ;; the tags is used to group the tests together.
@@ -204,6 +230,15 @@
          (hash-equal (region-summary (point-min) (point-max) nuc-base-regexp)
                 (hash-alist (cdr test))))
         (delete-region (point-min) (point-max))))))
+
+
+(ert-deftest nuc-decode-test ()
+  :tags '(nuc-mode)
+  (let ((cases '(("CTM" ?L)
+                 ((?C ?T ?M) ?L)
+                 ("MAT" ?H ?N))))
+    (dolist (test cases)
+      (should (equal (cdr test) (nuc-decode (car test)))))))
 
 
 (ert-deftest nuc-translate-test ()

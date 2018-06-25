@@ -62,7 +62,7 @@ like a set object similar in Python language.")
 
 
 (defvar nuc-base-regexp
-    (regexp-opt (mapcar #'char-to-string (car nuc-base-alist)))
+    (regexp-opt (mapcar (lambda (i) (char-to-string (car i))) nuc-base-alist))
   "A regexp that matches a valid nucleotide base symbol defined
 in `nuc-base-alist'.")
 
@@ -72,8 +72,8 @@ in `nuc-base-alist'.")
     (dolist (element nuc-base-alist)
       (aset d-vec (car element) (cddr element)))
   d-vec)
-  "A vector of degeneracies for each upper and lower case valid bases
-defined in `nuc-base-alist'.")
+  "A vector of degeneracies (list type) for each upper and lower
+case valid bases defined in `nuc-base-alist'.")
 
 (defvar dna-base-complement
   (let ((c-vec (vconcat (number-sequence 0 256))))  ; all alphabets chars are < 256
@@ -252,7 +252,7 @@ See also `nuc-2dna'."
     (delete-region beg end)
     (dotimes (i (- end beg))
       ;; replace the sequence inplace. this is the fastest and also
-      ;; requires least mem. It reduces 12s to 2s and 200mb to 30mb
+      ;; requires least mem. It reduces 12s to <2s and 200mb to 30mb
       ;; for a genome of 5M bp.
       (aset sequence i (aref replace-vector (aref sequence i))))
     (insert sequence)))
@@ -271,9 +271,7 @@ See also `nuc-2rna'."
 
 See also `region-summary'."
   (interactive-region-or-line)
-  (let ((my-hash (region-summary beg end nuc-base-regexp)))
-    (maphash (lambda (x y) (princ (format "%c:%d " x y) t))
-             my-hash)))
+  (region-summary beg end nuc-base-regexp))
 
 
 (defun nuc-seq-isearch-mangle-str-degeneracy (str)
@@ -365,31 +363,38 @@ otherwise, not. See `seq-paint' for details."
 It is an alias to `seq-unpaint'.")
 
 
-(defvar translation-table nil
+(defvar nuc-translation-table nil
   "Define the translation table.
 
-This is hash table with codons as keys. It is set by
+This is list. Its car is an int indication which genetic table it
+is.  Its cdr is a hash table with codons as keys and encoded
+amino acids as values. This variable is set by
 `nuc-set-translation-table'.")
 
 
-(defun nuc-decode (codons)
-  "Return the list of amino acid(s) that are coded by the CODONS.
+(defun nuc-decode (codon)
+  "Return the list of amino acid(s) that are coded by the CODON.
 
-Example: (nuc-decode '(?t ?c ?m) should return (83) and (nuc-decode '(?m ?a ?t)) should
+CODON must be uppercase string of 3 DNA letters. Example: (nuc-decode
+\"TCM\") should return (83) and (nuc-decode \"MAT\") should
 return (72 78) for translation table 1."
-  (let ((case-fold-search t)
-        codon aas aa)
-    (dolist (first (aref nuc-base-degeneracy (nth 0 codons)))
-      (if (memq first '(?u ?U)) (setq first ?t))
-      (dolist (second (aref nuc-base-degeneracy (nth 1 codons)))
-        (if (memq second '(?u ?U)) (setq second ?t))
-        (dolist (third (aref nuc-base-degeneracy (nth 2 codons)))
-          (if (memq third '(?u ?U)) (setq third ?t))
-          (setq codon (format "%c%c%c" first second third))
-          (setq aa (car (gethash (upcase codon) translation-table)))
-          (or aa (error "codon %s is not recognized." codon))
+  (interactive (list (read-from-minibuffer
+                (format "The amino acide of condon in genetic table %d: " (car nuc-translation-table)))))
+  (let ((table (cdr nuc-translation-table))
+        degenerated-codon aas aa)
+    (if (stringp codon)
+        (setq codon (string-to-list codon)))
+    (dolist (first-base (aref nuc-base-degeneracy (nth 0 codon)))
+      (dolist (second-base (aref nuc-base-degeneracy (nth 1 codon)))
+        (dolist (third-base (aref nuc-base-degeneracy (nth 2 codon)))
+          (setq degenerated-codon (format "%c%c%c" first-base second-base third-base))
+          (setq aa (car (gethash degenerated-codon table)))
+          (or aa (error "Codon %s (after degeneration) is not recognized." degenerated-codon))
           (or (memq aa aas)
               (setq aas (cons aa aas))))))
+    (if (called-interactively-p 'interactive)
+        ;; apply is used to concat list of char to a string
+        (message "%s encodes %s" codon (apply #'string aas)))
     aas))
 
 
@@ -402,39 +407,38 @@ For example, run `C-u 2 M-x nuc-set-translation-table' to set it to table 2."
   (let (table)
     (or (setq table (get-translation-table n))
         (error "The translation table %d does not exist" n))
-    (setq translation-table (hash-alist table))
+    (setq nuc-translation-table `(,n . ,(hash-alist table)))
     (message "Set to translation table %d" n)))
 
 
 ;;;###autoload
 (defun nuc-translate (beg end)
-  "Translate the nuc seq to protein seq using current translation table.
+  "Translate the DNA/RNA seq to protein seq using current translation table.
 
 The ambiguous codon will be handled correctly: if it is mapped to multiple
-amino acids, 'X' will be output; if it is mapped to a single amino acid,
-then it will be translated into the amino acid."
+amino acids, 'X' will be output.
+
+This function translates DNA of 9K for ~6 sec (over 80% of the
+time is for `nuc-decode') and ~15 MB mem."
   (interactive-region-or-line)
-  (let (;; check valid of the sequence and
-        ;; count the number of bases
-        (n (nuc-count beg end))
-        codon aa)
-      (goto-char beg)
-      (if n
-        (progn
-          (setq n (/ n 3))
-          (message "%d nucleotides to %d amino acids" (* 3 n) n)
-          (while (> n 0)
-            (if (looking-at nuc-base-regexp)
-                (setq codon (cons (char-after) codon)))
-            (if (equal (length codon) 3)
-                (progn (setq aa (nuc-decode (nreverse codon)))
-                       (if (> (length aa) 1)
-                           (setq aa ?X)
-                         (setq aa (car aa)))
-                       (insert-char aa)
-                       (setq n (1- n))
-                       (setq codon nil)))
-            (delete-char 1))))))
+  (let* (;; check valid of the sequence and count the number of bases
+         (n (nuc-count beg end))
+         (x (% n 3))
+         str seq codon aa)
+    (goto-char beg)
+    (message "translating %d nucleotides to %d amino acids..." (- n x) (/ n 3))
+    (setq str (buffer-substring-no-properties beg (- end x)))
+    (setq seq (mapcan (lambda (i) (if (gethash i nuc-alphabet-set) (list (upcase i)))) str))
+    (delete-region beg (- end x))
+    (insert (concat
+             (mapcar (lambda (i) (let ((j (* i 3)) aas)
+                                   (setq aas (nuc-decode (list (nth j seq)
+                                                          (nth (1+ j) seq)
+                                                          (nth (+ j 2) seq))))
+                                   (if (> (length aas) 1)
+                                       ?X
+                                     (car aas))))
+                     (number-sequence 0  (1- (/ n 3))))))))
 
 
 (defvar nuc-mode-map
@@ -459,7 +463,7 @@ It should not be enabled with `pro-mode' at the same time."
   :keymap nuc-mode-map
   :global t
   ;; set the translation table to 1 if it is nil
-  (or translation-table (nuc-set-translation-table 1)))
+  (or nuc-translation-table (nuc-set-translation-table 1)))
 
 
 (provide 'nuc-mode)
