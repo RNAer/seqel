@@ -227,7 +227,7 @@
         (insert (car test))
         (should
          ;; `equal' can compare hash tables
-         (hash-equal (region-summary (point-min) (point-max) nuc-base-regexp)
+         (hash-equal (seq-summary (point-min) (point-max) nuc-base-regexp)
                 (hash-alist (cdr test))))
         (delete-region (point-min) (point-max))))))
 

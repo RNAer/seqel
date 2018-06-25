@@ -269,9 +269,9 @@ See also `nuc-2rna'."
 (defun nuc-summary (beg end)
   "Print the frequencies of bases in the region or the current line.
 
-See also `region-summary'."
+See also `seq-summary'."
   (interactive-region-or-line)
-  (region-summary beg end nuc-base-regexp))
+  (seq-summary beg end nuc-base-regexp))
 
 
 (defun nuc-seq-isearch-mangle-str-degeneracy (str)
