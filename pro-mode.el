@@ -11,81 +11,90 @@
 
 (require 'seq)
 
-(defvar pro--aa-alist
+(defvar pro-aa-alist
   ;; put a question mark before the char will evaluate it to digit ascii code
-  '((?a  "Ala"  71.09   ?a)
-    (?b  "Asx"  114     ?n ?d)  ; Asn Asp
-    (?c  "Cys"  103.15  ?c)
-    (?d  "Asp"  115.09  ?d)
-    (?e  "Glu"  129.12  ?e)
-    (?f  "Phe"  147.18  ?f)
-    (?g  "Gly"  57.05   ?g)
-    (?h  "His"  137.14  ?h)
-    (?i  "Ile"  113.16  ?i)
-    (?j  "Xle"  113.16  ?i ?l)  ;Leu Ile
-    (?k  "Lys"  128.17  ?k)
-    (?l  "Leu"  113.16  ?l)
-    (?m  "Met"  131.19  ?m)
-    (?n  "Asn"  114.11  ?n)
-    (?p  "Pro"  97.12   ?p)
-    (?q  "Gln"  128.14  ?q)
-    (?r  "Arg"  156.19  ?r)
-    (?s  "Ser"  87.08   ?s)
-    (?t  "Thr"  101.11  ?t)
-    (?v  "Val"  99.14   ?v)
-    (?w  "Trp"  186.21  ?w)
-    (?x  "Xaa"  92      ?.)  ; unknown aa; set it weight to average weight
-    (?y  "Tyr"  163.18  ?y)
-    (?z  "Glx"  128     ?e ?q)) ; Glu Gln
-  "*A association list of 1-letter, 3-letter IUPAC AA codes and molecular weights.
+  '((?A  "Ala"  71.09   ?a)
+    (?B  "Asx"  114     ?n ?d)  ; Asn Asp
+    (?C  "Cys"  103.15  ?c)
+    (?D  "Asp"  115.09  ?d)
+    (?E  "Glu"  129.12  ?e)
+    (?F  "Phe"  147.18  ?f)
+    (?G  "Gly"  57.05   ?g)
+    (?H  "His"  137.14  ?h)
+    (?I  "Ile"  113.16  ?i)
+    (?J  "Xle"  113.16  ?i ?l)  ;Leu Ile
+    (?K  "Lys"  128.17  ?k)
+    (?L  "Leu"  113.16  ?l)
+    (?M  "Met"  131.19  ?m)
+    (?N  "Asn"  114.11  ?n)
+    (?P  "Pro"  97.12   ?p)
+    (?Q  "Gln"  128.14  ?q)
+    (?R  "Arg"  156.19  ?r)
+    (?S  "Ser"  87.08   ?s)
+    (?T  "Thr"  101.11  ?t)
+    (?V  "Val"  99.14   ?v)
+    (?W  "Trp"  186.21  ?w)
+    (?X  "Xaa"  92      ?.)  ; unknown aa; set it weight to average weight
+    (?Y  "Tyr"  163.18  ?y)
+    (?Z  "Glx"  128     ?e ?q)) ; Glu Gln
+  "*A association list of 1-letter, 3-letter IUPAC codes and molecular weights.
 
 This is the molecular weight with H2O subtracted.
 
 For each inner list, the first element is allowed AA; the second
 element is the three-letter code of the first, and the last is
-the molecular weight.  for the first.  Only for lowercase, as the
-upcased will be added automatically.")
+the molecular weight.  for the first.")
 
 ;;;;; END OF USER CUSTOMIZABLE VARIABLES
 
-(defvar pro-aa-alist
-  (append (mapcar (lambda (x)
-                    (cons (upcase (car x)) (cdr x)))
-                  pro--aa-alist)
-          pro--aa-alist)
-  "Similar to `pro-aa--alist', just with uppercase 1-letter code added.")
+
+(defvar pro-alphabet-set
+  (let ((alphabet-set (make-hash-table :test 'eq :size (length (* 2 pro-aa-alist)))))
+    (dolist (l pro-aa-alist)
+      (puthash (downcase (car l)) t alphabet-set)
+      (puthash (car l) t alphabet-set))
+    alphabet-set)
+  "The set of all legal alphabets in protein sequences.
+
+This is a hash table: keys are char (including both lower case
+and upper case) and values are `t'. It serves like a set object
+similar in Python language.")
 
 
-(defvar pro-aa
-  (mapcar #'car pro-aa-alist)
-  "All 1-letter IUPAC AA code, including lower and upper cases.")
-
-(defvar pro-aa-acidic "de")
-(defvar pro-aa-basic "rhk")
-(defvar pro-aa-hydrophobic "ahilmfvpgwy")
+(defvar pro-aa-acidic "DE")
+(defvar pro-aa-basic "RHK")
+(defvar pro-aa-hydrophobic "AHILMFVPGWY")
 (defvar pro-aa-hydrophilic "")
 (defvar pro-aa-amphipathic "")
 
 
 (defvar pro-aa-mw
-  (let ((mw-vec (make-vector 256 nil)))
+  (let ((mw-vec (make-vector 256 nil))
+        aa mw)
     (dolist (element pro-aa-alist)
-      (aset mw-vec (car element) (nth 2 element)))
+      (setq aa (car element))
+      (setq mw (nth 2 element))
+      (aset mw-vec aa mw)
+      (aset mw-vec (downcase aa) mw))
     mw-vec)
-  "A vector of AA molecular weights in Dalton.")
+  "A vector of amino acid molecular weights in Dalton.")
 
 (defvar pro-aa-1-vec
-  (let ((vec (make-vector 256 nil)))
+  (let ((vec (make-vector 256 nil))
+        aa1 aa3)
     (dolist (element pro-aa-alist)
-      (aset vec (car element) (nth 1 element)))
+      (setq aa1 (car element))
+      (setq aa3 (nth 1 element))
+      (aset vec aa1 aa3)
+      (aset vec (downcase aa1) aa3))
     vec)
   "A vector of 3-letter amino acid codes.
 
 It is used to convert 1-letter codes to 3-letter codes.")
 
 (defvar pro-aa-3-hash
-  (let ((my-hash (make-hash-table :test 'equal)))
-    (dolist (element pro--aa-alist)
+  (let ((my-hash (make-hash-table :test 'equal :size (length pro-aa-alist))))
+    (dolist (element pro-aa-alist)
       (puthash (nth 1 element) (car element) my-hash))
     my-hash)
   "A hash table with 3-letter code as key and 1-letter code as value.
@@ -93,8 +102,8 @@ It is used to convert 1-letter codes to 3-letter codes.")
 It is used to convert 3-letter codes to 1-letter codes.")
 
 (defvar pro-aa-regexp
-  (regexp-opt (mapcar #'char-to-string pro-aa))
-  "A regexp that matches a valid 1-letter amino acid code in `pro-aa'.")
+  (regexp-opt (maphash (lambda (k v) (char-to-string k)) pro-alphabet-set))
+  "A regexp that matches a valid 1-letter amino acid code in `pro-alphabet-set'.")
 
 
 (defun pro-weight (beg end)
@@ -118,7 +127,7 @@ It is used to convert 3-letter codes to 1-letter codes.")
 
 
 (defun pro-1-2-3 (beg end)
-  "Convert the region of 1-letter IUPAC code to 3-letter IUPAC code.
+  "Convert 1-letter IUPAC code to 3-letter IUPAC code.
 
 BEG and END defines the region to operate on."
   (interactive-region-or-line)
@@ -165,46 +174,44 @@ separating them."
 (defun pro-move-forward (count)
   "Move forward COUNT number of amino acids.
 
-Move backward if COUNT is negative.  Skip `seq-cruft-regexp' but
-stop on the illegal AA code and report how many AA the point have
-been moved by.  COUNT can be either positive or negative,
-indicating the moving direction.  Return the number of AA that are
-moved thru.  See `proceed-char-repeatedly'"
+See `nuc-move-forward'"
   (interactive "p")
-  (proceed-char-repeatedly count #'forward-char pro-aa-regexp))
+  (seq-forward-char count pro-alphabet-set))
 
 (defun pro-move-backward (count)
-  "Move backward COUNT number of AA, similar to `pro-aa-move-forward'.
-
-See also `proceed-char-repeatedly'."
+  "Move backward COUNT number of amino acides, similar to `pro-move-forward'."
   (interactive "p")
   ;; (proceed-char-repeatedly count 'backward-char))
-  (proceed-char-repeatedly (- count) #'forward-char pro-aa-regexp))
+  (seq-forward-char (- count) pro-alphabet-set))
 
 ;;; delete
 (defun pro-delete-forward (count)
-  "Delete COUNT number of AA starting from the point.
+  "Delete COUNT number of amino acids starting from the point.
 
-Similar to `pro-aa-move-forward' (just use delete instead of move)."
+See also `nuc-delete-forward'."
   (interactive "p")
-  (proceed-char-repeatedly count #'delete-char pro-aa-regexp))
+  (let ((pos (point)))
+    (seq-forward-char count pro-alphabet-set)
+    (delete-region pos (point))))
+
 
 (defun pro-delete-backward (count)
   "Delete backward COUNT number of AA from the point.
 
-Similar to `pro-aa-move-forward' (just use delete backward
-instead of move forward).  See `pro-aa-delete-forward' and
-`proceed-char-repeatedly'."
+See also `nuc-delete-backward'."
   (interactive "p")
-  (proceed-char-repeatedly (- count) #'delete-char pro-aa-regexp))
+  (let ((pos (point)))
+    (seq-forward-char (- count) pro-alphabet-set)
+    (delete-region pos (point))))
 
 
 (defun pro-count (beg end)
   "Count the amino acid in the region or in the current line).
 
-Return the count if the region contains only legal amino acid characters,
-including `pro-aa-regexp', `seq-cruft-regexp'; otherwise return nil and
-report the location of the invalid characters in the echo region."
+Return the count if the region contains only legal amino acid
+characters, including `pro-aa-regexp', `seq-cruft-regexp';
+otherwise return nil and report the location of the invalid
+characters in the echo region."
   (interactive-region-or-line)
   (let ((length (seq-count beg end pro-aa-regexp)))
     (and length
@@ -217,25 +224,15 @@ report the location of the invalid characters in the echo region."
 
 
 (defun pro-summary (beg end)
-  "Summarize the frequencies of AA in the region BEG and END or the current line.
+  "Summarize the frequencies of amino acids in the region BEG and END or the current line.
 
-See also `region-summary'."
+See also `seq-summary'."
   (interactive-region-or-line)
-  (let ((my-hash (region-summary beg end pro-aa-regexp)))
-    (maphash (lambda (x y) (princ (format "%c:%d " x y) t))
-             my-hash)))
-
+  (seq-summary beg end pro-aa-regexp))
 
 ;; define aa faces belonging to pro-aa-face group
 (defvar pro-aa-colors
-  (let ((n (length pro-aa))
-        tmp)
-    (dotimes (i n)
-      (setq tmp (cons (cons (nth i pro-aa) (nth i color-pairs-cycle)) tmp)))
-    tmp)
-  ;; (mapcar* #'cons
-  ;;          pro-aa
-  ;;          (setcdr (last color-pairs) color-pairs))
+  (mapcar* #'(lambda (x y) (cons (car x) y)) pro-aa-alist color-pairs-cycle)
   "Background and foreground colors for each IUPAC bases.
 
 This is a list of lists.  For each inner list, it contains 3 atoms:
