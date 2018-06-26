@@ -6,12 +6,6 @@
 (require 'ert)
 
 
-(ert-deftest nuc-variables-test ()
-  :tags '(nuc-mode)
-  ;; test global variables defined
-  (should (equal nuc-base-regexp "[A-DGHKMNR-Ya-dghkmnr-y]")))
-
-
 (ert-deftest nuc-move-forward-test ()
   ;; the tags is used to group the tests together.
   :tags '(nuc-mode)
@@ -109,21 +103,23 @@
 (ert-deftest nuc-count-test ()
   :tags '(nuc-mode)
   (let ((cases '(("acgutmrwsykvhdbnACGUTMRWSYKVHDBN" . 32)
-                 ("abc12345"    .       nil))))
+                 ("abc12345"    .       nil)))
+        exp)
     (with-temp-buffer
       (dolist (test cases)
         (insert (car test))
         (set-mark (point-min))
         (goto-char (point-max))
-        (should (equal (call-interactively 'nuc-count)
-                       (cdr test)))
+        (setq exp (cdr test))
+        (if exp
+            (should (equal (call-interactively 'nuc-count) exp))
+          (should-error (call-interactively 'nuc-count)))
         (delete-region (point-min) (point-max))))))
 
 
 (ert-deftest nuc-rna-p-test ()
   :tags '(nuc-mode)
   (let ((cases '(("acgumrwsykvhdbnACGUMRWSYKVHDBN" . t)
-                 ("abc12345"    .       nil)
                  ("acgtmrwsykvhdbnACGTMRWSYKVHDBN" . nil))))
     (with-temp-buffer
       (dolist (test cases)
@@ -139,7 +135,6 @@
 (ert-deftest nuc-dna-p-test ()
   :tags '(nuc-mode)
   (let ((cases '(("acgumrwsykvhdbnACGUMRWSYKVHDBN" . nil)
-                 ("abc12345"    .       nil)
                  ("acgtmrwsykvhdbnACGTMRWSYKVHDBN" . t))))
     (with-temp-buffer
       (dolist (test cases)
@@ -221,14 +216,16 @@
                    (?A . 1) (?C . 1) (?G . 1) (?T . 1)
                    (?M . 1) (?R . 1) (?W . 1) (?S . 1)
                    (?Y . 1) (?K . 1) (?V . 1) (?H . 1)
-                   (?D . 1) (?B . 1) (?N . 1))))))
+                   (?D . 1) (?B . 1) (?N . 1)))))
+        obs)
     (with-temp-buffer
       (dolist (test cases)
         (insert (car test))
+        (setq obs (seq-summary (point-min) (point-max) nuc-alphabet-set))
+        (maphash (lambda (k v) (if (= 0 (gethash k obs)) (remhash k obs))) obs)
         (should
          ;; `equal' can compare hash tables
-         (hash-equal (seq-summary (point-min) (point-max) nuc-base-regexp)
-                (hash-alist (cdr test))))
+         (hash-equal obs (hash-alist (cdr test))))
         (delete-region (point-min) (point-max))))))
 
 
@@ -286,7 +283,7 @@
                  ("aTGc" . "[a][\t\n .-]*[T][\t\n .-]*[G][\t\n .-]*[c]"))))
     (dolist (test cases)
       (should
-       (equal (seq-isearch-mangle-str-degeneracy (car test))
+       (equal (nuc-seq-isearch-mangle-str-degeneracy (car test))
               (cdr test))))))
 
 

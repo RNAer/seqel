@@ -61,12 +61,6 @@ This is a hash table: keys are char and values are `t'. It serves
 like a set object similar in Python language.")
 
 
-(defvar nuc-base-regexp
-    (regexp-opt (mapcar (lambda (i) (char-to-string (car i))) nuc-base-alist))
-  "A regexp that matches a valid nucleotide base symbol defined
-in `nuc-base-alist'.")
-
-
 (defvar nuc-base-degeneracy
   (let ((d-vec (make-vector 256 nil)))
     (dolist (element nuc-base-alist)
@@ -144,11 +138,11 @@ See `nuc-delete-forward'."
 
 Check if each char is legal base. Return the count if the region
 contains only legal nucleic acid characters, which includes
-`nuc-base-regexp', `seq-cruft-regexp'; otherwise return nil and
+`nuc-alphabet-set', `seq-cruft-set'; otherwise return nil and
 report the location of the invalid characters in the echo region.
 This function calls `seq-count'. `nuc-p' is an alias of this function."
   (interactive-region-or-line)
-  (let ((length (seq-count beg end nuc-base-regexp)))
+  (let ((length (seq-count beg end nuc-alphabet-set)))
     (and length
          (called-interactively-p 'interactive)
          (message "Base count: %d" length))
@@ -271,7 +265,7 @@ See also `nuc-2rna'."
 
 See also `seq-summary'."
   (interactive-region-or-line)
-  (seq-summary beg end nuc-base-regexp))
+  (seq-summary beg end nuc-alphabet-set))
 
 
 (defun nuc-seq-isearch-mangle-str-degeneracy (str)
@@ -306,7 +300,7 @@ the frequency of homopolymers in the sequence. "
         old cur)
     (save-excursion
       (goto-char beg)
-      (while (and (/= (point) end) (looking-at nuc-base-regexp))
+      (while (and (/= (point) end))
         (setq cur (char-after))
         (cond ((not old)
                (setq ni 1))
@@ -426,19 +420,22 @@ time is for `nuc-decode') and ~15 MB mem."
          (x (% n 3))
          str seq codon aa)
     (goto-char beg)
-    (message "translating %d nucleotides to %d amino acids..." (- n x) (/ n 3))
-    (setq str (buffer-substring-no-properties beg (- end x)))
-    (setq seq (mapcan (lambda (i) (if (gethash i nuc-alphabet-set) (list (upcase i)))) str))
-    (delete-region beg (- end x))
-    (insert (concat
-             (mapcar (lambda (i) (let ((j (* i 3)) aas)
-                                   (setq aas (nuc-decode (list (nth j seq)
-                                                          (nth (1+ j) seq)
-                                                          (nth (+ j 2) seq))))
-                                   (if (> (length aas) 1)
-                                       ?X
-                                     (car aas))))
-                     (number-sequence 0  (1- (/ n 3))))))))
+    ;; ask for confirmation if translate long sequence
+    (if (or (< n 5000) (y-or-n-p (format "translate %d nucleotides? it will take a while" n)))
+        (progn
+          (message "translating %d nucleotides to %d amino acids..." (- n x) (/ n 3))
+          (setq str (buffer-substring-no-properties beg (- end x)))
+          (setq seq (mapcan (lambda (i) (if (gethash i nuc-alphabet-set) (list (upcase i)))) str))
+          (delete-region beg (- end x))
+          (insert (concat
+                   (mapcar (lambda (i) (let ((j (* i 3)) aas)
+                                         (setq aas (nuc-decode (list (nth j seq)
+                                                                     (nth (1+ j) seq)
+                                                                     (nth (+ j 2) seq))))
+                                         (if (> (length aas) 1)
+                                             ?X
+                                           (car aas))))
+                           (number-sequence 0  (1- (/ n 3))))))))))
 
 
 (defvar nuc-mode-map
