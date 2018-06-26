@@ -37,6 +37,7 @@ augct"
 augct
 AUGCT
 augct
+
 >seq_name a
 augct")))
           tmp)
@@ -99,16 +100,15 @@ augct"
   :tags '(fasta-mode)
   (let ((cases '((
 ">seq_name a
-augc 	AUGC
+ugc 	AUGC
 augc" .
 ">seq_name a
 gcau
-GCAU	 gcau")))
+GCAU	 gca")))
         tmp)
     (with-temp-buffer
       (dolist (test cases)
         (insert (car test))
-        (goto-char (point-min))
         (nuc-mode 1)
         (call-interactively 'fasta-rc)
         (setq tmp (buffer-string))
@@ -116,7 +116,7 @@ GCAU	 gcau")))
         (delete-region (point-min) (point-max))))))
 
 
-(ert-deftest fasta-delete-column-test ()
+(ert-deftest fasta-column-delete-test ()
   :tags '(fasta-mode)
   (let ((cases '((1   ; should case: test the buffer after deletion
                   ">seq_name a
@@ -144,26 +144,24 @@ augct"
         (insert (nth 1 test))
         (goto-char (nth 2 test))
         (cond ((= type-test 1)
-               (princ "run ttt")
-               (call-interactively 'fasta-delete-column)
+               (call-interactively 'fasta-column-delete)
                (setq tmp (buffer-string))
-               (princ "run aaa")
                (should (equal tmp (nth 3 test))))
               ((= type-test 2)
-               (should-error (call-interactively 'fasta-delete-column))))
+               (should-error (call-interactively 'fasta-column-delete))))
          (delete-region (point-min) (point-max))))))
 
 
-(ert-deftest fasta-insert-column-test ()
+(ert-deftest fasta-column-insert-test ()
   :tags '(fasta-mode)
-    (let ((cases '((
-">seq_name a
+    (let ((cases '((">seq_name a
 augctAUGCTaugct
 
 >seq_name b
 augct"
-18  "A"
-">seq_name a
+                    18
+                    "A"
+                    ">seq_name a
 augctAAUGCTaugct
 
 >seq_name b
@@ -173,18 +171,13 @@ augctA")))
       (dolist (test cases)
         (insert (nth 0 test))
         (goto-char (nth 1 test))
-        ;; (call-interactively 'fasta-insert-column)
-        (fasta-insert-column (nth 2 test))
+        (fasta-column-insert (nth 2 test))
         (setq tmp (buffer-string))
         (should (equal tmp (nth 3 test)))
         (delete-region (point-min) (point-max))))))
 
 
-(ert-deftest fasta-2-stockholm-test ()
-  :tags '(fasta-mode))
-
-
-(ert-deftest fasta-summary-column-test ()
+(ert-deftest fasta-column-summary-test ()
   :tags '(fasta-mode)
   (let ((cases '((
 ">seq_name a
@@ -202,12 +195,48 @@ ac"
       (dolist (test cases)
         (insert (nth 0 test))
         (goto-char (nth 1 test))
-        (princ (nth 2 test))
-        (princ (hash-alist (nth 2 test)))
+        ;; (princ (nth 2 test))
+        ;; (princ (hash-alist (nth 2 test)))
         (should (hash-equal
-                 (fasta-summary-column)
+                 (fasta-column-summary)
                  (hash-alist (nth 2 test))))
         (delete-region (point-min) (point-max))))))
 
+
+(ert-deftest fasta-seq-type-test ()
+  :tags '(fasta-mode)
+  (let ((cases '((">seq1
+A" . nuc-mode)
+                 (">seq1
+AUCG" . nuc-mode)
+                 (">seq1
+AEFZ" . pro-mode))))
+    (dolist (test cases)
+      (with-temp-buffer
+        (insert (car test))
+        (fasta-seq-type)
+        (princ (symbol-value (cdr test)))
+        ;; return true if the mode is active
+        (should (and (symbolp (cdr test)) (symbol-value (cdr test))))
+        ;; disable both modes to start with clean buffer
+        (nuc-mode -1)
+        (pro-mode -1)))))
+
+(ert-deftest fasta-seq-type-test-error ()
+  :tags '(fasta-mode)
+  (let ((cases '((">seq1
+A" . pro-mode)
+                 (">seq1
+AUCG" . pro-mode)
+                 (">seq1
+AEFZ" . nuc-mode))))
+    (dolist (test cases)
+      (with-temp-buffer
+        (insert (car test))
+        (fasta-seq-type)
+        (princ (and (symbolp (cdr test)) (symbol-value (cdr test))))
+        (should (not (and (symbolp (cdr test)) (symbol-value (cdr test)))))
+        (nuc-mode -1)
+        (pro-mode -1)))))
 
 ;; fasta-mode-test.el ends here

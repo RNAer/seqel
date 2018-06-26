@@ -27,7 +27,7 @@
   "*Chars that represent a gap.")
 
 (defvar seq-space
-  '(?  ?\t ?\n)
+  '(?  ?\t ?\n ?\r ?\v ?\f)
   "*Chars that represent cruft which may appear between bases or amino acid.
 
 It will be skipped during moving and search and anything involving counting.")
@@ -232,7 +232,8 @@ TODO: this is slow for long sequences."
 (defun seq-unpaint (beg end)
   "Uncolor the sequences from BEG to END or the current line."
   (interactive-region-or-line)
-  (remove-text-properties beg end '(font-lock-face nil)))
+  (with-silent-modifications
+    (remove-text-properties beg end '(font-lock-face nil))))
 
 
 ;;;;;; isearch motif

@@ -182,8 +182,8 @@ Return current point if it moved over COUNT of records; otherwise return nil."
 If a prefix arg is provided or INCLUDE-HEADER is t, then put the point at
 the beginning of the fasta entry instead of the sequence."
   (interactive "P")
-  (push-mark) ; mark current position
-  (fasta-forward 1)
+  (if (fasta-forward 1)
+      (backward-char))
   (push-mark nil nil t)
   (fasta-backward 1)
   (or include-header
@@ -196,32 +196,28 @@ By default, each sequence is one line (if WIDTH is nil). The
 white spaces will all be removed."
   (and width  (< width 1)
        (error "Width should be nil or positive integer"))
-  (let (beg end)
-    (fasta-forward 1)
-    (backward-char)
-    (setq end (point-marker))
-    (fasta-backward 1)
-    (setq beg (line-beginning-position 2)) ; the beg of next line
+  (save-restriction
+    (fasta-mark)
+    (message "Formating the sequence...")
+    (narrow-to-region (point) (mark))
     ;; remove seq-spaces
-    (goto-char beg)
-    (while (re-search-forward seq-space-regexp end t)
+    (while (re-search-forward seq-space-regexp nil t)
       ;; (setq count (1+ count))
       (replace-match "" nil nil))
-    ;; insert newlines
     (if width
-        (progn
-          (goto-char beg)
-          ;; (message "%d %d %d" width (point) (region-end))
-          (forward-char width)
-          (while (< (point) end)
-            (insert-char ?\n)
-            (forward-char width))))))
+        ;; insert newlines
+        (progn (goto-char (point-min))
+               ;; (message "%d %d %d" width (point) (region-end))
+               (dotimes (i (/ (- (point-max) (point-min)) width))
+                 (forward-char width)
+                 (insert-char ?\n))))))
 
 ;;;###autoload
 (defun fasta-format (&optional width)
   "Format the current sequence to contain WIDTH chars per line.
 
-It is just a wrapper around `fasta--format'."
+It is just a wrapper around `fasta--format'. This can take >10
+seconds for long sequences (> 5 M base pairs)."
   (interactive "P")
   (save-excursion
     (fasta--format width)))
@@ -249,8 +245,8 @@ It calls `fasta--format' on each fasta records."
 (defun fasta-position ()
   "Return the position of point in the current sequence.
 
-It will not count white spaces and seq gaps. The count starts
-at zero. See also `fasta-position-ali'."
+It will not count white spaces and sequence gaps. See also
+`fasta-position-ali'."
   (interactive)
   (if (looking-at fasta-record-regexp)
       (error "Point is not in the sequence region"))
@@ -259,31 +255,14 @@ at zero. See also `fasta-position-ali'."
     (save-excursion
       (or (fasta-backward 1)
           (error "The start of the fasta record is not found"))
-      (end-of-line)
-      (while (< (point) pos)
-        (or (looking-at seq-cruft-regexp)
+      (forward-line 1)
+      (dotimes (i (- pos (point)))
+        (or (gethash (char-after) seq-cruft-set)
             (setq count (1+ count)))
         (forward-char)))
     (if (called-interactively-p 'interactive)
         (message "Position %d" count))
     count))
-
-
-(defun fasta-position-ali ()
-  "Return position counted from the beginning of the current sequence.
-
-The difference from `fasta-position' is that this function will
-count all the characters."
-  (interactive)
-  (if (looking-at fasta-record-regexp)
-      (error "Point is not in the sequence region"))
-  (let ((pos (point)))
-    (save-excursion
-      (fasta-backward 1)
-      (forward-line)
-      (if (called-interactively-p 'interactive)
-          (message "Position %d." (- pos (point)))
-        (- pos (point))))))
 
 
 (defun fasta-length ()
@@ -295,20 +274,19 @@ count all the characters."
       (backward-char)
       (setq length (fasta-position)))
     (if (called-interactively-p 'interactive)
-        (message "Length %d" length))
+        (message "Sequence length %d" length))
     length))
 
 
 (defun fasta--rc ()
-  "Reverse complement current fasta sequence if it is nuc sequence.
-
-If IS-RNA is nil, then assume the sequence is RNA; otherwise, DNA."
+  "Reverse complement current DNA/RNA sequence."
   (condition-case err
       (progn (fasta-mark)
              (let ((beg (region-beginning))
                    (end (region-end)))
                (if nuc-mode  ; if nuc-mode is enabled
-                   (nuc-reverse-complement beg (1- end))
+                   ;; (print (buffer-substring beg end))
+                   (nuc-reverse-complement beg end)
                  (error "nuc mode is not enabled"))))
     ((debug error)
      (primitive-undo 1 buffer-undo-list)
@@ -317,7 +295,7 @@ If IS-RNA is nil, then assume the sequence is RNA; otherwise, DNA."
 
 ;;;###autoload
 (defun fasta-rc ()
-  "Reverse complement current fasta sequence if it is nuc sequence.
+  "Reverse complement current DNA/RNA sequence.
 
 It is just a wrapper on `fasta--rc'."
   (interactive)
@@ -325,15 +303,13 @@ It is just a wrapper on `fasta--rc'."
     (fasta--rc))
   (message "Reverse complemented the current sequence."))
 
-(defun fasta-rc-all (is-rna)
-  "Reverse complement every fasta sequences in the buffer.
-
-It calls `fasta--rc' on each fasta record."
-  (interactive "P")
+(defun fasta-rc-all ()
+  "Reverse complement every DNA/RNA sequence in the buffer."
+  (interactive)
   (save-excursion
     (goto-char (point-max))
     (while (fasta-backward 1)
-      (fasta--rc is-rna)
+      (fasta--rc)
       (fasta-backward 1)))
   (message "Reverse complemented all the sequences in the buffer."))
 
@@ -360,7 +336,7 @@ It is just a wrapper on `fasta--translate'."
     (fasta--translate)))
 
 (defun fasta-translate-all ()
-  "Translate the every fasta sequence in the buffer to amino acids.
+  "Translate every DNA/RNA sequence in the buffer to amino acids.
 
 It calls `fasta--translate' on each fasta record."
   (interactive)
@@ -380,6 +356,7 @@ It calls `fasta--translate' on each fasta record."
         (pro-weight (region-beginning) (region-end))
       (error "pro mode is not enabled"))))
 
+
 (defun fasta-summary ()
   "Print the frequencies of characters in the fasta sequence.
 
@@ -388,8 +365,8 @@ See also `seq-summary', `nuc-summary', `pro-summary'."
   (save-excursion
     (fasta-mark)
     (if pro-mode
-        (pro-summary)
-      (nuc-summary))))
+        (pro-summary (point) (mark))
+      (nuc-summary (point) (mark)))))
 
 (defun fasta--paint (&optional case)
   "Paint current fasta sequence by their residue identity.
@@ -458,40 +435,38 @@ at the current column of all fasta records. See `fasta-insert-column'
 and `fasta-delete-column' for an example of usage."
   `(save-excursion
      (let ((column (current-column))
-           pos ln)
+           pos line)
        (condition-case err
            (progn (goto-char (point-max))
                   (setq pos (point-marker))
                   (while (fasta-backward 1)
                     (forward-line) ; move to the sequence region
-                    (setq ln (line-number-at-pos))
+                    (setq line (line-number-at-pos))
                     (if (< (move-to-column column) column)
                         (signal 'end-of-col-err '(move-to-column)))
                     ,@fn
-                    (or (> pos (point))
-                        (signal 'end-of-col-err '((> pos (point)))))
                     (fasta-backward 1)
                     (setq pos (point-marker))))
        ;; return to the original state if error is met.
        (end-of-col-err ; the single quote is dispensable
         (primitive-undo 1 buffer-undo-list)
-        (error "Abort: line %d is shorter than the column (%d)."
-                 ln column))))))
+        (error "Abort: line %d is shorter than the column number (%d)."
+               line column))))))
 
 
-(defun fasta-delete-column (&optional n)
+(defun fasta-column-delete (&optional n)
   "Delete current column."
   (interactive "p")
   (fasta--column-action (delete-char n)))
 
 
-(defun fasta-insert-column (str)
+(defun fasta-column-insert (str)
   "Insert a string STR at the column."
   (interactive "sInsert string: ")
   (fasta--column-action (insert str)))
 
 
-(defun fasta-highlight-column (&optional to-face)
+(defun fasta-column-highlight (&optional to-face)
   "Highlight the current column with the face TO-FACE.
 
 If TO-FACE is not a face, mark with highlight face by default.
@@ -507,7 +482,7 @@ and C-u \\[fasta-highlight-column] will unmark the column."
    (put-text-property (point) (1+ (point)) 'font-lock-face to-face)))
 
 
-(defun fasta-paint-column (&optional case)
+(defun fasta-column-paint (&optional case)
   "Paint the current column according their aa or nuc bases.
 
 By default, lower and upper cases are painted in the same colors.
@@ -517,18 +492,19 @@ C-u \\[fasta-paint-column] honors the cases"
     (or case
         (setq current-char (list 'upcase current-char)))
     (cond (nuc-mode
-           (setq to-face (list 'format "base-face-%c" current-char)))
+           (setq to-face (list 'format "nuc-base-face-%c" current-char)))
           (pro-mode
-           (setq to-face (list 'format "aa-face-%c" current-char)))
+           (setq to-face (list 'format "pro-aa-face-%c" current-char)))
           (t
            (error "Unknown seq type")))
     (fasta--column-action
-     (put-text-property (point) (1+ (point))
-                               'font-lock-face
-                               (intern (eval to-face))))))
+     (with-silent-modifications
+       (put-text-property (point) (1+ (point))
+                          'font-lock-face
+                          (intern (eval to-face)))))))
 
 
-(defun fasta-summary-column (&optional case)
+(defun fasta-column-summary (&optional case)
   "Summary of the column.
 
 If CASE is nil, the summary will be case insensitive."

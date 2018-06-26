@@ -30,14 +30,18 @@
 (ert-deftest pro-count-test ()
   :tags '(pro-mode)
   (let ((cases '(("ABCDEFGHIJKLMNPQRSTVWXYZabcdefghijklmnpqrstvwxyz" . 48)
-                 ("12345"    .       nil))))
+                 ("12345"    .       nil)))
+        exp)
     (with-temp-buffer
       (dolist (test cases)
         (insert (car test))
         (set-mark (point-min))
         (goto-char (point-max))
-        (should (equal (call-interactively 'pro-count)
-                       (cdr test)))
+        (setq exp (cdr test))
+        (if exp
+            (should (equal (call-interactively 'pro-count) exp))
+          (should-error (call-interactively 'pro-count)))
+
         (delete-region (point-min) (point-max))))))
 
 
