@@ -1,6 +1,6 @@
 ;;; genbank-mode -- a major mode to edit genbank files
 
-;;; license: GPLv3
+;;; license: BSD-3
 
 ;;; Author: Zech Xu <zhenjiang dot xu at gmail dot com>
 
@@ -50,11 +50,10 @@
     ("^ +\\(JOURNAL\\)"  . font-lock-doc-face)
     ("^ +\\(PUBMED\\)"   . font-lock-doc-face)
 
-
     ;; line numbers at the beginning of sequence...
     ("^[ \t]*\\([0-9]+\\)"
      (1 font-lock-string-face)))
-  "Expressions to hilight in `genbank-mode'.")
+  "Expressions to highlight in `genbank-mode'.")
 
 
 ;;;###autoload
@@ -80,8 +79,8 @@ Special commands:
   (run-hooks 'genbank-mode-hook))
 
 
-(defvar genbank-record-regexp "^//[ \t]*$"
-  "Genbank label that delimits records.")
+(defvar genbank-record-regexp "^LOCUS[ \t]*$"
+  "Genbank records always start with \"LOCUS\".")
 
 
 ;;;###autoload
@@ -92,80 +91,53 @@ Special commands:
 (defun genbank-forward (count)
   "Move forward to the end genbank record.
 
-It works in the style of `forward-paragraph'. Count need to be positive integer.
+It works in the style of `forward-paragraph'. COUNT needs to be positive integer.
 Return current point if it moved over COUNT of records; otherwise return nil."
   (interactive "p")
-  (if (< count 1)
-      (error "The parameter count should be positive integer."))
-  (beginning-of-line)
-  (if (re-search-forward genbank-record-regexp nil 'move-to-point-max count)
-      (progn (re-search-backward genbank-record-regexp nil 2)
-             (forward-line)))
-  (if (equal (point) (point-max))
-      nil
-    (point)))
+  (entry-forward count genbank-record-regexp))
 
 (defun genbank-backward (count)
   "Move the point the beginning of the genbank record.
 
-It works in the style of `backward-paragraph'. COUNT need to be positive integer.
+It works in the style of `backward-paragraph'. COUNT needs to be positive integer.
 Return current point if it moved over COUNT of records; otherwise return nil."
   (interactive "p")
-  (if (< count 1)
-      (error "The parameter count should be positive integer."))
-  (if (eq (current-column) 0) (forward-line -1))
-  (if (eolp) (backward-char))
-  (if (re-search-backward genbank-record-regexp nil 'move-to-point-max count)
-      (progn (forward-line) (point))
-    nil))
-
+  (entry-backward count genbank-record-regexp))
 
 (defun genbank-first ()
   "Go to the beginning of first genbank record."
   (interactive)
-  (goto-char (point-min)))
+  (entry-first genbank-record-regexp))
 
 (defun genbank-last ()
   "Go to the beginning of last genbank record."
   (interactive)
-  (goto-char (point-max))
-  (genbank-backward 1))
+  (entry-last genbank-record-regexp))
 
 (defun genbank-count ()
   (interactive)
-  (let ((total 0))
-    (save-excursion
-      (goto-char (point-min))
-      (while (genbank-forward 1)
-        (setq total (1+ total))))
-    (if (called-interactively-p 'interactive)
-        (message "Total %d records." total))
-    total))
+  (entry-count genbank-record-regexp))
 
 
-(defun genbank-mark-seq ()
-  "Mark the whole sequence under ORIGIN section."
-  (interactive)
-  (genbank-forward 1)
-  (forward-line -1)
-  (push-mark nil nil t)
-  (re-search-backward "^ORIGIN *$" nil)
-  (forward-line 1))
-
-(defun genbank-mark ()
-  "Put point at the beginning of the record and mark the end.
+(defun genbank-mark (&optional whole)
+  "Put point at the beginning of the sequence and mark the end.
 
 If a prefix arg is provided or WHOLE is t, then put the point at
 the beginning of the genbank entry instead of the sequence."
-  (interactive)
-  (genbank-forward 1)
+  (interactive "P")
+  (if (genbank-forward 1)
+      (backward-char))
   (push-mark nil nil t)
-  (genbank-backward 1))
+  (genbank-backward 1)
+  (or whole
+      (progn (re-search-forward "^ORIGIN *$" nil)
+             (forward-line))))
 
 
 (defun genbank-delete ()
   "Delete the current genbank record."
   (interactive)
+  (genbank-mark 'whole)
   (delete-region (region-beginning) (region-end)))
 
 

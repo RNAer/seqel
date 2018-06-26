@@ -126,9 +126,7 @@ Only if the major mode is `fundermental. This function is added to
 It works in the style of `backward-paragraph'. COUNT need to be positive integer.
 Return current point if it moved over COUNT of records; otherwise return nil."
   (interactive "p")
-  (if (> count 0)
-      (re-search-backward fasta-record-regexp nil 'move-to-point-min count)
-    (error "The argument COUNT should be positive integer.")))
+  (entry-backward count fasta-record-regexp))
 
 ;;;###autoload
 (defun fasta-forward (count)
@@ -137,44 +135,27 @@ Return current point if it moved over COUNT of records; otherwise return nil."
 It works in the style of `forward-paragraph'. Count need to be positive integer.
 Return current point if it moved over COUNT of records; otherwise return nil."
   (interactive "p")
-  (if (looking-at fasta-record-regexp)
-      (setq count (1+ count)))
-  (if (< count 1)
-      (error "The parameter count should be positive integer."))
-  (if (re-search-forward fasta-record-regexp nil 'move-to-point-max count)
-      (progn (beginning-of-line) (point))
-    nil))
+  (entry-forward count fasta-record-regexp))
 
 
 ;;;###autoload
 (defun fasta-last ()
   "Go to the beginning of last fasta record."
   (interactive)
-  ;; (while (fasta-forward 1))
-  (goto-char (point-max))
-  (fasta-backward 1))
+  (entry-last fasta-record-regexp))
 
 ;;;###autoload
 (defun fasta-first ()
   "Go to the beginning of first fasta record."
   (interactive)
-  ;; (while (fasta-backward 1)))
-  (goto-char (point-min))
-  (or (looking-at fasta-record-regexp)
-      (fasta-forward 1)))
+  (entry-first fasta-record-regexp))
 
 ;;;###autoload
 (defun fasta-count ()
   "Count the number of fasta sequences in the buffer."
   (interactive)
-  (let ((total 0))
-    (save-excursion
-      (goto-char (point-max))
-      (while (fasta-backward 1)
-        (setq total (1+ total))))
-    (if (called-interactively-p 'interactive)
-        (message "Total %d sequences." total))
-    total))
+  (entry-count fasta-record-regexp))
+
 
 ;;;###autoload
 (defun fasta-mark (&optional include-header)

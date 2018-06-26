@@ -326,4 +326,58 @@ reported."
          (throw 'flag t))))
 
 
+
+(defun entry-forward (count entry-regexp)
+  "Move forward to the beginning of next entry.
+
+It works in the style of `forward-paragraph'. Count need to be positive integer.
+Return current point if it moved over COUNT of entries; otherwise return nil."
+  (if (looking-at entry-regexp)
+      (setq count (1+ count)))
+  (if (< count 1)
+      (error "The parameter count should be positive integer."))
+  (if (re-search-forward entry-regexp nil 'move-to-point-max count)
+      (progn (beginning-of-line) (point))
+    nil))
+
+
+(defun entry-backward (count entry-regexp)
+  "Move the point to the beginning of previous entry.
+
+It works in the style of `backward-paragraph'. COUNT need to be positive integer.
+Return current point if it moved over COUNT of entries; otherwise return nil."
+  (if (> count 0)
+      (re-search-backward entry-regexp nil 'move-to-point-min count)
+    (error "The argument COUNT should be positive integer.")))
+
+;;;###autoload
+(defun entry-last (entry-regexp)
+  "Go to the beginning of last entry."
+  (interactive)
+  ;; (while (entry-forward 1))
+  (goto-char (point-max))
+  (entry-backward 1 entry-regexp))
+
+;;;###autoload
+(defun entry-first (entry-regexp)
+  "Go to the beginning of first entry."
+  (interactive)
+  ;; (while (entry-backward 1)))
+  (goto-char (point-min))
+  (or (looking-at entry-regexp)
+      (entry-forward 1 entry-regexp)))
+
+;;;###autoload
+(defun entry-count (entry-regexp)
+  "Count the number of entries in the buffer."
+  (interactive)
+  (let ((total 0))
+    (save-excursion
+      (goto-char (point-max))
+      (while (entry-backward 1 entry-regexp)
+        (setq total (1+ total))))
+    (message "Total %d sequences." total)
+    total))
+
+
 (provide 'seq)
