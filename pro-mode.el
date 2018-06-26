@@ -263,12 +263,10 @@ This is an alias to `seq-unpaint'.")
 
 (defvar pro-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map "\C-cf"     'pro-move-forward)
-    (define-key map "\C-cb"     'pro-move-backward)
-    (define-key map "\C-cw"     'pro-weight)
-    (define-key map "\C-c1"     'pro-1-2-3)
-    (define-key map "\C-c3"     'pro-3-2-1)
-    (define-key map "\C-c\c-#"  'pro-summary)
+    (define-key map "\C-c\C-f"  'pro-move-forward)
+    (define-key map "\C-c\C-b"  'pro-move-backward)
+    (define-key map "\C-c\C-w"  'pro-weight)
+    (define-key map "\C-c\C-s"  'pro-summary)
     map)
   "Keymap for `pro-mode'.")
 
