@@ -101,10 +101,6 @@ It is used to convert 1-letter codes to 3-letter codes.")
 
 It is used to convert 3-letter codes to 1-letter codes.")
 
-(defvar pro-aa-regexp
-  (regexp-opt (maphash (lambda (k v) (char-to-string k)) pro-alphabet-set))
-  "A regexp that matches a valid 1-letter amino acid code in `pro-alphabet-set'.")
-
 
 (defun pro-weight (beg end)
   "Return molecular weight of the region BEG and END or the current line."
@@ -117,12 +113,11 @@ It is used to convert 3-letter codes to 1-letter codes.")
         (setq mw (aref pro-aa-mw char))
         (cond (mw
                (setq sum-mw (+ sum-mw mw)))
-              ((not (looking-at pro-aa-regexp))
+              ((not (gethash char seq-cruft-set))
                (error "Ambiguous or illegal char %s at position line %d column %d"
                       char (line-number-at-pos) (current-column))))
         (forward-char)))
-    (if (called-interactively-p 'interactive)
-        (message "The molecular weight is %.2f" sum-mw))
+    (message "The molecular weight is %.2f" sum-mw)
     sum-mw))
 
 
@@ -135,12 +130,13 @@ BEG and END defines the region to operate on."
       (let ((times (- end beg)) char)
         (goto-char beg)
         (dotimes (x times)
-          (cond ((looking-at pro-aa-regexp)
+          (setq char (char-after))
+          (cond ((gethash char pro-alphabet-set)
                  (insert (aref pro-aa-1-vec (char-after)))
                  (delete-char 1))
                 (t
                  (error "Ambiguous or illegal amino acid letter %c at line %d column %d"
-                        (char-after) (line-number-at-pos) (current-column))))))
+                        char (line-number-at-pos) (current-column))))))
     ((debug error)
      (primitive-undo 1 buffer-undo-list)
      (error "%s" (error-message-string err)))))
@@ -209,11 +205,11 @@ See also `nuc-delete-backward'."
   "Count the amino acid in the region or in the current line).
 
 Return the count if the region contains only legal amino acid
-characters, including `pro-aa-regexp', `seq-cruft-regexp';
+characters, including `pro-alphabet-set', `seq-cruft-set';
 otherwise return nil and report the location of the invalid
 characters in the echo region."
   (interactive-region-or-line)
-  (let ((length (seq-count beg end pro-aa-regexp)))
+  (let ((length (seq-count beg end pro-alphabet-set)))
     (and length
          (called-interactively-p 'interactive)
          (message "Amino acid count: %d" length))
@@ -228,7 +224,7 @@ characters in the echo region."
 
 See also `seq-summary'."
   (interactive-region-or-line)
-  (seq-summary beg end pro-aa-regexp))
+  (seq-summary beg end pro-alphabet-set))
 
 ;; define aa faces belonging to pro-aa-face group
 (defvar pro-aa-colors

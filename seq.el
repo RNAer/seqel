@@ -32,88 +32,89 @@
 
 It will be skipped during moving and search and anything involving counting.")
 
-(defvar seq-space-regexp
-  (regexp-opt (mapcar #'char-to-string seq-space))
-  "A regexp that matches white spaces.")
-
 (defvar seq-cruft-regexp
   (regexp-opt (mapcar #'char-to-string
                       (concat seq-gap seq-space)))
   "A regexp that matches cruft, including `seq-gap' and `seq-space'.")
 
+(defvar seq-cruft-set
+  (let ((alphabet-set (make-hash-table :test 'eq
+                                       :size (+ (length seq-gap)
+                                                (length seq-space)))))
+    (mapc (lambda (i) (puthash i t alphabet-set)) seq-gap)
+    (mapc (lambda (i) (puthash i t alphabet-set)) seq-space)
+    alphabet-set)
+  "The set of alphabets for `seq-gap' and `seq-space' in sequences.
 
-(defun proceed-char-repeatedly (count func legal-char-regexp)
-  "Run the FUNC function for COUNT times repeatedly from the point on.
+This is a hash table: keys are char and values are `t'. It serves
+like a set object similar in Python language.")
 
-The next char has to belong to LEGAL-CHAR-REGEXP; otherwise, stop and report
-error. The `seq-cruft-regexp' char will be skipped, i.e., not counted.
- Return the actual count of legal char. COUNT can be either positive
-or negative integer, indicating the proceeding direction."
+
+(defun seq-forward-char (count legal-alphbet-set)
+  "Move the cursor for COUNT times repeatedly from the point on.
+
+The next char has to belong to LEGAL-ALPHBET-SET to be
+ counted. The `seq-cruft-regexp' char will be skipped, i.e., not
+ counted. Return the actual count of legal char. COUNT can be
+ either positive or negative integer - if it is positive, move
+ forward; if it is negative, move backward; if zero, don't move."
+
   (let ((direction (if (< count 0) -1 1))
-        (looking (if (< count 0) 'looking-back 'looking-at)))
+        (fetch-char (if (< count 0) 'char-before 'char-after)))
     (dotimes (x (abs count))
-      (while (funcall looking seq-cruft-regexp)
-        (funcall func direction))
-      ;; `looking' will fail it reaches the end or the current char does not match regexp
-      (if (funcall looking legal-char-regexp)
-          (funcall func direction)
-        (error "Failed to complete the move! Moved %d bases" (* direction x))))
+      (while (gethash (funcall fetch-char) seq-cruft-set)
+        (forward-char direction))
+      (if (gethash (funcall fetch-char) legal-alphbet-set)
+          (forward-char direction)
+        (error "Failed! Moved %d bases. You have illegal char here." (* direction x))))
     count))
 
 
-(defun region-summary (beg end &optional legal-char-regexp)
+(defun seq-summary (beg end &optional legal-char-set)
   "Count the number of all the characters in the region.
 
-Ignore char that does not belong to LEGAL-CHAR-REGEXP. Use hash
-table to create dictionary-like data type. Return the hash table."
+Ignore char that does not belong to LEGAL-CHAR-SET. Use hash
+table to create dictionary-like data type. Return the hash table.
+This is fast (only 2 seconds for 5M base pairs)."
   (interactive-region-or-line)
-  (let ((my-hash (make-hash-table :test 'equal))
-        char count)
-    ;; any char is allowed if legal char is not provided
-    (if (not legal-char-regexp)
-        (setq legal-char-regexp "."))
+  (let (my-hash size char count)
+    (if legal-char-set
+        (progn (setq my-hash (make-hash-table :test 'equal :size (hash-table-count legal-char-set)))
+               (maphash (lambda (k v) (puthash k 0 my-hash)) legal-char-set))
+      ;; any char is allowed if legal char is not provided
+      (progn (setq my-hash (make-hash-table :test 'equal :size 255))
+             (mapc (lambda (i) (puthash k 0 my-hash)) (number-sequence 0 255))))
     (save-excursion
       (goto-char beg)
       (dotimes (x (- end beg))
-        (if (looking-at legal-char-regexp)
-            (progn (setq char (char-after))
-                   (setq count (gethash char my-hash))
-                   (if count
-                       (puthash char (1+ count) my-hash)
-                     (puthash char 1 my-hash))))
-        (forward-char)))
-    my-hash))
+        (setq char (char-after))
+        (if (gethash char legal-char-set)
+            (puthash char (1+ (gethash char my-hash)) my-hash))
+        (forward-char))
+    (maphash (lambda (x y) (or (= y 0) (princ (format "%c:%d " x y) t))) my-hash)
+    my-hash)))
 
 
-(defun seq-count (beg end &optional legal-char-regexp)
+(defun seq-count (beg end &optional legal-char-set)
   "Count the chars that belong to LEGAL-CHAR-REGEXP.
 
 Chars of `seq-cruft-regexp' will be skipped. Return the count if
 the region contains only legal characters; otherwise return nil and
 report the location of the invalid characters. This function is used
 by `nuc-count' and `pro-count'."
-  (let ((count 0) (legal-p t))
-    ;; allow any char if legal-char-regexp is not provided
-    (or legal-char-regexp
-        (setq legal-char-regexp "."))
+  (let ((count 0))
     (save-excursion
       (goto-char beg)
-      ;; (point) will not equal `end' if invalid char is met.
-      ;; Using forward-char to check char one-by-one has the advantage of
-      ;; negligible memory requirement.
-      (while (< (point) end)
-        (cond ((looking-at seq-cruft-regexp)
-               (forward-char))
-              ((looking-at legal-char-regexp)
-               (forward-char)
-               (setq count (1+ count)))
-              (t (message "Bad char '%c' found at position %d,%d"
-                          (char-after)
-                          (line-number-at-pos)
-                          (current-column))
-                 (setq legal-p nil)
-                 (goto-char end)))))
-    (if legal-p count)))
+      (dotimes (i (- end beg))
+        (setq char (char-after))
+        (cond ((gethash char legal-char-set) (setq count (1+ count)))
+              ;; allow any char if legal-char-set is not provided
+              ((and legal-char-set
+                    (not (gethash char seq-cruft-set)))
+               (error "Bad char '%c' found at line %d column %d"
+                      char (line-number-at-pos) (current-column))))
+        (forward-char)))
+    count))
 
 (defun color-gradient-hsl (start stop step-number &optional s l)
   "Return a list with (STEP-NUMBER + 1) number of colors in hex code.
@@ -204,29 +205,29 @@ as foreground colors."
       (list (line-beginning-position) (line-end-position)))))
 
 
-(defun seq-paint (beg end face-prefix &optional case)
+(defun seq-paint (beg end face-group &optional case)
   "Color the sequences in the region BEG to END.
 
 If CASE is nil, upcase and lowercase chars will be colored the same;
 otherwise, not. FACE-PREFIX decides which face groups ('base-face' or
-'aa-face') to use."
+'aa-face') to use.
+
+TODO: this is slow for long sequences."
   (save-excursion
     (let (char face)
       (goto-char beg)
-      (while (< beg end)
-        (setq char (char-after beg))
+      (dotimes (i (- end beg))
+        (setq char (char-after))
         ;; skip whitespaces and gap symbols
-        (if (not (or (memq char seq-space) (memq char seq-gap)))
+        (if (not (gethash char seq-cruft-set))
             (progn (if case
-                       (setq face (format "%s-%c" face-prefix char))
+                       (setq face (format "%s-%c" face-group char))
                      ;; let upcase base use the color of lowercase base color
-                     (setq face (format "%s-%c" face-prefix (upcase char))))
-                   (if (facep face)
-                       ;; use font-lock-face instead of face for font-lock-mode is enabled
-                       (with-silent-modifications
-                         (put-text-property beg (+ beg 1) 'font-lock-face (intern face)))
-                     (message "Face '%s' does not exist." face))))
-        (setq beg (1+ beg))))))
+                     (setq face (format "%s-%c" face-group (upcase char))))
+                   ;; use font-lock-face instead of face for font-lock-mode is enabled
+                   (with-silent-modifications
+                     (put-text-property (+ beg i) (+ beg i 1) 'font-lock-face (intern face)))))
+        (forward-char)))))
 
 (defun seq-unpaint (beg end)
   "Uncolor the sequences from BEG to END or the current line."
@@ -304,7 +305,7 @@ This serves as a warning that the string is being mangled."
 The car will be the key and the cdr will be the value. If
 there are multiple items with the same car, error will be
 reported."
-  (let ((my-hash (make-hash-table :test 'equal)))
+  (let ((my-hash (make-hash-table :test 'equal :size (length alist))))
     (dolist (entry alist)
       (if (gethash (car entry) my-hash)
           (error "repeat hashing"))
