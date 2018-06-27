@@ -420,15 +420,13 @@ and `fasta-delete-column' for an example of usage."
            pos line)
        (condition-case err
            (progn (goto-char (point-max))
-                  (setq pos (point-marker))
                   (while (fasta-backward 1)
                     (forward-line) ; move to the sequence region
                     (setq line (line-number-at-pos))
                     (if (< (move-to-column column) column)
                         (signal 'end-of-col-err '(move-to-column)))
                     ,@fn
-                    (fasta-backward 1)
-                    (setq pos (point-marker))))
+                    (fasta-backward 1)))
        ;; return to the original state if error is met.
        (end-of-col-err ; the single quote is dispensable
         (primitive-undo 1 buffer-undo-list)
@@ -478,7 +476,7 @@ C-u \\[fasta-paint-column] honors the cases"
           (pro-mode
            (setq to-face (list 'format "pro-aa-face-%c" current-char)))
           (t
-           (error "Unknown seq type")))
+           (error "Unknown sequence type. Please specify protein or nucletide")))
     (fasta--column-action
      (with-silent-modifications
        (put-text-property (point) (1+ (point))
