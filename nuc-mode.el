@@ -330,12 +330,12 @@ atoms: a nuc base in char type, hex-code colors for foreground
 and background")
 
 
-;; define base faces belonging to base-face group
-(loop for elem in nuc-base-colors
-      for f = (nth 1 elem)
-      for b = (nth 2 elem)
-      for l = (format "%c" (nth 0 elem)) do
-      (eval (macroexpand `(def-char-face ,l ,b ,f "nuc-base-face"))))
+(mapc (lambda (elem)
+        (let ((l (format "%c" (nth 0 elem)))
+              (f (nth 2 elem))
+              (b (nth 1 elem)))
+          (eval (macroexpand `(def-char-face ,l ,b ,f "nuc-base-face")))))
+      nuc-base-colors)
 
 
 ;;;###autoload
@@ -373,7 +373,7 @@ CODON must be uppercase string of 3 DNA letters. Example: (nuc-decode
 \"TCM\") should return (83) and (nuc-decode \"MAT\") should
 return (72 78) for translation table 1."
   (interactive (list (read-from-minibuffer
-                (format "The amino acide of condon in genetic table %d: " (car nuc-translation-table)))))
+                (format "The amino acid of condon in genetic table %d: " (car nuc-translation-table)))))
   (let ((table (cdr nuc-translation-table))
         degenerated-codon aas aa)
     (if (stringp codon)

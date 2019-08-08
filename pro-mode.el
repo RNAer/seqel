@@ -49,7 +49,7 @@ the molecular weight.  for the first.")
 
 
 (defvar pro-alphabet-set
-  (let ((alphabet-set (make-hash-table :test 'eq :size (length (* 2 pro-aa-alist)))))
+  (let ((alphabet-set (make-hash-table :test 'eq :size (* 2 (length pro-aa-alist)))))
     (dolist (l pro-aa-alist)
       (puthash (downcase (car l)) t alphabet-set)
       (puthash (car l) t alphabet-set))
@@ -235,12 +235,12 @@ This is a list of lists.  For each inner list, it contains 3 atoms:
 a nuc base in char type, hex-code colors for foreground and background")
 
 
-(loop for elem in pro-aa-colors
-      for f = (nth 1 elem)
-      for b = (nth 2 elem)
-      for l = (format "%c" (nth 0 elem)) do
-      (eval (macroexpand `(def-char-face ,l ,b ,f "pro-aa-face"))))
-
+(mapc (lambda (elem)
+        (let ((l (format "%c" (nth 0 elem)))
+              (f (nth 2 elem))
+              (b (nth 1 elem)))
+          (eval (macroexpand `(def-char-face ,l ,b ,f "pro-aa-face")))))
+      pro-aa-colors)
 
 ;;;###autoload
 (defun pro-paint (beg end &optional case)
