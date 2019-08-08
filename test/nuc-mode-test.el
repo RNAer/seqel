@@ -234,6 +234,7 @@
   (let ((cases '(("CTM" ?L)
                  ((?C ?T ?M) ?L)
                  ("MAT" ?H ?N))))
+    (nuc-set-translation-table 1)
     (dolist (test cases)
       (should (equal (cdr test) (nuc-decode (car test)))))))
 

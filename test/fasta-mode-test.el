@@ -64,7 +64,7 @@ a" . 15))))
       (dolist (test cases)
         (insert (car test))
         (goto-char (point-min))
-        (should (equal (call-interactively 'fasta-seq-length) (cdr test)))
+        (should (equal (call-interactively 'fasta-length) (cdr test)))
         (delete-region (point-min) (point-max))))))
 
 
