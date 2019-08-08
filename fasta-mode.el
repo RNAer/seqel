@@ -183,7 +183,7 @@ white spaces will all be removed."
     (message "Formating the sequence...")
     (narrow-to-region (point) (mark))
     ;; remove seq-spaces
-    (while (re-search-forward seq-space-regexp nil t)
+    (while (re-search-forward "\\s-+" nil t)
       ;; (setq count (1+ count))
       (replace-match "" nil nil))
     (if width
