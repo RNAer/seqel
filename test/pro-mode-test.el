@@ -65,7 +65,7 @@
         (delete-region (point-min) (point-max))))))
 
 (ert-deftest pro-summary-test ()
-  :tags '(nuc-mode)
+  :tags '(pro-mode)
   (let ((cases '(("ABCa" .
                   ((?A . 1) (?B . 1) (?C . 1) (?a . 1))))))
     (with-temp-buffer
@@ -73,7 +73,7 @@
         (insert (car test))
         (should
          ;; `equal' can compare hash tables
-         (hash-equal (seq-summary (point-min) (point-max) pro-aa-regexp)
+         (hash-equal (seq-summary (point-min) (point-max) pro-alphabet-set)
                 (hash-alist (cdr test))))
         (delete-region (point-min) (point-max))))))
 
