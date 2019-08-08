@@ -145,7 +145,7 @@ the beginning of the genbank entry instead of the sequence."
 (defun genbank-2-fasta ()
   "Convert current genbank record to fasta format"
   (interactive)
-  (goto-char (point-max))  )
+  (genbank-mark))
 
 
 (provide 'genbank-mode)

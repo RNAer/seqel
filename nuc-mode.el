@@ -409,11 +409,13 @@ For example, run `C-u 2 M-x nuc-set-translation-table' to set it to table 2."
 (defun nuc-translate (beg end)
   "Translate the DNA/RNA seq to protein seq using current translation table.
 
-The ambiguous codon will be handled correctly: if it is mapped to multiple
-amino acids, 'X' will be output.
+The ambiguous codon will be handled correctly: if it is mapped to
+multiple amino acids, 'X' will be output.
 
 This function translates DNA of 9K for ~6 sec (over 80% of the
-time is for `nuc-decode') and ~15 MB mem."
+time is for `nuc-decode') and ~15 MB mem. It is not super fast,
+but it is very rare you need to translate a sequence over 10K
+long."
   (interactive-region-or-line)
   (let* (;; check valid of the sequence and count the number of bases
          (n (nuc-count beg end))
@@ -425,6 +427,7 @@ time is for `nuc-decode') and ~15 MB mem."
         (progn
           (message "translating %d nucleotides to %d amino acids..." (- n x) (/ n 3))
           (setq str (buffer-substring-no-properties beg (- end x)))
+          ;; seq is a list of all legal nuc char
           (setq seq (mapcan (lambda (i) (if (gethash i nuc-alphabet-set) (list (upcase i)))) str))
           (delete-region beg (- end x))
           (insert (concat

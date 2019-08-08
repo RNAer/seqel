@@ -1,6 +1,6 @@
 ;;; genetic-code.el --- store tables of genetic code
 
-;;; License: GPLv3
+;;; License: BSD-3
 
 ;;; Commentary:
 ;;  * The translation tables are downloaded from
