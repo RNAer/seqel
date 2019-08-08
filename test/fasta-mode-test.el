@@ -52,7 +52,7 @@ augct")))
         (delete-region (point-min) (point-max))))))
 
 
-(ert-deftest fasta-seq-length-test ()
+(ert-deftest fasta-length-test ()
   :tags '(fasta-mode)
   (let ((cases '((
 ">seq_name a
@@ -65,19 +65,6 @@ a" . 15))))
         (insert (car test))
         (goto-char (point-min))
         (should (equal (call-interactively 'fasta-length) (cdr test)))
-        (delete-region (point-min) (point-max))))))
-
-
-(ert-deftest fasta-seq-type-test ()
-  :tags '(fasta-mode)
-  (let ((cases '((">seq_name a
-augctAUGCT
->seq_name b
-augct" . nuc))))
-    (with-temp-buffer
-      (dolist (test cases)
-        (insert (car test))
-        (should (equal (fasta-seq-type) (cdr test)))
         (delete-region (point-min) (point-max))))))
 
 

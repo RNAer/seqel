@@ -9,3 +9,6 @@
 
 (require 'fasta-mode-test)
 (ert '(tag fasta-mode))
+
+(require 'genbank-mode-test)
+(ert '(tag genbank-mode))
