@@ -20,15 +20,24 @@
      'error-message
      "End of column error")
 
-
+(defun mapcar* (function &rest args)
+  "Apply FUNCTION to successive cars of all ARGS.
+          Return the list of results."
+  ;; If no list is exhausted,
+  (if (not (memq nil args))
+      ;; apply function to cars.
+      (cons (apply function (mapcar 'car args))
+            (apply 'mapcar* function
+                   ;; Recurse for rest of elements.
+                   (mapcar 'cdr args)))))
 ;; valid characters as alignment gaps in the sequences
 (defvar seq-gap
   '(?- ?.)
-  "*Chars that represent a gap.")
+  "*Chars of '.' and '-' that represent a gap.")
 
 (defvar seq-space
   '(?  ?\t ?\n ?\r ?\v ?\f)
-  "*Chars that represent cruft which may appear between bases or amino acid.
+  "*Chars that represent all kinds of spaces which may appear between bases or amino acids.
 
 It will be skipped during moving and search and anything involving counting.")
 
