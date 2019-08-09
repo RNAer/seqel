@@ -79,7 +79,7 @@ Special commands:
   (run-hooks 'genbank-mode-hook))
 
 
-(defvar genbank-record-regexp "^LOCUS[ \t].*$"
+(setq genbank-record-regexp "^LOCUS[ \t]+")
   "Genbank records always start with \"LOCUS\".")
 
 
@@ -145,7 +145,19 @@ the beginning of the genbank entry instead of the sequence."
 (defun genbank-2-fasta ()
   "Convert current genbank record to fasta format"
   (interactive)
-  (genbank-mark))
+  (let (str seq)
+    (genbank-mark)
+    (setq str (buffer-substring-no-properties (region-beginning) (region-end)))
+    (if nuc-mode
+        (setq seq (mapcan (lambda (i) (if (gethash i nuc-alphabet-set) (list (upcase i)))) str))
+      (setq seq (mapcan (lambda (i) (if (gethash i pro-alphabet-set) (list (upcase i)))) str)))
+    (genbank-mark 'whole)
+    (if (re-search-forward genbank-record-regexp nil t)
+        (replace-match ">" nil nil))
+    (forward-line)
+    (delete-active-region)
+    (insert (concat seq))
+    (insert "\n")))
 
 
 (provide 'genbank-mode)
