@@ -94,7 +94,7 @@ Special commands:
 (defun fasta-find-file ()
   "Invoke `fasta-mode' if the buffer look like a fasta.
 
-Only if the major mode is `fundermental. This function is added to
+Only if the major mode is `fundermental'. This function is added to
 `find-file-hooks'."
   (save-excursion
     (goto-char (point-min))
@@ -221,7 +221,8 @@ It calls `fasta--format' on each fasta records."
   "Delete current fasta entry."
   (interactive)
   (fasta-mark 'include-header)
-  (delete-region (region-beginning) (region-end)))
+  (delete-region (region-beginning) (region-end))
+  (delete-char 1))
 
 
 (defun fasta-position ()
@@ -336,7 +337,7 @@ It calls `fasta--translate' on each fasta record."
     (fasta-mark)
     (if pro-mode  ; if pro-mode is enabled
         (pro-weight (region-beginning) (region-end))
-      (error "pro mode is not enabled"))))
+      (error "pro mode is not enabled. `fasta-weight' is only for protein sequence"))))
 
 
 (defun fasta-summary ()

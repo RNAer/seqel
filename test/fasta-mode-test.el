@@ -4,22 +4,6 @@
 (require 'ert)
 
 
-(ert-deftest fasta-count-test ()
-  :tags '(fasta-mode)
-  (let ((cases '(("" . 0)
-                 (">a
-acgu
-
->b
-AcGu
-"
-                  . 2))))
-    (with-temp-buffer
-      (dolist (test cases)
-        (insert (car test))
-        (should (equal (fasta-count) (cdr test)))
-        (delete-region (point-min) (point-max))))))
-
 (ert-deftest fasta-forward-test ()
   :tags '(fasta-mode)
   (let ((cases '(("" 1 1)
@@ -57,6 +41,73 @@ AcGu
         (should (equal (line-number-at-pos) (nth 2 test)))
         (delete-region (point-min) (point-max))))))
 
+(ert-deftest fasta-first-test ()
+  :tags '(fasta-mode)
+  (let ((cases '(""
+                 ">a
+acgu
+
+>b
+AcGu
+")))
+    (with-temp-buffer
+      (dolist (test cases)
+        (insert test)
+        (call-interactively 'fasta-first)
+        (should (equal (point-min) (point)))
+        (delete-region (point-min) (point-max))))))
+
+(ert-deftest fasta-last-test ()
+  :tags '(fasta-mode)
+  (let ((cases '(("" . 1)
+                 (">a
+acgu
+
+>b
+AcGu
+"
+                  . 4))))
+    (with-temp-buffer
+      (dolist (test cases)
+        (insert (car test))
+        (goto-char (point-min))
+        (call-interactively 'fasta-last)
+        (should (equal (line-number-at-pos) (cdr test)))
+        (delete-region (point-min) (point-max))))))
+
+(ert-deftest fasta-count-test ()
+  :tags '(fasta-mode)
+  (let ((cases '(("" . 0)
+                 (">a
+acgu
+
+>b
+AcGu
+"
+                  . 2))))
+    (with-temp-buffer
+      (dolist (test cases)
+        (insert (car test))
+        (should (equal (call-interactively 'fasta-count) (cdr test)))
+        (delete-region (point-min) (point-max))))))
+
+(ert-deftest fasta-mark-test ()
+  :tags '(fasta-mark)
+  (let ((cases '(("" 1 1)
+                 (">a
+acgu
+
+>b
+AcGu
+"
+                  13 18))))
+        (with-temp-buffer
+      (dolist (test cases)
+        (insert (car test))
+        (fasta-mark)
+        (should (equal (region-beginning) (nth 1 test)))
+        (should (equal (region-end) (nth 2 test)))
+        (delete-region (point-min) (point-max))))))
 
 
 (ert-deftest fasta-format-test ()
@@ -120,6 +171,24 @@ t")))
         (should (equal tmp (nth 2 test)))
         (delete-region (point-min) (point-max))))))
 
+(ert-deftest fasta-delete-test ()
+  :tags '(fasta-mark)
+  (let ((cases '((
+">seq_name a
+augc 	tAUGCT
+augct
+>seq_name b
+a" . ">seq_name b
+a"))))
+    (with-temp-buffer
+      (dolist (test cases)
+        (insert (car test))
+        (goto-char (point-min))
+        (call-interactively 'fasta-delete)
+        (setq tmp (buffer-string))
+        (should (equal tmp (cdr test)))
+        (delete-region (point-min) (point-max))))))
+
 
 (ert-deftest fasta-length-test ()
   :tags '(fasta-mode)
@@ -171,6 +240,46 @@ GCAU	 gca")))
         (should (equal tmp (cdr test)))
         (delete-region (point-min) (point-max))))))
 
+(ert-deftest fasta-translate-test ()
+  :tags '(fasta-mode)
+   (let ((cases '((
+">seq_name a
+at gc
+ag
+" .
+">seq_name a
+MQ
+")
+                  (
+">seq_name a
+at gc
+" .
+">seq_name a
+Mc
+")))
+        tmp)
+    (with-temp-buffer
+      (dolist (test cases)
+        (insert (car test))
+        (nuc-mode 1)
+        (call-interactively 'fasta-translate)
+        (setq tmp (buffer-string))
+        (should (equal tmp (cdr test)))
+        (delete-region (point-min) (point-max))))))
+
+(ert-deftest fasta-weight-test ()
+  :tags '(fasta-mode)
+   (let ((cases '((
+">seq_name a
+GKVKVGVNG FGRIGRLVTR AAFNSGKVDI
+VAINDPFIDL NYMVYMFQYD STHGKFHGTV
+" . 6505.0) )))
+    (with-temp-buffer
+      (dolist (test cases)
+        (insert (car test))
+        (pro-mode 1)
+        (should (equal (fround (call-interactively 'fasta-weight)) (cdr test)))
+        (delete-region (point-min) (point-max))))))
 
 (ert-deftest fasta-column-delete-test ()
   :tags '(fasta-mode)
