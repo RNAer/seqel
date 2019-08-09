@@ -1,6 +1,8 @@
-* SEQEL
-
-package for biological sequence manipulation
-** install local package
-
+#+TILE: SEQEL
+  package for biological sequence manipulation
+* install local package
+   (package-install-file "/home/zech/git/seqel")
    (package-install-file "/Users/zech/git/seqel")
+* Usage
+** search for sequence pattern
+   - enable sequence isearch with ~M-x seq-toggle-isearch~

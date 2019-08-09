@@ -79,7 +79,7 @@ Special commands:
   (run-hooks 'genbank-mode-hook))
 
 
-(setq genbank-record-regexp "^LOCUS[ \t]+")
+(defvar genbank-record-regexp "^LOCUS[ \t]+"
   "Genbank records always start with \"LOCUS\".")
 
 

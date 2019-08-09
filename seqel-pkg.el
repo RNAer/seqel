@@ -7,5 +7,4 @@
 (define-package
   "seqel"   ; package name
   "1.0"     ; version
-  "biological sequence manipulation"   ; description
-  :url "https://github.com/RNAer/seqel")
+  "biological sequence manipulation")   ; description

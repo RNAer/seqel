@@ -10,16 +10,17 @@
 VERSION:=1.0
 PACKAGE_NAME:=seqel-$(VERSION)
 PACKAGE_DIR:=/tmp/$(PACKAGE_NAME)
+PACKAGE:=/tmp/$(PACKAGE_NAME).tar
 
 package: $(PACKAGE_DIR)
-	tar cvf /tmp/$(PACKAGE_NAME).tar --exclude="*#" --exclude="*~" --exclude="*.elc" -C $(PACKAGE_DIR)/.. $(PACKAGE_NAME)
+	tar cvf $(PACKAGE) -C $(PACKAGE_DIR)/.. $(PACKAGE_NAME)
 
 $(PACKAGE_DIR):
 	mkdir $@
-	cp -r * $@
+	cp -r *.el $@
 
 clean:
-	rm -f ../$(PACKAGE_NAME).tar
+	rm -f $(PACKAGE)
 	rm -rf $(PACKAGE_DIR)
 
 # end
