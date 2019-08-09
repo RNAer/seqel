@@ -242,7 +242,11 @@
 (ert-deftest nuc-translate-test ()
   :tags '(nuc-mode)
   ;; http://in-silico.net/tools/biology/sequence_conversion
-  (let ((cases '(("accatttcm mtc" . "TISX"))))
+  (let ((cases '(("accatttcm mtc" . "TISX")
+                 ("acc at
+ttc
+" . "TItc
+"))))
     (with-temp-buffer
       (dolist (test cases)
         (insert (car test))
