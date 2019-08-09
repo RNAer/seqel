@@ -172,13 +172,14 @@ t")))
         (delete-region (point-min) (point-max))))))
 
 (ert-deftest fasta-delete-test ()
-  :tags '(fasta-mark)
-  (let ((cases '((
-">seq_name a
+  :tags '(fasta-mode)
+  (let ((cases '(("" . "")
+                 (">seq_name a
 augc 	tAUGCT
 augct
 >seq_name b
-a" . ">seq_name b
+a" . "
+>seq_name b
 a"))))
     (with-temp-buffer
       (dolist (test cases)

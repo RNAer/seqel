@@ -221,8 +221,7 @@ It calls `fasta--format' on each fasta records."
   "Delete current fasta entry."
   (interactive)
   (fasta-mark 'include-header)
-  (delete-region (region-beginning) (region-end))
-  (delete-char 1))
+  (delete-region (region-beginning) (region-end)))
 
 
 (defun fasta-position ()
