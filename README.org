@@ -1,2 +1,6 @@
-SEQEL
+* SEQEL
+
 package for biological sequence manipulation
+** install local package
+
+   (package-install-file "/Users/zech/git/seqel")

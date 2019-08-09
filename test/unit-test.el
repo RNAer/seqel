@@ -1,5 +1,7 @@
 ;;; unit-test.el --- run the unit-test in the test/ dir
 
+(require 'seq-test)
+(ert '(tag seq))
 
 (require 'nuc-mode-test)
 (ert '(tag nuc-mode))
