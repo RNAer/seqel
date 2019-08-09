@@ -30,6 +30,15 @@
             (apply 'mapcar* function
                    ;; Recurse for rest of elements.
                    (mapcar 'cdr args)))))
+
+
+(defmacro interactive-region-or-line ()
+  `(interactive
+    (if (use-region-p) ; mark-active
+        (list (region-beginning) (region-end))
+      (list (line-beginning-position) (line-end-position)))))
+
+
 ;; valid characters as alignment gaps in the sequences
 (defvar seq-gap
   '(?- ?.)
@@ -92,16 +101,18 @@ This is fast (only 2 seconds for 5M base pairs)."
                (maphash (lambda (k v) (puthash k 0 my-hash)) legal-char-set))
       ;; any char is allowed if legal char is not provided
       (progn (setq my-hash (make-hash-table :test 'equal :size 255))
-             (mapc (lambda (i) (puthash k 0 my-hash)) (number-sequence 0 255))))
+             (mapc (lambda (i) (puthash i 0 my-hash)) (number-sequence 0 255))))
     (save-excursion
       (goto-char beg)
       (dotimes (x (- end beg))
         (setq char (char-after))
-        (if (gethash char legal-char-set)
+        (if (or (not legal-char-set)
+                (gethash char legal-char-set))
             (puthash char (1+ (gethash char my-hash)) my-hash))
         (forward-char))
-    (maphash (lambda (x y) (or (= y 0) (princ (format "%c:%d " x y) t))) my-hash)
-    my-hash)))
+      ;; print out the summary table
+      (maphash (lambda (x y) (or (= y 0) (princ (format "%c:%d " x y) t))) my-hash)
+      my-hash)))
 
 
 (defun seq-count (beg end &optional legal-char-set)
@@ -111,7 +122,7 @@ Chars of `seq-cruft-regexp' will be skipped. Return the count if
 the region contains only legal characters; otherwise return nil and
 report the location of the invalid characters. This function is used
 by `nuc-count' and `pro-count'."
-  (let ((count 0))
+  (let ((count 0) char)
     (save-excursion
       (goto-char beg)
       (dotimes (i (- end beg))
@@ -144,8 +155,7 @@ from red to green without yellow) besides other differences."
                                     (nth 1 rgb)
                                     (nth 2 rgb)))
             (mapcar #'(lambda (hue) (color-hsl-to-rgb hue s l))
-                    (loop for i from start to stop by incremental
-                          collect i)))))
+                    (number-sequence start stop incremental)))))
 
 
 (defvar color--pairs
@@ -205,13 +215,6 @@ as foreground colors."
         (:background ,backgrnd :foreground ,foregrnd))
        (t (:background "gray")))
      ,(concat "Face for marking up " (upcase letter) "'s")))
-
-
-(defmacro interactive-region-or-line ()
-  `(interactive
-    (if (use-region-p) ; mark-active
-        (list (region-beginning) (region-end))
-      (list (line-beginning-position) (line-end-position)))))
 
 
 (defun seq-paint (beg end face-group &optional case)

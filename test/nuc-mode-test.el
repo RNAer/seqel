@@ -221,10 +221,10 @@
     (with-temp-buffer
       (dolist (test cases)
         (insert (car test))
-        (setq obs (seq-summary (point-min) (point-max) nuc-alphabet-set))
+        (setq obs (nuc-summary (point-min) (point-max)))
         (maphash (lambda (k v) (if (= 0 (gethash k obs)) (remhash k obs))) obs)
         (should
-         ;; `equal' can compare hash tables
+         ;; `equal' can not compare hash tables
          (hash-equal obs (hash-alist (cdr test))))
         (delete-region (point-min) (point-max))))))
 
