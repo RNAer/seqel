@@ -20,14 +20,15 @@
      'error-message
      "End of column error")
 
-(defun mapcar* (function &rest args)
+(defun seq--zip (function &rest args)
   "Apply FUNCTION to successive cars of all ARGS.
-          Return the list of results."
+
+Return the list of results. This is similar to the Python zip function."
   ;; If no list is exhausted,
   (if (not (memq nil args))
       ;; apply function to cars.
       (cons (apply function (mapcar 'car args))
-            (apply 'mapcar* function
+            (apply 'seq--zip function
                    ;; Recurse for rest of elements.
                    (mapcar 'cdr args)))))
 

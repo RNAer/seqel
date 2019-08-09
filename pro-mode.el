@@ -228,7 +228,7 @@ See also `seq-summary'."
 
 ;; define aa faces belonging to pro-aa-face group
 (defvar pro-aa-colors
-  (mapcar* #'(lambda (x y) (cons (car x) y)) pro-aa-alist color-pairs-cycle)
+  (seq--zip #'(lambda (x y) (cons (car x) y)) pro-aa-alist color-pairs-cycle)
   "Background and foreground colors for each IUPAC bases.
 
 This is a list of lists.  For each inner list, it contains 3 atoms:

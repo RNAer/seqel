@@ -321,7 +321,7 @@ the frequency of homopolymers in the sequence. "
 
 ;;; Per base colors
 (defvar nuc-base-colors
-    (mapcar* #'(lambda (x y) (cons (car x) y)) nuc-base-alist color-pairs-cycle)
+    (seq--zip #'(lambda (x y) (cons (car x) y)) nuc-base-alist color-pairs-cycle)
 
   "Background and foreground colors for each IUPAC bases.
 
