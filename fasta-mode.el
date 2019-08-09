@@ -505,7 +505,7 @@ If CASE is nil, the summary will be case insensitive."
 (defun fasta-seq-type (&optional threshold)
   "Enable the minor mode for either protein or nucleic acid.
 
-It will search the first 100 sequence residues (or the first
+It will search the first 100 sequence residues (or the current
 sequence record, whichever is smaller) for unique nucletide base
 and unique protein amino acid IUPAC code. If found, the minor
 mode of `nuc-mode' or `pro-mode' will be enabled. If it is
@@ -515,7 +515,8 @@ ambiguous, enable `nuc-mode' by default."
     (save-mark-and-excursion
         (catch 'seq-type
           (fasta-mark)
-          (dotimes (i (min (or threshold 2) (- (region-end) (region-beginning))))
+          ;; 100 sequence residues or the current sequence length
+          (dotimes (i (min (or threshold 100) (- (region-end) (region-beginning))))
             (setq current (char-after))
             (cond ((memq current pro-aa-uniq)
                    (pro-mode)
@@ -530,11 +531,12 @@ ambiguous, enable `nuc-mode' by default."
 
 
 (add-hook 'fasta-mode-hook
-          (lambda () ((fasta-seq-type)
-                      ;; this can slow the loading of a large fasta file
-                      ;; disable these minor modes
-                      (flyspell-mode -1)
-                      (linum-mode -1))))
+          (lambda ()
+            (fasta-seq-type)
+            ;; this can slow the loading of a large fasta file
+            ;; disable these minor modes
+            (flyspell-mode -1)
+            (linum-mode -1)))
 
 
 (provide 'fasta-mode)

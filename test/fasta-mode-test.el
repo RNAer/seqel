@@ -376,12 +376,11 @@ A" . nuc-mode)
                  (">seq1
 AUCG" . nuc-mode)
                  (">seq1
-AEFZ" . pro-mode))))
+AAAAAAEFZ" . pro-mode))))
     (dolist (test cases)
       (with-temp-buffer
         (insert (car test))
         (fasta-seq-type)
-        (princ (symbol-value (cdr test)))
         ;; return true if the mode is active
         (should (and (symbolp (cdr test)) (symbol-value (cdr test))))
         ;; disable both modes to start with clean buffer
