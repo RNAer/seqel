@@ -248,7 +248,7 @@ TODO: this is slow for long sequences."
     (remove-text-properties beg end '(font-lock-face nil))))
 
 
-;;;;;; isearch motif
+;;;;;; isearch pattern
 
 ;; (defun seq-isearch-transform-string ()
 ;;   (interactive)
@@ -272,33 +272,34 @@ transformed into 'a[ ]*c[ ]*g[ ]*t'."
   (mapconcat 'identity (split-string str "" 'omit-empty) (concat seq-cruft-regexp "*")))
 
 
-(defun seq-isearch-forward (motif &optional bound noerror)
-  "Search forward for MOTIF."
-  (let ((string (seq-isearch-mangle-str motif)))
+(defun seq-isearch-forward (pattern &optional bound noerror)
+  "Search forward for PATTERN."
+  (let ((string (seq-isearch-mangle-str pattern)))
     (re-search-forward string bound noerror)))
 
-(defun seq-isearch-backward (motif &optional bound noerror)
-  "Search backward for MOTIF."
-  (let ((string (seq-isearch-mangle-str motif)))
+(defun seq-isearch-backward (pattern &optional bound noerror)
+  "Search backward for PATTERN."
+  (let ((string (seq-isearch-mangle-str pattern)))
     (re-search-backward string bound noerror)))
 
 (defadvice isearch-message-prefix (after seq-isearch-ismp)
   "Modify the isearch prompt string to show seq search is active.
 
 This serves as a warning that the string is being mangled."
-  (setq ad-return-value (concat "MOTIF " ad-return-value)))
+  (setq ad-return-value (concat "SEQ " ad-return-value)))
 
-(defvar seq-isearch-p nil)
+(defvar seq-isearch-p nil
+  "Whether sequence pattern isearch is enabled")
 
 (defun seq-toggle-isearch ()
   "Toggle the sequence isearch."
   (interactive)
   (cond (seq-isearch-p
          (setq seq-isearch-p nil)
-         (message "motif isearch is off")
+         (message "sequence pattern isearch is off")
          (ad-disable-advice 'isearch-message-prefix 'after 'seq-isearch-ismp))
         (t (setq seq-isearch-p t)
-           (message "motif isearch is on")
+           (message "sequence pattern isearch is on")
            (ad-enable-advice 'isearch-message-prefix 'after 'seq-isearch-ismp)))
   ;; in case there are other advices.
   (ad-activate 'isearch-message-prefix))

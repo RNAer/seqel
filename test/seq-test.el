@@ -18,9 +18,10 @@
 
 (ert-deftest seq-isearch-mangle-str-test ()
   :tags '(seq)
-  (let ((cases '(("mR" . "m[\t\n .-]*R")
-                 ("aTGc" . "a[\t\n .-]*T[\t\n .-]*G[\t\n .-]*c"))))
+  (let ((cases '(("mR" . "m[	- .-]*R")
+                 ("aTGc" . "a[	- .-]*T[	- .-]*G[	- .-]*c"))))
     (dolist (test cases)
+      (princ (seq-isearch-mangle-str (car test)))
       (should
        (equal (seq-isearch-mangle-str (car test))
               (cdr test))))))
