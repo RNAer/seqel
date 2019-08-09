@@ -20,8 +20,46 @@ AcGu
         (should (equal (fasta-count) (cdr test)))
         (delete-region (point-min) (point-max))))))
 
+(ert-deftest fasta-forward-test ()
+  :tags '(fasta-mode)
+  (let ((cases '(("" 1 1)
+                 (">a
+acgu
 
-(ert-deftest fasta-formt-test ()
+>b
+AcGu
+"
+                  1 4))))
+    (with-temp-buffer
+      (dolist (test cases)
+        (insert (nth 0 test))
+        (goto-char (point-min))
+        (setq current-prefix-arg (nth 1 test))
+        (call-interactively 'fasta-forward)
+        (should (equal (line-number-at-pos) (nth 2 test)))
+        (delete-region (point-min) (point-max))))))
+
+(ert-deftest fasta-backward-test ()
+  :tags '(fasta-mode)
+  (let ((cases '(("" 1 1)
+                 (">a
+acgu
+
+>b
+AcGu
+"
+                  2 1))))
+    (with-temp-buffer
+      (dolist (test cases)
+        (insert (nth 0 test))
+        (setq current-prefix-arg (nth 1 test))
+        (call-interactively 'fasta-backward)
+        (should (equal (line-number-at-pos) (nth 2 test)))
+        (delete-region (point-min) (point-max))))))
+
+
+
+(ert-deftest fasta-format-test ()
   :tags '(fasta-mode)
     (let ((cases '((
 ">seq_name b
@@ -29,7 +67,7 @@ augc 	tAUGCT
 augct
 
 >seq_name a
-augct"
+augctt"
 
 5
 
@@ -39,7 +77,7 @@ AUGCT
 augct
 
 >seq_name a
-augct")))
+augctt")))
           tmp)
     (with-temp-buffer
       (dolist (test cases)
@@ -47,6 +85,37 @@ augct")))
         (goto-char (point-min))
         (setq current-prefix-arg (nth 1 test))
         (call-interactively 'fasta-format)
+        (setq tmp (buffer-string))
+        (should (equal tmp (nth 2 test)))
+        (delete-region (point-min) (point-max))))))
+
+
+(ert-deftest fasta-format-all-test ()
+  :tags '(fasta-mode)
+    (let ((cases '((
+">seq_name b
+augc 	tAUGCT
+augct
+
+>seq_name a
+augctt"
+
+5
+
+">seq_name b
+augct
+AUGCT
+augct
+
+>seq_name a
+augct
+t")))
+          tmp)
+    (with-temp-buffer
+      (dolist (test cases)
+        (insert (nth 0 test))
+        (setq current-prefix-arg (nth 1 test))
+        (call-interactively 'fasta-format-all)
         (setq tmp (buffer-string))
         (should (equal tmp (nth 2 test)))
         (delete-region (point-min) (point-max))))))
