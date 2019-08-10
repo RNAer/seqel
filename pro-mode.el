@@ -113,7 +113,7 @@ It is used to convert 3-letter codes to 1-letter codes.")
         (setq mw (aref pro-aa-mw char))
         (cond (mw
                (setq sum-mw (+ sum-mw mw)))
-              ((not (gethash char seq-cruft-set))
+              ((not (gethash char bioseq-cruft-set))
                (error "Ambiguous or illegal char %s at position line %d column %d"
                       char (line-number-at-pos) (current-column))))
         (forward-char)))
@@ -172,13 +172,13 @@ separating them."
 
 See `nuc-move-forward'"
   (interactive "p")
-  (seq-forward-char count pro-alphabet-set))
+  (bioseq-forward-char count pro-alphabet-set))
 
 (defun pro-move-backward (count)
   "Move backward COUNT number of amino acides, similar to `pro-move-forward'."
   (interactive "p")
   ;; (proceed-char-repeatedly count 'backward-char))
-  (seq-forward-char (- count) pro-alphabet-set))
+  (bioseq-forward-char (- count) pro-alphabet-set))
 
 ;;; delete
 (defun pro-delete-forward (count)
@@ -187,7 +187,7 @@ See `nuc-move-forward'"
 See also `nuc-delete-forward'."
   (interactive "p")
   (let ((pos (point)))
-    (seq-forward-char count pro-alphabet-set)
+    (bioseq-forward-char count pro-alphabet-set)
     (delete-region pos (point))))
 
 
@@ -197,7 +197,7 @@ See also `nuc-delete-forward'."
 See also `nuc-delete-backward'."
   (interactive "p")
   (let ((pos (point)))
-    (seq-forward-char (- count) pro-alphabet-set)
+    (bioseq-forward-char (- count) pro-alphabet-set)
     (delete-region pos (point))))
 
 
@@ -205,11 +205,11 @@ See also `nuc-delete-backward'."
   "Count the amino acid in the region or in the current line).
 
 Return the count if the region contains only legal amino acid
-characters, including `pro-alphabet-set', `seq-cruft-set';
+characters, including `pro-alphabet-set', `bioseq-cruft-set';
 otherwise return nil and report the location of the invalid
 characters in the echo region."
   (interactive-region-or-line)
-  (let ((length (seq-count beg end pro-alphabet-set)))
+  (let ((length (bioseq-count beg end pro-alphabet-set)))
     (and length
          (called-interactively-p 'interactive)
          (message "Amino acid count: %d" length))
@@ -222,13 +222,13 @@ characters in the echo region."
 (defun pro-summary (beg end)
   "Summarize the frequencies of amino acids in the region BEG and END or the current line.
 
-See also `seq-summary'."
+See also `bioseq-summary'."
   (interactive-region-or-line)
-  (seq-summary beg end pro-alphabet-set))
+  (bioseq-summary beg end pro-alphabet-set))
 
 ;; define aa faces belonging to pro-aa-face group
 (defvar pro-aa-colors
-  (seq--zip #'(lambda (x y) (cons (car x) y)) pro-aa-alist color-pairs-cycle)
+  (bioseq--zip #'(lambda (x y) (cons (car x) y)) pro-aa-alist color-pairs-cycle)
   "Background and foreground colors for each IUPAC bases.
 
 This is a list of lists.  For each inner list, it contains 3 atoms:
@@ -247,18 +247,18 @@ a nuc base in char type, hex-code colors for foreground and background")
   "Color the protein sequence from BEG to END.
 
 If the CASE is nil, upcase and lowercase base chars will be colored the same;
-otherwise, not.  See `seq-paint' for details."
+otherwise, not.  See `bioseq-paint' for details."
   (interactive "r\nP")
   (if (not (use-region-p))
       (setq beg (line-beginning-position)
             end (line-end-position)))
-  (seq-paint beg end "pro-aa-face" case))
+  (bioseq-paint beg end "pro-aa-face" case))
 
 ;;;###autoload
-(defalias 'pro-unpaint 'seq-unpaint
+(defalias 'pro-unpaint 'bioseq-unpaint
   "Uncolor the region of protein sequence.
 
-This is an alias to `seq-unpaint'.")
+This is an alias to `bioseq-unpaint'.")
 
 
 (defvar pro-mode-map

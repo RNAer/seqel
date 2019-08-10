@@ -1,6 +1,6 @@
 ;;; unit-test.el --- run the unit-test in the test/ dir
 
-(require 'seq-test)
+(require 'bioseq-test)
 (ert '(tag seq))
 
 (require 'nuc-mode-test)

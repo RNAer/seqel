@@ -73,7 +73,7 @@
         (insert (car test))
         (should
          ;; `equal' can compare hash tables
-         (hash-equal (seq-summary (point-min) (point-max) pro-alphabet-set)
+         (hash-equal (bioseq-summary (point-min) (point-max) pro-alphabet-set)
                 (hash-alist (cdr test))))
         (delete-region (point-min) (point-max))))))
 

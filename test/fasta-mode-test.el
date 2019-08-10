@@ -369,7 +369,7 @@ ac"
         (delete-region (point-min) (point-max))))))
 
 
-(ert-deftest fasta-seq-type-test ()
+(ert-deftest fasta-bioseq-type-test ()
   :tags '(fasta-mode)
   (let ((cases '((">seq1
 A" . nuc-mode)
@@ -380,14 +380,14 @@ AAAAAAEFZ" . pro-mode))))
     (dolist (test cases)
       (with-temp-buffer
         (insert (car test))
-        (fasta-seq-type)
+        (fasta-bioseq-type)
         ;; return true if the mode is active
         (should (and (symbolp (cdr test)) (symbol-value (cdr test))))
         ;; disable both modes to start with clean buffer
         (nuc-mode -1)
         (pro-mode -1)))))
 
-(ert-deftest fasta-seq-type-test-error ()
+(ert-deftest fasta-bioseq-type-test-error ()
   :tags '(fasta-mode)
   (let ((cases '((">seq1
 A" . pro-mode)
@@ -398,7 +398,7 @@ AEFZ" . nuc-mode))))
     (dolist (test cases)
       (with-temp-buffer
         (insert (car test))
-        (fasta-seq-type)
+        (fasta-bioseq-type)
         (princ (and (symbolp (cdr test)) (symbol-value (cdr test))))
         (should (not (and (symbolp (cdr test)) (symbol-value (cdr test)))))
         (nuc-mode -1)

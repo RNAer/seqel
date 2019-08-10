@@ -282,13 +282,13 @@ ttc
         (erase-buffer)))))
 
 
-(ert-deftest nuc-seq-isearch-mangle-str-degeneracy-test ()
+(ert-deftest nuc-bioseq-isearch-mangle-str-degeneracy-test ()
   :tags '(nuc-mode)
   (let ((cases '(("mR" . "[ac][\t\n .-]*[AG]")
                  ("aTGc" . "[a][\t\n .-]*[T][\t\n .-]*[G][\t\n .-]*[c]"))))
     (dolist (test cases)
       (should
-       (equal (nuc-seq-isearch-mangle-str-degeneracy (car test))
+       (equal (nuc-bioseq-isearch-mangle-str-degeneracy (car test))
               (cdr test))))))
 
 

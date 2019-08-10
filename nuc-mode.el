@@ -95,23 +95,23 @@ case valid bases defined in `nuc-base-alist'.")
 (defun nuc-move-forward (count)
   "Move forward COUNT bases. Move backward if negative.
 
-Skip `seq-cruft-regexp' but stop on the illegal base
+Skip `bioseq-cruft-regexp' but stop on the illegal base
 and report how many bases the point have been moved by.
 COUNT can be either positive or negative, indicating the
 moving direction. Return the number of bases that are moved thru.
-See `seq-forward-char'"
+See `bioseq-forward-char'"
   (interactive "p")
-  (seq-forward-char count nuc-alphabet-set))
+  (bioseq-forward-char count nuc-alphabet-set))
 
 ;;;###autoload
 (defun nuc-move-backward (count)
   "Move backward COUNT bases, similar to `nuc-move-forward'.
 
-See also `seq-forward-char'. `(nuc-move-backward -1)'
+See also `bioseq-forward-char'. `(nuc-move-backward -1)'
 and `(nuc-move-forward 1)' are equvialent."
   (interactive "p")
   ;; (proceed-char-repeatedly count 'backward-char))
-  (seq-forward-char (- count) nuc-alphabet-set))
+  (bioseq-forward-char (- count) nuc-alphabet-set))
 
 ;;; delete
 (defun nuc-delete-forward (count)
@@ -120,7 +120,7 @@ and `(nuc-move-forward 1)' are equvialent."
 See also `nuc-delete-backward' and `nuc-move-forward'."
   (interactive "p")
   (let ((pos (point)))
-    (seq-forward-char count nuc-alphabet-set)
+    (bioseq-forward-char count nuc-alphabet-set)
     (delete-region pos (point))))
 
 (defun nuc-delete-backward (count)
@@ -129,7 +129,7 @@ See also `nuc-delete-backward' and `nuc-move-forward'."
 See `nuc-delete-forward'."
   (interactive "p")
   (let ((pos (point)))
-    (seq-forward-char (- count) nuc-alphabet-set)
+    (bioseq-forward-char (- count) nuc-alphabet-set)
     (delete-region pos (point))))
 
 
@@ -138,11 +138,11 @@ See `nuc-delete-forward'."
 
 Check if each char is legal base. Return the count if the region
 contains only legal nucleic acid characters, which includes
-`nuc-alphabet-set', `seq-cruft-set'; otherwise return nil and
+`nuc-alphabet-set', `bioseq-cruft-set'; otherwise return nil and
 report the location of the invalid characters in the echo region.
-This function calls `seq-count'. `nuc-p' is an alias of this function."
+This function calls `bioseq-count'. `nuc-p' is an alias of this function."
   (interactive-region-or-line)
-  (let ((length (seq-count beg end nuc-alphabet-set)))
+  (let ((length (bioseq-count beg end nuc-alphabet-set)))
     (and length
          (called-interactively-p 'interactive)
          (message "Base count: %d" length))
@@ -263,19 +263,19 @@ See also `nuc-2rna'."
 (defun nuc-summary (beg end)
   "Print the frequencies of bases in the region or the current line.
 
-See also `seq-summary'."
+See also `bioseq-summary'."
   (interactive-region-or-line)
-  (seq-summary beg end nuc-alphabet-set))
+  (bioseq-summary beg end nuc-alphabet-set))
 
 
-(defun nuc-seq-isearch-mangle-str-degeneracy (str)
+(defun nuc-bioseq-isearch-mangle-str-degeneracy (str)
   "Mangle the string STR into a regexp to search over cruft in sequence.
 
 Inserts a regexp between each base which matches sequence
-formatting cruft.  For example, if `seq-cruft-regexp' is '[ ]',
+formatting cruft.  For example, if `bioseq-cruft-regexp' is '[ ]',
 the search string 'at' would be transformed into '[a][ ]*[t]';
 and 'mR' will be transformed to '[ac][ ]*[AG]'."
-  ;; (mapconcat 'identity (split-string str "" t) (concat seq-cruft-regexp "*")))
+  ;; (mapconcat 'identity (split-string str "" t) (concat bioseq-cruft-regexp "*")))
   (let (degenerate-str-list  degeneracies)
     ;; 'ar' will return as ("[a]", "[ag]")
     (setq degenerate-str-list
@@ -285,7 +285,7 @@ and 'mR' will be transformed to '[ac][ ]*[AG]'."
                           (error "%c is not a valid nuc base character!" x))
                       (concat "["  (mapconcat 'char-to-string degeneracies "") "]"))
                   (string-to-list str)))
-    (mapconcat 'identity degenerate-str-list (concat seq-cruft-regexp "*"))))
+    (mapconcat 'identity degenerate-str-list (concat bioseq-cruft-regexp "*"))))
 
 
 ;; weighted homopolymer rate (WHR)
@@ -321,7 +321,7 @@ the frequency of homopolymers in the sequence. "
 
 ;;; Per base colors
 (defvar nuc-base-colors
-    (seq--zip #'(lambda (x y) (cons (car x) y)) nuc-base-alist color-pairs-cycle)
+    (bioseq--zip #'(lambda (x y) (cons (car x) y)) nuc-base-alist color-pairs-cycle)
 
   "Background and foreground colors for each IUPAC bases.
 
@@ -343,18 +343,18 @@ and background")
   "Color the nucleic acid region BEG to END.
 
 If CASE is nil, upcase and lowercase base chars will be colored the same;
-otherwise, not. See `seq-paint' for details."
+otherwise, not. See `bioseq-paint' for details."
   (interactive "r\nP")
   (if (not (use-region-p))
       (setq beg (line-beginning-position)
             end (line-end-position)))
-  (seq-paint beg end "nuc-base-face" case))
+  (bioseq-paint beg end "nuc-base-face" case))
 
 ;;;###autoload
-(defalias 'nuc-unpaint 'seq-unpaint
+(defalias 'nuc-unpaint 'bioseq-unpaint
   "Uncolor the nucleotide sequence region.
 
-It is an alias to `seq-unpaint'.")
+It is an alias to `bioseq-unpaint'.")
 
 
 (defvar nuc-translation-table nil

@@ -182,7 +182,7 @@ white spaces will all be removed."
     (fasta-mark)
     (message "Formating the sequence...")
     (narrow-to-region (point) (mark))
-    ;; remove seq-spaces
+    ;; remove bioseq-spaces
     (while (re-search-forward "\\s-+" nil t)
       ;; (setq count (1+ count))
       (replace-match "" nil nil))
@@ -239,7 +239,7 @@ It will not count white spaces and sequence gaps. See also
           (error "The start of the fasta record is not found"))
       (forward-line 1)
       (dotimes (i (- pos (point)))
-        (or (gethash (char-after) seq-cruft-set)
+        (or (gethash (char-after) bioseq-cruft-set)
             (setq count (1+ count)))
         (forward-char)))
     (if (called-interactively-p 'interactive)
@@ -342,7 +342,7 @@ It calls `fasta--translate' on each fasta record."
 (defun fasta-summary ()
   "Print the frequencies of characters in the fasta sequence.
 
-See also `seq-summary', `nuc-summary', `pro-summary'."
+See also `bioseq-summary', `nuc-summary', `pro-summary'."
   (interactive)
   (save-excursion
     (fasta-mark)
@@ -371,11 +371,11 @@ C-u \\[fasta-paint] honors the cases."
 (defun fasta-unpaint ()
   "Unpaint current sequence.
 
-It calls `seq-unpaint'."
+It calls `bioseq-unpaint'."
   (interactive)
   (save-excursion
     (fasta-mark)
-    (seq-unpaint (region-beginning) (region-end))))
+    (bioseq-unpaint (region-beginning) (region-end))))
 
 (defun fasta-paint (&optional case)
   "Paint current sequence.
@@ -388,13 +388,13 @@ It is just a wrapper around `fasta--paint'."
 (defun fasta-unpaint-all ()
   "Unpaint all the sequences.
 
-It calls `seq-unpaint' on each fasta record."
+It calls `bioseq-unpaint' on each fasta record."
   (interactive)
   (save-excursion
     (goto-char (point-max))
     (while (fasta-backward 1)
       (fasta-mark)
-      (seq-unpaint (region-beginning) (region-end))
+      (bioseq-unpaint (region-beginning) (region-end))
       (fasta-backward 1))))
 
 (defun fasta-paint-all (&optional case)
@@ -502,7 +502,7 @@ If CASE is nil, the summary will be case insensitive."
       my-hash)))
 
 
-(defun fasta-seq-type (&optional threshold)
+(defun fasta-bioseq-type (&optional threshold)
   "Enable the minor mode for either protein or nucleic acid.
 
 It will search the first 100 sequence residues (or the current
@@ -513,26 +513,26 @@ ambiguous, enable `nuc-mode' by default."
   (let ((pro-aa-uniq '(?E ?F ?I ?J ?L ?P ?Q ?Z ?e ?f ?i ?j ?l ?p ?q ?z))
         current)
     (save-mark-and-excursion
-        (catch 'seq-type
+        (catch 'bioseq-type
           (fasta-mark)
           ;; 100 sequence residues or the current sequence length
           (dotimes (i (min (or threshold 100) (- (region-end) (region-beginning))))
             (setq current (char-after))
             (cond ((memq current pro-aa-uniq)
                    (pro-mode)
-                   (throw 'seq-type 'pro))
+                   (throw 'bioseq-type 'pro))
                   ((= ?U (upcase current))
                    (nuc-mode)
-                   (throw 'seq-type 'nuc)))
+                   (throw 'bioseq-type 'nuc)))
             (forward-char))
         ;; if no uniq char found for pro or nuc sequences; enable nuc-mode by default
         (nuc-mode)
-        (throw 'seq-type 'nuc)))))
+        (throw 'bioseq-type 'nuc)))))
 
 
 (add-hook 'fasta-mode-hook
           (lambda ()
-            (fasta-seq-type)
+            (fasta-bioseq-type)
             ;; this can slow the loading of a large fasta file
             ;; disable these minor modes
             (flyspell-mode -1)

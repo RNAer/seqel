@@ -9,29 +9,29 @@
 
 
 ;; valid characters as alignment gaps in the sequences
-(defvar seq-gap
+(defvar bioseq-gap
   '(?- ?.)
   "*Chars of '.' and '-' that represent a gap.")
 
-(defvar seq-space
+(defvar bioseq-space
   '(?  ?\t ?\n ?\r ?\v ?\f)
   "*Chars that represent all kinds of spaces which may appear between bases or amino acids.
 
 It will be skipped during moving and search and anything involving counting.")
 
-(defvar seq-cruft-regexp
+(defvar bioseq-cruft-regexp
   (regexp-opt (mapcar #'char-to-string
-                      (concat seq-gap seq-space)))
-  "A regexp that matches cruft, including `seq-gap' and `seq-space'.")
+                      (concat bioseq-gap bioseq-space)))
+  "A regexp that matches cruft, including `bioseq-gap' and `bioseq-space'.")
 
-(defvar seq-cruft-set
+(defvar bioseq-cruft-set
   (let ((alphabet-set (make-hash-table :test 'eq
-                                       :size (+ (length seq-gap)
-                                                (length seq-space)))))
-    (mapc (lambda (i) (puthash i t alphabet-set)) seq-gap)
-    (mapc (lambda (i) (puthash i t alphabet-set)) seq-space)
+                                       :size (+ (length bioseq-gap)
+                                                (length bioseq-space)))))
+    (mapc (lambda (i) (puthash i t alphabet-set)) bioseq-gap)
+    (mapc (lambda (i) (puthash i t alphabet-set)) bioseq-space)
     alphabet-set)
-  "The set of alphabets for `seq-gap' and `seq-space' in sequences.
+  "The set of alphabets for `bioseq-gap' and `bioseq-space' in sequences.
 
 This is a hash table: keys are char and values are `t'. It serves
 like a set object similar in Python language.")
@@ -56,11 +56,11 @@ like a set object similar in Python language.")
       (list (line-beginning-position) (line-end-position)))))
 
 
-(defun seq-forward-char (count legal-alphbet-set)
+(defun bioseq-forward-char (count legal-alphbet-set)
   "Move the cursor for COUNT times repeatedly from the point on.
 
 The next char has to belong to LEGAL-ALPHBET-SET to be
- counted. The `seq-cruft-regexp' char will be skipped, i.e., not
+ counted. The `bioseq-cruft-regexp' char will be skipped, i.e., not
  counted. Return the actual count of legal char. COUNT can be
  either positive or negative integer - if it is positive, move
  forward; if it is negative, move backward; if zero, don't move."
@@ -68,7 +68,7 @@ The next char has to belong to LEGAL-ALPHBET-SET to be
   (let ((direction (if (< count 0) -1 1))
         (fetch-char (if (< count 0) 'char-before 'char-after)))
     (dotimes (x (abs count))
-      (while (gethash (funcall fetch-char) seq-cruft-set)
+      (while (gethash (funcall fetch-char) bioseq-cruft-set)
         (forward-char direction))
       (if (gethash (funcall fetch-char) legal-alphbet-set)
           (forward-char direction)
@@ -76,7 +76,7 @@ The next char has to belong to LEGAL-ALPHBET-SET to be
     count))
 
 
-(defun seq-summary (beg end &optional legal-char-set)
+(defun bioseq-summary (beg end &optional legal-char-set)
   "Count the number of all the characters in the region.
 
 Ignore char that does not belong to LEGAL-CHAR-SET. Use hash
@@ -103,10 +103,10 @@ This is fast (only 2 seconds for 5M base pairs)."
       my-hash)))
 
 
-(defun seq-count (beg end &optional legal-char-set)
+(defun bioseq-count (beg end &optional legal-char-set)
   "Count the chars that belong to LEGAL-CHAR-REGEXP.
 
-Chars of `seq-cruft-regexp' will be skipped. Return the count if
+Chars of `bioseq-cruft-regexp' will be skipped. Return the count if
 the region contains only legal characters; otherwise return nil and
 report the location of the invalid characters. This function is used
 by `nuc-count' and `pro-count'."
@@ -118,7 +118,7 @@ by `nuc-count' and `pro-count'."
         (cond ((gethash char legal-char-set) (setq count (1+ count)))
               ;; allow any char if legal-char-set is not provided
               ((and legal-char-set
-                    (not (gethash char seq-cruft-set)))
+                    (not (gethash char bioseq-cruft-set)))
                (error "Bad char '%c' found at line %d column %d"
                       char (line-number-at-pos) (current-column))))
         (forward-char)))
@@ -205,7 +205,7 @@ as foreground colors."
      ,(concat "Face for marking up " (upcase letter) "'s")))
 
 
-(defun seq-paint (beg end face-group &optional case)
+(defun bioseq-paint (beg end face-group &optional case)
   "Color the sequences in the region BEG to END.
 
 If CASE is nil, upcase and lowercase chars will be colored the same;
@@ -219,7 +219,7 @@ TODO: this is slow for long sequences."
       (dotimes (i (- end beg))
         (setq char (char-after))
         ;; skip whitespaces and gap symbols
-        (if (not (gethash char seq-cruft-set))
+        (if (not (gethash char bioseq-cruft-set))
             (progn (if case
                        (setq face (format "%s-%c" face-group char))
                      ;; let upcase base use the color of lowercase base color
@@ -229,7 +229,7 @@ TODO: this is slow for long sequences."
                      (put-text-property (+ beg i) (+ beg i 1) 'font-lock-face (intern face)))))
         (forward-char)))))
 
-(defun seq-unpaint (beg end)
+(defun bioseq-unpaint (beg end)
   "Uncolor the sequences from BEG to END or the current line."
   (interactive-region-or-line)
   (with-silent-modifications
@@ -238,67 +238,67 @@ TODO: this is slow for long sequences."
 
 ;;;;;; isearch pattern
 
-;; (defun seq-isearch-transform-string ()
+;; (defun bioseq-isearch-transform-string ()
 ;;   (interactive)
-;;   (let* ((string (seq-isearch-mangle-str isearch-string)))
+;;   (let* ((string (bioseq-isearch-mangle-str isearch-string)))
 ;;     (setq isearch-string string
 ;;           isearch-message (mapconcat 'isearch-text-char-description string ""))
 ;;     (isearch-search-and-update)))
 
-;; (define-key isearch-mode-map (kbd "C-c C-t") 'seq-isearch-transform-string)
+;; (define-key isearch-mode-map (kbd "C-c C-t") 'bioseq-isearch-transform-string)
 
 
-(defun seq-isearch-mangle-str (str)
+(defun bioseq-isearch-mangle-str (str)
   "Mangle the string STR into a regexp to search over cruft in sequence.
 
 Inserts a regexp between each base which matches sequence
 formatting cruft, namely, you don't need to worry about if there
 is any spaces separating between 'A' and 'T' if you'd like to
 find all the 'AT's in the sequence.  More technically, if
-`seq-cruft-regexp' is '[ ]', the search string 'acgt' would be
+`bioseq-cruft-regexp' is '[ ]', the search string 'acgt' would be
 transformed into 'a[ ]*c[ ]*g[ ]*t'."
-  (mapconcat 'identity (split-string str "" 'omit-empty) (concat seq-cruft-regexp "*")))
+  (mapconcat 'identity (split-string str "" 'omit-empty) (concat bioseq-cruft-regexp "*")))
 
 
-(defun seq-isearch-forward (pattern &optional bound noerror)
+(defun bioseq-isearch-forward (pattern &optional bound noerror)
   "Search forward for PATTERN."
-  (let ((string (seq-isearch-mangle-str pattern)))
+  (let ((string (bioseq-isearch-mangle-str pattern)))
     (re-search-forward string bound noerror)))
 
-(defun seq-isearch-backward (pattern &optional bound noerror)
+(defun bioseq-isearch-backward (pattern &optional bound noerror)
   "Search backward for PATTERN."
-  (let ((string (seq-isearch-mangle-str pattern)))
+  (let ((string (bioseq-isearch-mangle-str pattern)))
     (re-search-backward string bound noerror)))
 
-(defadvice isearch-message-prefix (after seq-isearch-ismp)
+(defadvice isearch-message-prefix (after bioseq-isearch-ismp)
   "Modify the isearch prompt string to show seq search is active.
 
 This serves as a warning that the string is being mangled."
   (setq ad-return-value (concat "SEQ " ad-return-value)))
 
-(defvar seq-isearch-p nil
+(defvar bioseq-isearch-p nil
   "Whether sequence pattern isearch is enabled")
 
-(defun seq-toggle-isearch ()
+(defun bioseq-toggle-isearch ()
   "Toggle the sequence isearch."
   (interactive)
-  (cond (seq-isearch-p
-         (setq seq-isearch-p nil)
+  (cond (bioseq-isearch-p
+         (setq bioseq-isearch-p nil)
          (message "sequence pattern isearch is off")
-         (ad-disable-advice 'isearch-message-prefix 'after 'seq-isearch-ismp))
-        (t (setq seq-isearch-p t)
+         (ad-disable-advice 'isearch-message-prefix 'after 'bioseq-isearch-ismp))
+        (t (setq bioseq-isearch-p t)
            (message "sequence pattern isearch is on")
-           (ad-enable-advice 'isearch-message-prefix 'after 'seq-isearch-ismp)))
+           (ad-enable-advice 'isearch-message-prefix 'after 'bioseq-isearch-ismp)))
   ;; in case there are other advices.
   (ad-activate 'isearch-message-prefix))
 
-(defun seq-isearch-search-fun ()
+(defun bioseq-isearch-search-fun ()
   "Set to `isearch-search-fun-function'."
-  (if seq-isearch-p
-      (if isearch-forward 'seq-isearch-forward 'seq-isearch-backward)
+  (if bioseq-isearch-p
+      (if isearch-forward 'bioseq-isearch-forward 'bioseq-isearch-backward)
     (isearch-search-fun-default)))
 
-(setq isearch-search-fun-function 'seq-isearch-search-fun)
+(setq isearch-search-fun-function 'bioseq-isearch-search-fun)
 
 
 (defun entry-forward (count entry-regexp)
@@ -380,7 +380,7 @@ reported."
          (throw 'flag t))))
 
 
-(defun seq--zip (function &rest args)
+(defun bioseq--zip (function &rest args)
   "Apply FUNCTION to successive cars of all ARGS.
 
 Return the list of results. This is similar to the Python zip function."
@@ -388,7 +388,7 @@ Return the list of results. This is similar to the Python zip function."
   (if (not (memq nil args))
       ;; apply function to cars.
       (cons (apply function (mapcar 'car args))
-            (apply 'seq--zip function
+            (apply 'bioseq--zip function
                    ;; Recurse for rest of elements.
                    (mapcar 'cdr args)))))
 
