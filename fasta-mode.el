@@ -23,7 +23,7 @@
     (define-key map "\C-cc"     'fasta-count)
     (define-key map "\C-cd"     'fasta-delete)
     (define-key map "\C-ca"     'fasta-first)
-    (define-key map "\C-ce"     'fasta-last)
+    (define-key map "\C-cz"     'fasta-last)
     (define-key map "\C-cf"     'fasta-forward)
     (define-key map "\C-cb"     'fasta-backward)
     (define-key map "\C-cl"     'fasta-length)

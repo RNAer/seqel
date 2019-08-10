@@ -8,38 +8,6 @@
 (require 'color)
 
 
-;; define a new error symbol
-(put 'end-of-col-err
-     'error-conditions
-     ;; This error has three condition names:
-     ;; 1) end-of-col-err, the narrowest classification;
-     ;; 2) my-own-errors, which we imagine is a wider classification;
-     ;; 3) and error, which is the widest of all.
-     '(error my-own-errors end-of-col-err))
-(put 'end-of-col-err
-     'error-message
-     "End of column error")
-
-(defun seq--zip (function &rest args)
-  "Apply FUNCTION to successive cars of all ARGS.
-
-Return the list of results. This is similar to the Python zip function."
-  ;; If no list is exhausted,
-  (if (not (memq nil args))
-      ;; apply function to cars.
-      (cons (apply function (mapcar 'car args))
-            (apply 'seq--zip function
-                   ;; Recurse for rest of elements.
-                   (mapcar 'cdr args)))))
-
-
-(defmacro interactive-region-or-line ()
-  `(interactive
-    (if (use-region-p) ; mark-active
-        (list (region-beginning) (region-end))
-      (list (line-beginning-position) (line-end-position)))))
-
-
 ;; valid characters as alignment gaps in the sequences
 (defvar seq-gap
   '(?- ?.)
@@ -67,6 +35,25 @@ It will be skipped during moving and search and anything involving counting.")
 
 This is a hash table: keys are char and values are `t'. It serves
 like a set object similar in Python language.")
+
+
+;; define a new error symbol
+(put 'end-of-col-err
+     'error-conditions
+     ;; This error has three condition names:
+     ;; 1) end-of-col-err, the narrowest classification;
+     ;; 2) my-own-errors, which we imagine is a wider classification;
+     ;; 3) and error, which is the widest of all.
+     '(error my-own-errors end-of-col-err))
+(put 'end-of-col-err
+     'error-message
+     "End of column error")
+
+(defmacro interactive-region-or-line ()
+  `(interactive
+    (if (use-region-p) ; mark-active
+        (list (region-beginning) (region-end))
+      (list (line-beginning-position) (line-end-position)))))
 
 
 (defun seq-forward-char (count legal-alphbet-set)
@@ -314,33 +301,6 @@ This serves as a warning that the string is being mangled."
 (setq isearch-search-fun-function 'seq-isearch-search-fun)
 
 
-(defun hash-alist (alist)
-  "Convert association list to a hash table and return it.
-
-The car will be the key and the cdr will be the value. If
-there are multiple items with the same car, error will be
-reported."
-  (let ((my-hash (make-hash-table :test 'equal :size (length alist))))
-    (dolist (entry alist)
-      (if (gethash (car entry) my-hash)
-          (error "repeat hashing"))
-      (puthash (car entry) (cdr entry) my-hash))
-    my-hash))
-
-(defun hash-equal (hash1 hash2)
-  "Compare two hash tables to see whether they are equal."
-  (and (= (hash-table-count hash1)
-          (hash-table-count hash2))
-       (catch 'flag
-         (maphash (lambda (x y)
-                    ;; (message "%c" x)
-                    (or (equal (gethash x hash2) y)
-                        (throw 'flag nil)))
-                  hash1)
-         (throw 'flag t))))
-
-
-
 (defun entry-forward (count entry-regexp)
   "Move forward to the beginning of next entry.
 
@@ -349,7 +309,7 @@ Return current point if it moved over COUNT of entries; otherwise return nil."
   (if (looking-at entry-regexp)
       (setq count (1+ count)))
   (if (< count 1)
-      (error "The parameter count should be positive integer."))
+      (error "The parameter COUNT should be positive integer."))
   (if (re-search-forward entry-regexp nil 'move-to-point-max count)
       (progn (beginning-of-line) (point))
     nil))
@@ -392,6 +352,46 @@ Return current point if it moved over COUNT of entries; otherwise return nil."
         (setq total (1+ total))))
     (message "Total %d sequences." total)
     total))
+
+
+(defun hash-alist (alist)
+  "Convert association list to a hash table and return it.
+
+The car will be the key and the cdr will be the value. If
+there are multiple items with the same car, error will be
+reported."
+  (let ((my-hash (make-hash-table :test 'equal :size (length alist))))
+    (dolist (entry alist)
+      (if (gethash (car entry) my-hash)
+          (error "repeat hashing"))
+      (puthash (car entry) (cdr entry) my-hash))
+    my-hash))
+
+(defun hash-equal (hash1 hash2)
+  "Compare two hash tables to see whether they are equal."
+  (and (= (hash-table-count hash1)
+          (hash-table-count hash2))
+       (catch 'flag
+         (maphash (lambda (x y)
+                    ;; (message "%c" x)
+                    (or (equal (gethash x hash2) y)
+                        (throw 'flag nil)))
+                  hash1)
+         (throw 'flag t))))
+
+
+(defun seq--zip (function &rest args)
+  "Apply FUNCTION to successive cars of all ARGS.
+
+Return the list of results. This is similar to the Python zip function."
+  ;; If no list is exhausted,
+  (if (not (memq nil args))
+      ;; apply function to cars.
+      (cons (apply function (mapcar 'car args))
+            (apply 'seq--zip function
+                   ;; Recurse for rest of elements.
+                   (mapcar 'cdr args)))))
+
 
 
 (provide 'seq)
