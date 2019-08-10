@@ -366,6 +366,19 @@ amino acids as values. This variable is set by
 `nuc-set-translation-table'.")
 
 
+(defun nuc-set-translation-table (n)
+  "Set translation table to N.
+
+By default, this function set the table 1 as the translation table.
+For example, run `C-u 2 M-x nuc-set-translation-table' to set it to table 2."
+  (interactive "p")
+  (let (table)
+    (or (setq table (get-translation-table n))
+        (error "The translation table %d does not exist" n))
+    (setq nuc-translation-table `(,n . ,(hash-alist table)))
+    (message "Set to translation table %d" n)))
+
+
 (defun nuc-decode (codon)
   "Return the list of amino acid(s) that are coded by the CODON.
 
@@ -373,7 +386,7 @@ CODON must be uppercase string of 3 DNA letters. Example: (nuc-decode
 \"TCM\") should return (83) and (nuc-decode \"MAT\") should
 return (72 78) for translation table 1."
   (interactive (list (read-from-minibuffer
-                (format "The amino acid of condon in genetic table %d: " (car nuc-translation-table)))))
+                (format "The amino acid(s) of condon in genetic table %d: " (car nuc-translation-table)))))
   (let ((table (cdr nuc-translation-table))
         degenerated-codon aas aa)
     (if (stringp codon)
@@ -390,20 +403,6 @@ return (72 78) for translation table 1."
         ;; apply is used to concat list of char to a string
         (message "%s encodes %s" codon (apply #'string aas)))
     aas))
-
-
-(defun nuc-set-translation-table (n)
-  "Set translation table to N.
-
-By default, this function set the table 1 as the translation table.
-For example, run `C-u 2 M-x nuc-set-translation-table' to set it to table 2."
-  (interactive "p")
-  (let (table)
-    (or (setq table (get-translation-table n))
-        (error "The translation table %d does not exist" n))
-    (setq nuc-translation-table `(,n . ,(hash-alist table)))
-    (message "Set to translation table %d" n)))
-
 
 ;;;###autoload
 (defun nuc-translate (beg end)
@@ -424,7 +423,7 @@ long."
          str seq codon aa)
     (goto-char beg)
     ;; ask for confirmation if translate long sequence
-    (if (or (< n 5000) (y-or-n-p (format "translate %d nucleotides? it will take a while" n)))
+    (if (or (< n 10000) (y-or-n-p (format "translate %d nucleotides? it will take a while" n)))
         (progn
           (message "translating %d nucleotides to %d amino acids..." len (/ n 3))
           (nuc-move-forward len)

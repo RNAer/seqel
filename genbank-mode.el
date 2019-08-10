@@ -16,12 +16,13 @@
   (let ((map (make-sparse-keymap)))
     ;; Ctrl bindings
     (define-key map "\C-ca"     'genbank-first)
+    (define-key map "\C-cz"     'genbank-last)
     (define-key map "\C-cc"     'genbank-count)
     (define-key map "\C-cd"     'genbank-delete)
-    (define-key map "\C-ce"     'genbank-last)
-    (define-key map "\C-cf"     'genbank-format)
-    ;; (define-key map "\C-cm"     'genbank-mark)
-    (define-key map "\C-cp"     'genbank-position)
+    (define-key map "\C-cf"     'genbank-forward)
+    (define-key map "\C-cb"     'genbank-backward)
+    (define-key map "\C-cm"     'genbank-mark)
+    (define-key map "\C-cg"     'genbank-2-fasta)
     map)
  "The local keymap for `genbank-mode'")
 
