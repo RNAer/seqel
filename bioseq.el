@@ -394,4 +394,4 @@ Return the list of results. This is similar to the Python zip function."
 
 
 
-(provide 'seq)
+(provide 'bioseq)

@@ -5,7 +5,7 @@
 ;;; Author: Zech Xu <zhenjiang dot xu at gmail dot com>
 
 
-(require 'seq)
+(require 'bioseq)
 (require 'nuc-mode)
 (require 'pro-mode)
 (require 'genetic-code)

@@ -1,4 +1,4 @@
-(require 'seq)
+(require 'bioseq)
 
 (ert-deftest bioseq-summary-test ()
   :tags '(seq)

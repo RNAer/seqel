@@ -9,7 +9,7 @@
 ;;  * It should not be enabled with pro-mode at the same time.
 ;;  * Borrows a few ideas/lines of code from dna-mode.el
 
-(require 'seq)
+(require 'bioseq)
 (require 'genetic-code)
 
 ;;;;;; USER CUSTOMIZABLE VARIABLES START HERE

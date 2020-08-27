@@ -9,7 +9,7 @@
 
 ;;;;;; USER CUSTOMIZABLE VARIABLES START HERE
 
-(require 'seq)
+(require 'bioseq)
 
 (defvar pro-aa-alist
   ;; put a question mark before the char will evaluate it to digit ascii code
