@@ -20,6 +20,8 @@ AcGu
         (goto-char (point-min))
         (setq current-prefix-arg (nth 1 test))
         (call-interactively 'fasta-forward)
+        ;; set its value back to avoid side effects for other functions
+        (setq current-prefix-arg nil)
         (should (equal (line-number-at-pos) (nth 2 test)))
         (delete-region (point-min) (point-max))))))
 
@@ -38,6 +40,8 @@ AcGu
         (insert (nth 0 test))
         (setq current-prefix-arg (nth 1 test))
         (call-interactively 'fasta-backward)
+        ;; set its value back to avoid side effects for other functions
+        (setq current-prefix-arg nil)
         (should (equal (line-number-at-pos) (nth 2 test)))
         (delete-region (point-min) (point-max))))))
 
