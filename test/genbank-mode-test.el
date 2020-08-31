@@ -1,7 +1,6 @@
 ;;; nuc-mode-test.el --- a unit test for nuc-mode.el
 
 (require 'genbank-mode)
-(require 'ert)
 
 
 (ert-deftest genbank-forward-test ()
@@ -134,6 +133,4 @@ TACGGTAACAGAAGTACTTTCTAAACACGGTATTGACCAGCGTGTGCTCAACCCCGACAATCTCAAGG
         (should (equal tmp (cdr test)))
         (delete-region (point-min) (point-max))))))
 
-
-(provide 'genbank-mode-test)
 ;; genbank-mode-test.el ends here

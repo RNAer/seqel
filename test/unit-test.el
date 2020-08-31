@@ -1,16 +1,16 @@
-;;; unit-test.el --- run the unit-test in the test/ dir
+;;; unit-test.el --- run the unit-test interactively in emacs
 
-(require 'bioseq-test)
+(load-file "bioseq-test.el")
 (ert '(tag seq))
 
-(require 'nuc-mode-test)
+(load-file "nuc-mode-test.el")
 (ert '(tag nuc-mode))
 
-(require 'pro-mode-test)
+(load-file "pro-mode-test.el")
 (ert '(tag pro-mode))
 
-(require 'fasta-mode-test)
+(load-file "fasta-mode-test.el")
 (ert '(tag fasta-mode))
 
-(require 'genbank-mode-test)
+(load-file "genbank-mode-test.el")
 (ert '(tag genbank-mode))

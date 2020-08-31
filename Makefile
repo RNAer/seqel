@@ -6,7 +6,8 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-.DEFAULT_GOAL := package
+.DEFAULT_GOAL := test
+
 VERSION:=1.0
 PACKAGE_NAME:=seqel-$(VERSION)
 PACKAGE_DIR:=/tmp/$(PACKAGE_NAME)
@@ -39,17 +40,13 @@ clean:
 
 # https://github.com/xuchunyang/pinyin.el
 
-.PHONY: all
-all:
-	@printf "* Checking Emacs Version...\n"
+.PHONY: test
+test:
+	@printf "\n------- Checking Emacs Version...\n"
 	@$(EMACS) --version | head -1
-	@printf "\n* Byte-Compiling elisp files...\n"
+	@printf "\n------- Byte-Compiling elisp files...\n"
 	${EMACS} -Q --batch -L . -f batch-byte-compile *.el
-	@printf "\n* Testing...\n"
-	${EMACS} -Q --batch -L . -l test/bioseq-test.el -l test/nuc-mode-test.el -l test/pro-mode-test.el -l test/fasta-mode-test.el -l test/genbank-mode-test.el -f ert-run-tests-batch-and-exit
+	@printf "\n------- Testing...\n"
+	${EMACS} -Q --batch -L . -l ert -l test/bioseq-test.el -l test/nuc-mode-test.el -l test/pro-mode-test.el -l test/fasta-mode-test.el -l test/genbank-mode-test.el -f ert-run-tests-batch-and-exit
 
-emacs_versions:
-	@for cmd in emacs emacs-24.4.2 emacs-24.5.2 emacs-25.1.1 emacs-25.3.1; do \
-	    make EMACS=$$cmd ;\
-	done
 # end

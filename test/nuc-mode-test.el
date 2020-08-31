@@ -3,7 +3,6 @@
 (require 'nuc-mode)
 (require 'seq)
 (require 'genetic-code)
-(require 'ert)
 
 
 (ert-deftest nuc-move-forward-test ()
@@ -287,8 +286,5 @@
       (should
        (equal (nuc-bioseq-isearch-mangle-str-degeneracy (car test))
               (cdr test))))))
-
-
-(provide 'nuc-mode-test)
 
 ;;; nuc-mode-test.el ends here

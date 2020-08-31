@@ -2,7 +2,6 @@
 
 (require 'pro-mode)
 (require 'seq)
-(require 'ert)
 
 (ert-deftest pro-weight-test ()
   :tags '(pro-mode)

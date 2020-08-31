@@ -1,7 +1,6 @@
 ;;; nuc-mode-test.el --- a unit test for nuc-mode.el
 
 (require 'fasta-mode)
-(require 'ert)
 
 
 (ert-deftest fasta-forward-test ()
