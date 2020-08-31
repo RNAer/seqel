@@ -18,11 +18,9 @@
 
 (ert-deftest bioseq-isearch-mangle-str-test ()
   :tags '(seq)
-  (let ((cases '(("mR" . "m[	- .-]*R")
-                 ("aTGc" . "a[	- .-]*T[	- .-]*G[	- .-]*c"))))
+  (let ((cases '(("mR" . "m[\t\n .-]*R")
+                 ("aTGc" . "a[\t\n .-]*T[\t\n .-]*G[\t\n .-]*c"))))
     (dolist (test cases)
-      (princ (bioseq-isearch-mangle-str (car test)))
       (should
        (equal (bioseq-isearch-mangle-str (car test))
               (cdr test))))))
-

@@ -14,7 +14,7 @@
   "*Chars of '.' and '-' that represent a gap.")
 
 (defvar bioseq-space
-  '(?  ?\t ?\n ?\r ?\v ?\f)
+  '(?  ?\t ?\n ?\r)
   "*Chars that represent all kinds of spaces which may appear between bases or amino acids.
 
 It will be skipped during moving and search and anything involving counting.")

@@ -276,7 +276,7 @@ formatting cruft.  For example, if `bioseq-cruft-regexp' is '[ ]',
 the search string 'at' would be transformed into '[a][ ]*[t]';
 and 'mR' will be transformed to '[ac][ ]*[AG]'."
   ;; (mapconcat 'identity (split-string str "" t) (concat bioseq-cruft-regexp "*")))
-  (let (degenerate-str-list  degeneracies)
+  (let (degenerate-str-list degeneracies)
     ;; 'ar' will return as ("[a]", "[ag]")
     (setq degenerate-str-list
           (mapcar #'(lambda (x)

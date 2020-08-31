@@ -67,14 +67,14 @@
 (ert-deftest pro-summary-test ()
   :tags '(pro-mode)
   (let ((cases '(("ABCa" .
-                  ((?A . 1) (?B . 1) (?C . 1) (?a . 1))))))
+                  ((?A . 1) (?B . 1) (?C . 1) (?a . 1)))))
+        obs)
     (with-temp-buffer
       (dolist (test cases)
         (insert (car test))
-        (should
-         ;; `equal' can compare hash tables
-         (hash-equal (bioseq-summary (point-min) (point-max) pro-alphabet-set)
-                (hash-alist (cdr test))))
+        (setq obs (pro-summary (point-min) (point-max)))
+        (maphash (lambda (k v) (if (= 0 (gethash k obs)) (remhash k obs))) obs)
+        (should (hash-equal obs (hash-alist (cdr test))))
         (delete-region (point-min) (point-max))))))
 
 

@@ -3,6 +3,9 @@
 * install local package
    (package-install-file "/home/zech/git/seqel")
    (package-install-file "/Users/zech/git/seqel")
+   #+begin_src sh
+     make all
+   #+end_src
 * Usage
 ** enable modes
    There are 2 emacs major mode for sequence file formats:

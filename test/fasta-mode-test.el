@@ -285,23 +285,11 @@ VAINDPFIDL NYMVYMFQYD STHGKFHGTV
 (ert-deftest fasta-column-delete-test ()
   :tags '(fasta-mode)
   (let ((cases '((1   ; should case: test the buffer after deletion
-                  ">seq_name a
-augctAUGCTaugct
-
->seq_name b
-augct"
+                  ">seq_name a\naugctAUGCTaugct\n\n>seq_name b\naugct\n"
                   17
-">seq_name a
-augcAUGCTaugct
-
->seq_name b
-augc")
+                  ">seq_name a\naugcAUGCTaugct\n\n>seq_name b\naugc\n")
                  (2   ; should-error case: the 2nd seq don't have any nuc in that column to delete
-                  ">seq_name a
-augctAUGCTaugct
-
->seq_name b
-augct"
+                  ">seq_name a\naugctAUGCTaugct\n>seq_name b\naugct"
                   18)))
         tmp   type-test)
     (with-temp-buffer

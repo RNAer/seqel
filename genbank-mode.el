@@ -156,7 +156,7 @@ the beginning of the genbank entry instead of the sequence."
     (if (re-search-forward genbank-record-regexp nil t)
         (replace-match ">" nil nil))
     (forward-line)
-    (delete-active-region)
+    (delete-region (region-beginning) (region-end))
     (insert (concat seq))
     (insert "\n")))
 

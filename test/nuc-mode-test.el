@@ -243,10 +243,7 @@
   :tags '(nuc-mode)
   ;; http://in-silico.net/tools/biology/sequence_conversion
   (let ((cases '(("accatttcm mtc" . "TISX")
-                 ("acc at
-ttc
-" . "TItc
-"))))
+                 ("acc at - ttc" . "TItc"))))
     (with-temp-buffer
       (dolist (test cases)
         (insert (car test))
@@ -284,8 +281,8 @@ ttc
 
 (ert-deftest nuc-bioseq-isearch-mangle-str-degeneracy-test ()
   :tags '(nuc-mode)
-  (let ((cases '(("mR" . "[ac][\t\n .-]*[AG]")
-                 ("aTGc" . "[a][\t\n .-]*[T][\t\n .-]*[G][\t\n .-]*[c]"))))
+  (let ((cases '(("mR" . "[ac][\t\n .-]*[AG]")
+                 ("aTGc" . "[a][\t\n .-]*[T][\t\n .-]*[G][\t\n .-]*[c]"))))
     (dolist (test cases)
       (should
        (equal (nuc-bioseq-isearch-mangle-str-degeneracy (car test))
