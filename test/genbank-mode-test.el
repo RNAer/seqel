@@ -98,8 +98,7 @@ LOCUS       ABCM01000001          510929 bp    DNA     linear   BCT 20-JUN-2007
 LOCUS       ABCM01000002          510929 bp    DNA     linear   BCT 20-JUN-2007
 //
 "
-                  . "
-LOCUS       ABCM01000002          510929 bp    DNA     linear   BCT 20-JUN-2007
+                  . "LOCUS       ABCM01000002          510929 bp    DNA     linear   BCT 20-JUN-2007
 //
 "))))
     (with-temp-buffer

@@ -26,6 +26,9 @@
     map)
  "The local keymap for `genbank-mode'")
 
+;;;###autoload
+(add-to-list 'auto-mode-alist
+             '("\\.\\(gbk\\|genbank\\)\\'" . genbank-mode))
 
 (defvar genbank-font-lock-keywords
   '(("^\\(LOCUS\\) +\\([-_.a-zA-Z_0-9]+\\)" ;; are '-_.' allowed?
@@ -83,10 +86,13 @@ Special commands:
 (defvar genbank-record-regexp "^LOCUS[ \t]+"
   "Genbank records always start with \"LOCUS\".")
 
+(defvar genbank-record-end "^//[ \t]*"
+  "Genbank records always end with \"//\".")
+
 
 ;;;###autoload
 (add-to-list 'auto-mode-alist
-             '("\\.\\(genbank\\|gb\\)\\'" . genbank-mode))
+             '("\\.\\(genbank\\|gb\\|gbk\\)\\'" . genbank-mode))
 
 
 (defun genbank-forward (count)
@@ -128,6 +134,8 @@ the beginning of the genbank entry instead of the sequence."
   (interactive "P")
   (if (genbank-forward 1)
       (backward-char))
+  (entry-backward 1 genbank-record-end)
+  (forward-line)
   (push-mark nil nil t)
   (genbank-backward 1)
   (or whole
@@ -143,9 +151,8 @@ the beginning of the genbank entry instead of the sequence."
 
 
 ;;;###autoload
-(defun genbank-2-fasta ()
+(defun genbank--2-fasta ()
   "Convert current genbank record to fasta format"
-  (interactive)
   (let (str seq)
     (genbank-mark)
     (setq str (buffer-substring-no-properties (region-beginning) (region-end)))
@@ -160,6 +167,19 @@ the beginning of the genbank entry instead of the sequence."
     (insert (concat seq))
     (insert "\n")))
 
+(defun genbank-2-fasta ()
+  "Convert current genbank record to fasta format"
+  (interactive)
+  (save-excursion
+    (genbank--2-fasta)))
+
+(defun genbank-2-fasta-all ()
+  "Convert all genbank records to fasta format"
+  (interactive)
+  (save-excursion
+    (goto-char (point-max))
+    (while (genbank-backward 1)
+      (genbank--2-fasta))))
 
 (provide 'genbank-mode)
 
