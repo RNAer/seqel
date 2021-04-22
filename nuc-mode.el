@@ -447,7 +447,7 @@ long."
     (define-key map "\C-c\C-f"  'nuc-move-forward)
     (define-key map "\C-c\C-b"  'nuc-move-backward)
     (define-key map "\C-c\C-r"  'nuc-rc)
-    (define-key map "\C-c\C-s"  'nuc-summary)
+    ;; (define-key map "\C-c\C-s"  'nuc-summary)
     (define-key map "\C-c\C-t"  'nuc-translate)
     map)
   "Keymap for `nuc-mode'.")

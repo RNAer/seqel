@@ -29,7 +29,9 @@
     (define-key map "\C-cl"     'fasta-length)
     (define-key map "\C-cm"     'fasta-mark)
     (define-key map "\C-cp"     'fasta-position)
-    (define-key map "\C-cr"     'fasta-rc)
+    (define-key map "\C-cw"     'fasta-weight)
+    (define-key map "\C-cr"     'fasta-rc-all)
+    (define-key map "\C-ct"     'fasta-translate-all)
     (define-key map "\C-c\C-d"  'fasta-column-delete)
     (define-key map "\C-c\C-i"  'fasta-column-insert)
     (define-key map "\C-c\C-h"  'fasta-column-highlight)
@@ -40,7 +42,7 @@
 
 ;;;###autoload
 (add-to-list 'auto-mode-alist
-             '("\\.\\(fasta\\|fa\\|fna\\|faa\\)\\'" . fasta-mode))
+             '("\\.\\(fasta\\|fa\\|fna\\|faa\\|aln\\)\\'" . fasta-mode))
 
 ;; map the paragraph key bindings to corresponding fasta functions
 (let ((equivs

@@ -266,7 +266,7 @@ This is an alias to `bioseq-unpaint'.")
     (define-key map "\C-c\C-f"  'pro-move-forward)
     (define-key map "\C-c\C-b"  'pro-move-backward)
     (define-key map "\C-c\C-w"  'pro-weight)
-    (define-key map "\C-c\C-s"  'pro-summary)
+    ;; (define-key map "\C-c\C-s"  'pro-summary)
     map)
   "Keymap for `pro-mode'.")
 
