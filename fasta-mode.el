@@ -34,10 +34,10 @@
     (define-key map "\C-c\C-d"     'fasta-delete)
     (define-key map "\C-c\C-a"     'fasta-first)
     (define-key map "\C-c\C-z"     'fasta-last)
-    (define-key map "\C-c\C-f"     'fasta-forward)
-    (define-key map "\C-c\C-b"     'fasta-backward)
+    (define-key map "\C-c\C-f"     'fasta-forward) ; it also binds to M-}
+    (define-key map "\C-c\C-b"     'fasta-backward); it also binds to M-{
+    (define-key map "\C-c\C-m"     'fasta-mark)    ; it also binds to M-h
     (define-key map "\C-c\C-l"     'fasta-length)
-    (define-key map "\C-c\C-m"     'fasta-mark)
     (define-key map "\C-c\C-p"     'fasta-position)
     (define-key map "\C-c\C-w"     'fasta-weight)
     (define-key map "\C-c\C-r"     'fasta-rc-all)
@@ -50,10 +50,6 @@
     map)
   "The local keymap for `fasta-mode'")
 
-;;;###autoload
-(add-to-list 'auto-mode-alist
-             '("\\.\\(fasta\\|fa\\|fna\\|faa\\|aln\\)\\'" . fasta-mode))
-
 ;; map the paragraph key bindings to corresponding fasta functions
 (let ((equivs
        '((fasta-forward  . forward-paragraph)
@@ -64,6 +60,10 @@
                                (car x)
                                fasta-mode-map
                                (current-global-map))))
+
+;;;###autoload
+(add-to-list 'auto-mode-alist
+             '("\\.\\(fasta\\|fa\\|fna\\|faa\\|aln\\)\\'" . fasta-mode))
 
 ;; this slows down the mode loading
 (defvar fasta-font-lock-keywords

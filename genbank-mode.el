@@ -29,17 +29,26 @@
     (define-key map "\C-c\C-z"  'genbank-last)
     (define-key map "\C-c\C-c"  'genbank-count)
     (define-key map "\C-c\C-d"  'genbank-delete)
-    (define-key map "\C-c\C-f"  'genbank-forward)
-    (define-key map "\C-c\C-b"  'genbank-backward)
-    (define-key map "\C-c\C-m"  'genbank-mark)
+    (define-key map "\C-c\C-f"  'genbank-forward) ; it also binds to M-}
+    (define-key map "\C-c\C-b"  'genbank-backward); it also binds to M-}
+    (define-key map "\C-c\C-m"  'genbank-mark)    ; it also binds to M-h
     map)
  "The local keymap for `genbank-mode'")
-
 
 ;;;###autoload
 (add-to-list 'auto-mode-alist
              '("\\.\\(genbank\\|gb\\|gbk\\)\\'" . genbank-mode))
 
+;; map the paragraph key bindings to corresponding functions
+(let ((equivs
+       '((genbank-forward  . forward-paragraph)
+         (genbank-backward . backward-paragraph)
+         (genbank-mark     . mark-paragraph))))
+  (dolist (x equivs)
+    (substitute-key-definition (cdr x)
+                               (car x)
+                               genbank-mode-map
+                               (current-global-map))))
 
 (defvar genbank-font-lock-keywords
   '(("^\\(LOCUS\\) +\\([-_.a-zA-Z_0-9]+\\)" ;; are '-_.' allowed?
