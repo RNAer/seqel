@@ -1,13 +1,17 @@
-;;; aa-mode.el --- a minor mode for editing protein sequences
+;;; aa-mode.el --- a minor mode for editing protein sequences   -*- lexical-binding: t; -*-
 
-;;; license: BSD-3
+;; Copyright (C) 2021  Zech Xu
+
+;; Author: Zech Xu
+;; Keywords: DNA, RNA, protein
+;; License: BSD-3
 
 ;;; Commentary:
 ;;  * It should be not enabled with nuc-mode at the same time.
 
-;;; Author: Zech Xu <zhenjiang dot xu at gmail dot com>
 
-;;;;;; USER CUSTOMIZABLE VARIABLES START HERE
+;;; Code:
+
 
 (require 'bioseq)
 

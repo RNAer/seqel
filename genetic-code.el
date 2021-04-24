@@ -1,12 +1,18 @@
-;;; genetic-code.el --- store tables of genetic code
+;;; genetic-code.el -- store tables of genetic code  -*- lexical-binding: t; -*-
 
-;;; License: BSD-3
+;; Copyright (C) 2021  Zech Xu
+
+;; Author: Zech Xu
+;; Keywords: DNA, RNA, protein
+;; License: BSD-3
 
 ;;; Commentary:
 ;;  * The translation tables are downloaded from
 ;;    http://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi
 
-;;; Author: Zech Xu <zhenjiang dot xu at gmail dot com>
+
+;;; Code:
+
 
 (defun get-translation-table (n)
   "Return tranlation table.

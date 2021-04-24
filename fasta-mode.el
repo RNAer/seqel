@@ -1,8 +1,16 @@
-;;; fasta-mode -- a major mode for editing fasta files
+;;; fasta-mode -- a major mode for editing fasta files  -*- lexical-binding: t; -*-
 
-;;; license: BSD-3
+;; Copyright (C) 2021  Zech Xu
 
-;;; Author: Zech Xu <zhenjiang dot xu at gmail dot com>
+;; Author: Zech Xu
+;; Keywords: DNA, RNA, protein
+;; License: BSD-3
+
+;;; Commentary:
+
+;;
+
+;;; Code:
 
 
 (require 'bioseq)

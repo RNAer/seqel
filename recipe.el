@@ -3,4 +3,4 @@
 (seqel :fetcher github
        :repo "rnaer/seqel"
        :files ("*.el" "test/*"
-               "README.md"))
+               "README.org"))

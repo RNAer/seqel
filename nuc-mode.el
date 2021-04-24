@@ -1,13 +1,18 @@
-;;; nuc-mode.el --- a minor mode for editing nucleic acid sequences
+;;; nuc-mode.el --- a minor mode for editing nucleic acid sequences    -*- lexical-binding: t; -*-
 
-;;; license: BSD-3
+;; Copyright (C) 2021  Zech Xu
 
-;;; Author: Zech Xu <zhenjiang dot xu at gmail dot com>
+;; Author: Zech Xu
+;; Keywords: DNA, RNA, protein
+;; License: BSD-3
 
 ;;; Commentary:
 ;;  * A collection of functions for editing DNA and RNA sequences.
 ;;  * It should not be enabled with pro-mode at the same time.
-;;  * Borrows a few ideas/lines of code from dna-mode.el
+
+;;
+
+;;; Code:
 
 (require 'bioseq)
 (require 'genetic-code)
@@ -462,7 +467,7 @@ It should not be enabled with `pro-mode' at the same time."
   ;; the name, a string, to show in the modeline
   :lighter " nucleotide"
   :keymap nuc-mode-map
-  :global t
+  ;; :global t
   ;; set the translation table to 1 if it is nil
   (or nuc-translation-table (nuc-set-translation-table 1)))
 
