@@ -20,11 +20,6 @@
 
 ;;;;;; USER CUSTOMIZABLE VARIABLES START HERE
 
-(defvar nuc-mode-hook nil
-  "*Hook to setup `nuc-mode'.")
-
-(add-hook 'nuc-mode-hook (lambda () (pro-mode -1)))
-
 
 (defvar nuc--base-alist
   '((?a  ?t ?a)
@@ -474,10 +469,9 @@ It should not be enabled with `pro-mode' at the same time."
   ;; the name, a string, to show in the modeline
   :lighter " nucleotide"
   :keymap nuc-mode-map
-  ;; :global t
+  :global t
   ;; set the translation table to 1 if it is nil
-  (or nuc-translation-table (nuc-set-translation-table 1))
-  (run-hooks 'nuc-mode-hook))
+  (or nuc-translation-table (nuc-set-translation-table 1)))
 
 
 (provide 'nuc-mode)

@@ -17,12 +17,6 @@
 (require 'bioseq)
 
 
-(defvar pro-mode-hook nil
-  "*Hook to setup `pro-mode'.")
-
-(add-hook 'pro-mode-hook (lambda () (nuc-mode -1)))
-
-
 (defvar pro-aa-alist
   ;; put a question mark before the char will evaluate it to digit ascii code
   '((?A  "Ala"  71.09   ?a)
@@ -291,8 +285,7 @@ It should be not enabled with `nuc-mode' at the same time."
   ;; the name, a string, to show in the modeline
   :lighter " protein"
   :keymap pro-mode-map
-  :global t
-  (run-hooks 'pro-mode-hook))
+  :global t)
 
 
 (provide 'pro-mode)

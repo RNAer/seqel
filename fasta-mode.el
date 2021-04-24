@@ -539,7 +539,7 @@ ambiguous, enable `nuc-mode' by default."
 (add-hook 'fasta-mode-hook
           (lambda ()
             (fasta-bioseq-type)
-            ;; this can slow the loading of a large fasta file
+            ;; these modes can slow the loading of a large fasta file;
             ;; disable these minor modes
             (flyspell-mode -1)
             (linum-mode -1)))
