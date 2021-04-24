@@ -19,6 +19,12 @@
 
 ;;;;;; USER CUSTOMIZABLE VARIABLES START HERE
 
+(defvar nuc-mode-hook nil
+  "*Hook to setup `nuc-mode'.")
+
+(add-hook 'nuc-mode-hook (lambda () (pro-mode -1)))
+
+
 (defvar nuc--base-alist
   '((?a  ?t ?a)
     (?t  ?a ?t)
@@ -469,7 +475,8 @@ It should not be enabled with `pro-mode' at the same time."
   :keymap nuc-mode-map
   ;; :global t
   ;; set the translation table to 1 if it is nil
-  (or nuc-translation-table (nuc-set-translation-table 1)))
+  (or nuc-translation-table (nuc-set-translation-table 1))
+  (run-hooks 'nuc-mode-hook))
 
 
 (provide 'nuc-mode)
