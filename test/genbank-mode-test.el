@@ -1,4 +1,4 @@
-;;; nuc-mode-test.el --- a unit test for nuc-mode.el
+;;; genbank-mode-test.el --- a unit test for genbank-mode.el
 
 (require 'genbank-mode)
 

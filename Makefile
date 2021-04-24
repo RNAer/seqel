@@ -38,7 +38,7 @@ clean:
 	rm -rf $(PACKAGE_DIR)
 	rm -f *.elc
 
-# https://github.com/xuchunyang/pinyin.el
+# learned from https://github.com/xuchunyang/pinyin.el
 
 .PHONY: test
 test:

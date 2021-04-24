@@ -6,7 +6,7 @@
   2. Open Emacs run ~M-x package-install-file~, and then input the cloned package directory.
 
 * Usage
-** enable modes
+** modes
    There are 2 emacs major mode for sequence file formats:
    1. ~fasta-mode~: fasta file
    2. ~genbank-mode~: genbank file
@@ -88,10 +88,11 @@
 
 ** search for sequence pattern/motif
    - You can search a sequence motif with =C-s=.
-   - enable sequence isearch () with ~M-x seq-toggle-isearch~
+   - Enable bio-sequence search mode with ~M-x bioseq-toggle-isearch~ to ignore the possible whitespaces, gaps, and other irrelevant characters in the middle of a matching hit.
 
 * For developers
-** run unit tests
+** unit tests
+   The package is unit tested using ~ert~ module of Emacs. You can run all the unit tests with linux command:
    #+begin_src sh
      make test
    #+end_src
