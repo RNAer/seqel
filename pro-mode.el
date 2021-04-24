@@ -1,8 +1,9 @@
-;;; aa-mode.el --- a minor mode for editing protein sequences   -*- lexical-binding: t; -*-
+;;; pro-mode.el --- a minor mode for editing protein sequences   -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2021  Zech Xu
 
 ;; Author: Zech Xu
+;; Version: 1.0
 ;; Keywords: DNA, RNA, protein
 ;; License: BSD-3
 

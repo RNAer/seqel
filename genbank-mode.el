@@ -3,6 +3,7 @@
 ;; Copyright (C) 2021  Zech Xu
 
 ;; Author: Zech Xu
+;; Version: 1.0
 ;; Keywords: DNA, RNA, protein
 ;; License: BSD-3
 
@@ -35,9 +36,11 @@
     map)
  "The local keymap for `genbank-mode'")
 
+
 ;;;###autoload
 (add-to-list 'auto-mode-alist
-             '("\\.\\(gbk\\|genbank\\)\\'" . genbank-mode))
+             '("\\.\\(genbank\\|gb\\|gbk\\)\\'" . genbank-mode))
+
 
 (defvar genbank-font-lock-keywords
   '(("^\\(LOCUS\\) +\\([-_.a-zA-Z_0-9]+\\)" ;; are '-_.' allowed?
@@ -97,11 +100,6 @@ Special commands:
 
 (defvar genbank-record-end "^//[ \t]*"
   "Genbank records always end with \"//\".")
-
-
-;;;###autoload
-(add-to-list 'auto-mode-alist
-             '("\\.\\(genbank\\|gb\\|gbk\\)\\'" . genbank-mode))
 
 
 (defun genbank-forward (count)

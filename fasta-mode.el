@@ -3,6 +3,7 @@
 ;; Copyright (C) 2021  Zech Xu
 
 ;; Author: Zech Xu
+;; Version: 1.0
 ;; Keywords: DNA, RNA, protein
 ;; License: BSD-3
 
@@ -123,11 +124,6 @@ Only if the major mode is `fundermental'. This function is added to
     (progn (add-hook 'find-file-hook 'fasta-find-file)
            (setq fasta-setup-on-load t)
            (message "Turned on fasta format guessing on load"))))
-
-
-;;;###autoload
-(add-to-list 'auto-mode-alist
-             '("\\.\\(fasta\\|fa\\|fna\\|faa\\)\\'" . fasta-mode))
 
 
 (defun fasta-backward (count)
