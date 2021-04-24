@@ -1,15 +1,16 @@
-;;; fasta-mode -- a major mode for editing fasta files  -*- lexical-binding: t; -*-
+;;; fasta-mode.el --- A major mode for editing fasta files
 
 ;; Copyright (C) 2021  Zech Xu
 
 ;; Author: Zech Xu
 ;; Version: 1.0
-;; Keywords: DNA, RNA, protein
+;; Package-Requires: ((emacs "25.1"))
 ;; License: BSD-3
+;; URL: https://github.com/RNAer/seqel
 
 ;;; Commentary:
 
-;;
+;; Major mode to edit fasta files
 
 ;;; Code:
 

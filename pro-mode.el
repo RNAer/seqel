@@ -1,14 +1,15 @@
-;;; pro-mode.el --- a minor mode for editing protein sequences   -*- lexical-binding: t; -*-
+;;; pro-mode.el --- A minor mode for editing protein sequences
 
 ;; Copyright (C) 2021  Zech Xu
 
 ;; Author: Zech Xu
 ;; Version: 1.0
-;; Keywords: DNA, RNA, protein
 ;; License: BSD-3
+;; URL: https://github.com/RNAer/seqel
 
 ;;; Commentary:
-;;  * It should be not enabled with nuc-mode at the same time.
+
+;;  A minor mode that provides collection of functions for editing protein sequences.
 
 
 ;;; Code:
@@ -284,8 +285,7 @@ It should be not enabled with `nuc-mode' at the same time."
   :init-value nil
   ;; the name, a string, to show in the modeline
   :lighter " protein"
-  :keymap pro-mode-map
-  :global t)
+  :keymap pro-mode-map)
 
 
 (provide 'pro-mode)

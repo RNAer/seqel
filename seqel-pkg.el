@@ -1,15 +1,16 @@
-;;; seqel-pkg.el --- biological sequence manipulation  -*- lexical-binding: t; -*-
+;;; seqel-pkg.el --- Biological sequence manipulation
 
 ;; Copyright (C) 2021  Zech Xu
 
 ;; Author: Zech Xu
 ;; Version: 1.0
-;; Keywords: DNA, RNA, protein
+;; Package-Requires: ((emacs "24.1"))
 ;; License: BSD-3
+;; URL: https://github.com/RNAer/seqel
 
 ;;; Commentary:
 
-;;
+;; A package for biological sequence manipulation
 
 ;;; Code:
 
@@ -18,9 +19,7 @@
   "seqel"   ; package name
   "1.0"     ; version
   "biological sequence manipulation"    ; description
-)
+  )
 
-
-(provide 'seqel-pkg)
 ;;; seqel-pkg.el ends here
 

@@ -1,15 +1,16 @@
-;;; bioseq.el --- util functions and variables shared by nuc-mode.el and pro-mode.el  -*- lexical-binding: t; -*-
+;;; bioseq.el --- Util functions and variables shared by nuc-mode and pro-mode
 
 ;; Copyright (C) 2021  Zech Xu
 
 ;; Author: Zech Xu
 ;; Version: 1.0
-;; Keywords: DNA, RNA, protein
+;; Package-Requires: ((emacs "24.1"))
 ;; License: BSD-3
+;; URL: https://github.com/RNAer/seqel
 
 ;;; Commentary:
 
-;;
+;; Utility functions and variables for both nucleotide and protein minor modes
 
 ;;; Code:
 
@@ -402,5 +403,6 @@ Return the list of results. This is similar to the Python zip function."
                    (mapcar 'cdr args)))))
 
 
-
 (provide 'bioseq)
+
+;;; bioseq.el ends here

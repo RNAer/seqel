@@ -1,15 +1,15 @@
-;;; genbank-mode -- a major mode to edit genbank files    -*- lexical-binding: t; -*-
+;;; genbank-mode.el --- A major mode to edit genbank files
 
 ;; Copyright (C) 2021  Zech Xu
 
 ;; Author: Zech Xu
 ;; Version: 1.0
-;; Keywords: DNA, RNA, protein
 ;; License: BSD-3
+;; URL: https://github.com/RNAer/seqel
 
 ;;; Commentary:
 
-;;
+;; Major mode to edit genbank files
 
 ;;; Code:
 
@@ -157,7 +157,6 @@ the beginning of the genbank entry instead of the sequence."
   (delete-region (region-beginning) (region-end)))
 
 
-;;;###autoload
 (defun genbank--2-fasta ()
   "Convert current genbank record to fasta format"
   (let (str seq)

@@ -1,21 +1,22 @@
-;;; genetic-code.el -- store tables of genetic code  -*- lexical-binding: t; -*-
+;;; genetic-code.el --- Store tables of genetic code
 
 ;; Copyright (C) 2021  Zech Xu
 
 ;; Author: Zech Xu
 ;; Version: 1.0
-;; Keywords: DNA, RNA, protein
 ;; License: BSD-3
+;; URL: https://github.com/RNAer/seqel
 
 ;;; Commentary:
-;;  * The translation tables are downloaded from
-;;    http://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi
+
+;; The translation tables are downloaded from
+;; http://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi
 
 
 ;;; Code:
 
 
-(defun get-translation-table (n)
+(defun genetic-code-table (n)
   "Return tranlation table.
 
 The tables are downloaded from http://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi"
@@ -549,3 +550,6 @@ The tables are downloaded from http://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprint
            ("GGA" ?G ?-)
            ("GGG" ?G ?-)))))
   (provide 'genetic-code)
+
+
+;;; genetic-code.el ends here

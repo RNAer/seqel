@@ -1,15 +1,15 @@
-;;; nuc-mode.el --- a minor mode for editing nucleic acid sequences    -*- lexical-binding: t; -*-
+;;; nuc-mode.el --- A minor mode for editing nucleic acid sequences
 
 ;; Copyright (C) 2021  Zech Xu
 
 ;; Author: Zech Xu
 ;; Version: 1.0
-;; Keywords: DNA, RNA, protein
 ;; License: BSD-3
+;; URL: https://github.com/RNAer/seqel
 
 ;;; Commentary:
-;;  * A collection of functions for editing DNA and RNA sequences.
-;;  * It should not be enabled with pro-mode at the same time.
+
+;; A minor mode that provides collection of functions for editing DNA and RNA sequences.
 
 ;;
 
@@ -76,26 +76,26 @@ like a set object similar in Python language.")
   "A vector of degeneracies (list type) for each upper and lower
 case valid bases defined in `nuc-base-alist'.")
 
-(defvar dna-base-complement
+(defvar nuc-dna-base-complement
   (let ((c-vec (vconcat (number-sequence 0 256))))  ; all alphabets chars are < 256
     (dolist (element nuc-base-alist)
       (aset c-vec (car element) (nth 1 element)))
     c-vec)
   "A vector of complements of upper and lower case bases.
- dna-base-complement[base] returns the complement of the base. see also
-`rna-base-complement'.")
+ nuc-dna-base-complement[base] returns the complement of the base. see also
+`nuc-rna-base-complement'.")
 
-(defvar rna-base-complement
+(defvar nuc-rna-base-complement
   ;; make a copy of the vector; otherwise it would change it in place.
-  (let ((c-vec (copy-sequence dna-base-complement)))
+  (let ((c-vec (copy-sequence nuc-dna-base-complement)))
     (aset c-vec ?a ?u)
     (aset c-vec ?A ?U)
     (aset c-vec ?u ?a)
     (aset c-vec ?U ?A)
     c-vec)
   "A vector of upper and lower case bases and their complements.
- rna-base-complement[base] returns the complement of the base. see also
-`dna-base-complement'.")
+ nuc-rna-base-complement[base] returns the complement of the base. see also
+`nuc-dna-base-complement'.")
 
 
 ;;;###autoload
@@ -185,11 +185,11 @@ See also `nuc-rna-p' and `nuc-p'."
 (defun nuc-base-complement-lookup (base)
   "Look up the complement of the BASE and print a message.
 
-See `dna-base-complement'."
+See `nuc-dna-base-complement'."
   (interactive "cComplement of base:")
   (if (equal base ?u) (setq base ?t))
   ;; use aref or elt
-  (message "Complement of '%c' is '%c'." base (aref dna-base-complement base)))
+  (message "Complement of '%c' is '%c'." base (aref nuc-dna-base-complement base)))
 
 
 (defun nuc-complement (beg end &optional reverse)
@@ -198,11 +198,11 @@ See `dna-base-complement'."
 Complement a region of the buffer by replacing nucleotide char
 base by base. Non-base char will be passed over unchanged."
   (interactive-region-or-line)
-  (let ((complement-vector dna-base-complement)
+  (let ((complement-vector nuc-dna-base-complement)
         (is-rna (nuc-rna-p beg end))
         (sequence (buffer-substring-no-properties beg end)))
     (if is-rna
-        (setq complement-vector rna-base-complement))
+        (setq complement-vector nuc-rna-base-complement))
     (if reverse
         (setq sequence (nreverse sequence)))
     (delete-region beg end)
@@ -380,7 +380,7 @@ By default, this function set the table 1 as the translation table.
 For example, run `C-u 2 M-x nuc-set-translation-table' to set it to table 2."
   (interactive "p")
   (let (table)
-    (or (setq table (get-translation-table n))
+    (or (setq table (genetic-code-table n))
         (error "The translation table %d does not exist" n))
     (setq nuc-translation-table `(,n . ,(hash-alist table)))
     (message "Set to translation table %d" n)))
@@ -459,6 +459,7 @@ long."
     map)
   "Keymap for `nuc-mode'.")
 
+
 (define-minor-mode nuc-mode
   "Nucleic acid mode.
 
@@ -469,7 +470,6 @@ It should not be enabled with `pro-mode' at the same time."
   ;; the name, a string, to show in the modeline
   :lighter " nucleotide"
   :keymap nuc-mode-map
-  :global t
   ;; set the translation table to 1 if it is nil
   (or nuc-translation-table (nuc-set-translation-table 1)))
 
