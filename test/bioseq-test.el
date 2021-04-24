@@ -12,7 +12,7 @@
         (maphash (lambda (k v) (if (= 0 (gethash k obs)) (remhash k obs))) obs)
         (should
          ;; `equal' can not compare hash tables
-         (hash-equal obs (hash-alist (cdr test))))
+         (bioseq-hash-equal obs (bioseq-hash-alist (cdr test))))
         (delete-region (point-min) (point-max))))))
 
 

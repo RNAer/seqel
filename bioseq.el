@@ -4,7 +4,7 @@
 
 ;; Author: Zech Xu
 ;; Version: 1.0
-;; Package-Requires: ((emacs "24.1"))
+;; Package-Requires: ((emacs "24.3"))
 ;; License: BSD-3
 ;; URL: https://github.com/RNAer/seqel
 
@@ -59,7 +59,7 @@ like a set object similar in Python language.")
      'error-message
      "End of column error")
 
-(defmacro interactive-region-or-line ()
+(defmacro bioseq-interactive-region-or-line ()
   `(interactive
     (if (use-region-p) ; mark-active
         (list (region-beginning) (region-end))
@@ -92,7 +92,7 @@ The next char has to belong to LEGAL-ALPHBET-SET to be
 Ignore char that does not belong to LEGAL-CHAR-SET. Use hash
 table to create dictionary-like data type. Return the hash table.
 This is fast (only 2 seconds for 5M base pairs)."
-  (interactive-region-or-line)
+  (bioseq-interactive-region-or-line)
   (let (my-hash size char count)
     (if legal-char-set
         (progn (setq my-hash (make-hash-table :test 'equal :size (hash-table-count legal-char-set)))
@@ -134,15 +134,15 @@ by `nuc-count' and `pro-count'."
         (forward-char)))
     count))
 
-(defun color-gradient-hsl (start stop step-number &optional s l)
+(defun bioseq-color-gradient-hsl (start stop step-number &optional s l)
   "Return a list with (STEP-NUMBER + 1) number of colors in hex code.
 
 START and STOP should are the start and ending hue in the color gradient
 to create. And S and L are saturation and lightness.
 
-For example, \"(color-gradient-hsl 0 0.333 20)\" will produce color
+For example, \"(bioseq-color-gradient-hsl 0 0.333 20)\" will produce color
 gradient from red to yellow to green. Please be aware that there is a
-`color-gradient' function defined in color.el, which produces color
+`bioseq-color-gradient' function defined in color.el, which produces color
 gradient in RGB scales (for the example here, it will create gradient
 from red to green without yellow) besides other differences."
   (let* ((incremental (/ (- stop start) step-number)))
@@ -152,11 +152,11 @@ from red to green without yellow) besides other differences."
                                     (nth 0 rgb)
                                     (nth 1 rgb)
                                     (nth 2 rgb)))
-            (mapcar #'(lambda (hue) (color-hsl-to-rgb hue s l))
+            (mapcar #'(lambda (hue) (bioseq-color-hsl-to-rgb hue s l))
                     (number-sequence start stop incremental)))))
 
 
-(defvar color--pairs
+(defvar bioseq-color-pairs
   '(("#ffffff" "#000000")  ; white    on black
     ("#ff0000" "#000000")  ; red
     ("#00ff00" "#000000")  ; green
@@ -190,14 +190,14 @@ from red to green without yellow) besides other differences."
 
 The first one is the text color and the second is the background.")
 
-(defvar color-pairs-cycle
-  (setcdr (last color--pairs) color--pairs)
+(defvar bioseq-color-pairs-cycle
+  (setcdr (last bioseq-color-pairs) bioseq-color-pairs)
     "Color pairs that pass WCAG AAA test.
 
 The first one is the text color and the second is the background.")
 
 
-(defmacro def-char-face (letter backgrnd foregrnd grp)
+(defmacro bioseq--def-char-face (letter backgrnd foregrnd grp)
   "A macro used to define faces.
 
 This will define a face named GRP-LETTER that belongs to the
@@ -241,7 +241,7 @@ TODO: this is slow for long sequences."
 
 (defun bioseq-unpaint (beg end)
   "Uncolor the sequences from BEG to END or the current line."
-  (interactive-region-or-line)
+  (bioseq-interactive-region-or-line)
   (with-silent-modifications
     (remove-text-properties beg end '(font-lock-face nil))))
 
@@ -311,7 +311,7 @@ This serves as a warning that the string is being mangled."
 (setq isearch-search-fun-function 'bioseq-isearch-search-fun)
 
 
-(defun entry-forward (count entry-regexp)
+(defun bioseq-entry-forward (count entry-regexp)
   "Move forward to the beginning of next entry.
 
 It works in the style of `forward-paragraph'. Count need to be positive integer.
@@ -325,7 +325,7 @@ Return current point if it moved over COUNT of entries; otherwise return nil."
     nil))
 
 
-(defun entry-backward (count entry-regexp)
+(defun bioseq-entry-backward (count entry-regexp)
   "Move the point to the beginning of previous entry.
 
 It works in the style of `backward-paragraph'. COUNT need to be positive integer.
@@ -334,37 +334,34 @@ Return current point if it moved over COUNT of entries; otherwise return nil."
       (re-search-backward entry-regexp nil 'move-to-point-min count)
     (error "The argument COUNT should be positive integer.")))
 
-;;;###autoload
-(defun entry-last (entry-regexp)
-  "Go to the beginning of last entry."
-  (interactive)
-  ;; (while (entry-forward 1))
-  (goto-char (point-max))
-  (entry-backward 1 entry-regexp))
 
-;;;###autoload
-(defun entry-first (entry-regexp)
+(defun bioseq-entry-last (entry-regexp)
+  "Go to the beginning of last entry."
+  ;; (while (bioseq-entry-forward 1))
+  (goto-char (point-max))
+  (bioseq-entry-backward 1 entry-regexp))
+
+
+(defun bioseq-entry-first (entry-regexp)
   "Go to the beginning of first entry."
-  (interactive)
-  ;; (while (entry-backward 1)))
+  ;; (while (bioseq-entry-backward 1)))
   (goto-char (point-min))
   (or (looking-at entry-regexp)
-      (entry-forward 1 entry-regexp)))
+      (bioseq-entry-forward 1 entry-regexp)))
 
-;;;###autoload
-(defun entry-count (entry-regexp)
+
+(defun bioseq-entry-count (entry-regexp)
   "Count the number of entries in the buffer."
-  (interactive)
   (let ((total 0))
     (save-excursion
       (goto-char (point-max))
-      (while (entry-backward 1 entry-regexp)
+      (while (bioseq-entry-backward 1 entry-regexp)
         (setq total (1+ total))))
     (message "Total %d sequences." total)
     total))
 
 
-(defun hash-alist (alist)
+(defun bioseq-hash-alist (alist)
   "Convert association list to a hash table and return it.
 
 The car will be the key and the cdr will be the value. If
@@ -377,7 +374,7 @@ reported."
       (puthash (car entry) (cdr entry) my-hash))
     my-hash))
 
-(defun hash-equal (hash1 hash2)
+(defun bioseq-hash-equal (hash1 hash2)
   "Compare two hash tables to see whether they are equal."
   (and (= (hash-table-count hash1)
           (hash-table-count hash2))

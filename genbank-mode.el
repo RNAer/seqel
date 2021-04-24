@@ -116,7 +116,7 @@ Special commands:
 It works in the style of `forward-paragraph'. COUNT needs to be positive integer.
 Return current point if it moved over COUNT of records; otherwise return nil."
   (interactive "p")
-  (entry-forward count genbank-record-regexp))
+  (bioseq-entry-forward count genbank-record-regexp))
 
 (defun genbank-backward (count)
   "Move the point the beginning of the genbank record.
@@ -124,21 +124,21 @@ Return current point if it moved over COUNT of records; otherwise return nil."
 It works in the style of `backward-paragraph'. COUNT needs to be positive integer.
 Return current point if it moved over COUNT of records; otherwise return nil."
   (interactive "p")
-  (entry-backward count genbank-record-regexp))
+  (bioseq-entry-backward count genbank-record-regexp))
 
 (defun genbank-first ()
   "Go to the beginning of first genbank record."
   (interactive)
-  (entry-first genbank-record-regexp))
+  (bioseq-entry-first genbank-record-regexp))
 
 (defun genbank-last ()
   "Go to the beginning of last genbank record."
   (interactive)
-  (entry-last genbank-record-regexp))
+  (bioseq-entry-last genbank-record-regexp))
 
 (defun genbank-count ()
   (interactive)
-  (entry-count genbank-record-regexp))
+  (bioseq-entry-count genbank-record-regexp))
 
 
 (defun genbank-mark (&optional whole)
@@ -149,7 +149,7 @@ the beginning of the genbank entry instead of the sequence."
   (interactive "P")
   (if (genbank-forward 1)
       (backward-char))
-  (entry-backward 1 genbank-record-end)
+  (bioseq-entry-backward 1 genbank-record-end)
   (forward-line)
   (push-mark nil nil t)
   (genbank-backward 1)

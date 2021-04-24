@@ -111,7 +111,7 @@ It is used to convert 3-letter codes to 1-letter codes.")
 
 (defun pro-weight (beg end)
   "Return molecular weight of the region BEG and END or the current line."
-  (interactive-region-or-line)
+  (bioseq-interactive-region-or-line)
   (let ((sum-mw 0) (times (- end beg)) char mw)
     (save-excursion
       (goto-char beg)
@@ -132,7 +132,7 @@ It is used to convert 3-letter codes to 1-letter codes.")
   "Convert 1-letter IUPAC code to 3-letter IUPAC code.
 
 BEG and END defines the region to operate on."
-  (interactive-region-or-line)
+  (bioseq-interactive-region-or-line)
   (condition-case err
       (let ((times (- end beg)) char)
         (goto-char beg)
@@ -154,7 +154,7 @@ BEG and END defines the region to operate on."
 
 Currently it only converts 3-letter codes without any characters
 separating them."
-  (interactive-region-or-line)
+  (bioseq-interactive-region-or-line)
   (condition-case err
       (let ((times (/ (- end beg) 3))
             code letter)
@@ -215,7 +215,7 @@ Return the count if the region contains only legal amino acid
 characters, including `pro-alphabet-set', `bioseq-cruft-set';
 otherwise return nil and report the location of the invalid
 characters in the echo region."
-  (interactive-region-or-line)
+  (bioseq-interactive-region-or-line)
   (let ((length (bioseq-count beg end pro-alphabet-set)))
     (and length
          (called-interactively-p 'interactive)
@@ -230,12 +230,12 @@ characters in the echo region."
   "Summarize the frequencies of amino acids in the region BEG and END or the current line.
 
 See also `bioseq-summary'."
-  (interactive-region-or-line)
+  (bioseq-interactive-region-or-line)
   (bioseq-summary beg end pro-alphabet-set))
 
 ;; define aa faces belonging to pro-aa-face group
 (defvar pro-aa-colors
-  (bioseq--zip #'(lambda (x y) (cons (car x) y)) pro-aa-alist color-pairs-cycle)
+  (bioseq--zip #'(lambda (x y) (cons (car x) y)) pro-aa-alist bioseq-color-pairs-cycle)
   "Background and foreground colors for each IUPAC bases.
 
 This is a list of lists.  For each inner list, it contains 3 atoms:
@@ -246,7 +246,7 @@ a nuc base in char type, hex-code colors for foreground and background")
         (let ((l (format "%c" (nth 0 elem)))
               (f (nth 2 elem))
               (b (nth 1 elem)))
-          (eval (macroexpand `(def-char-face ,l ,b ,f "pro-aa-face")))))
+          (eval (macroexpand `(bioseq--def-char-face ,l ,b ,f "pro-aa-face")))))
       pro-aa-colors)
 
 ;;;###autoload

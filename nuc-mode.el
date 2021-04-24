@@ -148,7 +148,7 @@ contains only legal nucleic acid characters, which includes
 `nuc-alphabet-set', `bioseq-cruft-set'; otherwise return nil and
 report the location of the invalid characters in the echo region.
 This function calls `bioseq-count'. `nuc-p' is an alias of this function."
-  (interactive-region-or-line)
+  (bioseq-interactive-region-or-line)
   (let ((length (bioseq-count beg end nuc-alphabet-set)))
     (and length
          (called-interactively-p 'interactive)
@@ -164,7 +164,7 @@ This is an alias of `nuc-count'.")
   "Return the point of 'u' or 'U' if any is found; otherwise return nil.
 
 See also `nuc-dna-p' and `nuc-p'."
-  (interactive-region-or-line)
+  (bioseq-interactive-region-or-line)
   (let ((case-fold-search t))           ; enable case insensitive search
     (save-excursion
       (goto-char beg)
@@ -175,7 +175,7 @@ See also `nuc-dna-p' and `nuc-p'."
   "Return the point of 't' or 'T' if any is found; otherwise return nil.
 
 See also `nuc-rna-p' and `nuc-p'."
-  (interactive-region-or-line)
+  (bioseq-interactive-region-or-line)
   (let ((case-fold-search t))
     (save-excursion
       (goto-char beg)
@@ -197,7 +197,7 @@ See `nuc-dna-base-complement'."
 
 Complement a region of the buffer by replacing nucleotide char
 base by base. Non-base char will be passed over unchanged."
-  (interactive-region-or-line)
+  (bioseq-interactive-region-or-line)
   (let ((complement-vector nuc-dna-base-complement)
         (is-rna (nuc-rna-p beg end))
         (sequence (buffer-substring-no-properties beg end)))
@@ -218,7 +218,7 @@ base by base. Non-base char will be passed over unchanged."
   "Reverse complement a region of DNA or RNA sequence.
 
 See also `nuc-complement'."
-  (interactive-region-or-line)
+  (bioseq-interactive-region-or-line)
   (nuc-complement beg end t)
   (if (called-interactively-p 'interactive)
       (message "Reverse complemented the selected region")))
@@ -247,7 +247,7 @@ See also `nuc-complement'."
 
 It basically converts 't' -> 'u' and 'T' -> 'U'.
 See also `nuc-2dna'."
-  (interactive-region-or-line)
+  (bioseq-interactive-region-or-line)
   (let ((sequence (buffer-substring-no-properties beg end))
         (replace-vector (if negate nuc--u2t nuc--t2u)))
     (delete-region beg end)
@@ -264,14 +264,14 @@ See also `nuc-2dna'."
 
 It basically converts 'u' -> 't' and 'U' -> 'T'.
 See also `nuc-2rna'."
-  (interactive-region-or-line)
+  (bioseq-interactive-region-or-line)
   (nuc-2rna beg end t))
 
 (defun nuc-summary (beg end)
   "Print the frequencies of bases in the region or the current line.
 
 See also `bioseq-summary'."
-  (interactive-region-or-line)
+  (bioseq-interactive-region-or-line)
   (bioseq-summary beg end nuc-alphabet-set))
 
 
@@ -302,7 +302,7 @@ and 'mR' will be transformed to '[ac][ ]*[AG]'."
 A homopolymer is a sequence of identical bases, like AAAA or TTTTTTTT.
 The weighted homopolymer rate (WHR) of a sequence is a measure of
 the frequency of homopolymers in the sequence. "
-  (interactive-region-or-line)
+  (bioseq-interactive-region-or-line)
   (let ((n  1.0)  (ni 0) (nis 0)
         old cur)
     (save-excursion
@@ -328,7 +328,7 @@ the frequency of homopolymers in the sequence. "
 
 ;;; Per base colors
 (defvar nuc-base-colors
-    (bioseq--zip #'(lambda (x y) (cons (car x) y)) nuc-base-alist color-pairs-cycle)
+    (bioseq--zip #'(lambda (x y) (cons (car x) y)) nuc-base-alist bioseq-color-pairs-cycle)
 
   "Background and foreground colors for each IUPAC bases.
 
@@ -341,7 +341,7 @@ and background")
         (let ((l (format "%c" (nth 0 elem)))
               (f (nth 2 elem))
               (b (nth 1 elem)))
-          (eval (macroexpand `(def-char-face ,l ,b ,f "nuc-base-face")))))
+          (eval (macroexpand `(bioseq--def-char-face ,l ,b ,f "nuc-base-face")))))
       nuc-base-colors)
 
 
@@ -382,7 +382,7 @@ For example, run `C-u 2 M-x nuc-set-translation-table' to set it to table 2."
   (let (table)
     (or (setq table (genetic-code-table n))
         (error "The translation table %d does not exist" n))
-    (setq nuc-translation-table `(,n . ,(hash-alist table)))
+    (setq nuc-translation-table `(,n . ,(bioseq-hash-alist table)))
     (message "Set to translation table %d" n)))
 
 
@@ -422,7 +422,7 @@ This function translates DNA of 9K for ~6 sec (over 80% of the
 time is for `nuc-decode') and ~15 MB mem. It is not super fast,
 but it is very rare you need to translate a sequence over 10K
 long."
-  (interactive-region-or-line)
+  (bioseq-interactive-region-or-line)
   (let* (;; check valid of the sequence and count the number of bases
          (n (nuc-count beg end))
          (x (% n 3))

@@ -133,7 +133,7 @@ Only if the major mode is `fundermental'. This function is added to
 It works in the style of `backward-paragraph'. COUNT need to be positive integer.
 Return current point if it moved over COUNT of records; otherwise return nil."
   (interactive "p")
-  (entry-backward count fasta-record-regexp))
+  (bioseq-entry-backward count fasta-record-regexp))
 
 ;;;###autoload
 (defun fasta-forward (count)
@@ -142,26 +142,26 @@ Return current point if it moved over COUNT of records; otherwise return nil."
 It works in the style of `forward-paragraph'. Count need to be positive integer.
 Return current point if it moved over COUNT of records; otherwise return nil."
   (interactive "p")
-  (entry-forward count fasta-record-regexp))
+  (bioseq-entry-forward count fasta-record-regexp))
 
 
 ;;;###autoload
 (defun fasta-last ()
   "Go to the beginning of last fasta record."
   (interactive)
-  (entry-last fasta-record-regexp))
+  (bioseq-entry-last fasta-record-regexp))
 
 ;;;###autoload
 (defun fasta-first ()
   "Go to the beginning of first fasta record."
   (interactive)
-  (entry-first fasta-record-regexp))
+  (bioseq-entry-first fasta-record-regexp))
 
 ;;;###autoload
 (defun fasta-count ()
   "Count the number of fasta sequences in the buffer."
   (interactive)
-  (entry-count fasta-record-regexp))
+  (bioseq-entry-count fasta-record-regexp))
 
 
 ;;;###autoload

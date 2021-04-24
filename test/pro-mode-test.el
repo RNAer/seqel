@@ -73,7 +73,7 @@
         (insert (car test))
         (setq obs (pro-summary (point-min) (point-max)))
         (maphash (lambda (k v) (if (= 0 (gethash k obs)) (remhash k obs))) obs)
-        (should (hash-equal obs (hash-alist (cdr test))))
+        (should (bioseq-hash-equal obs (bioseq-hash-alist (cdr test))))
         (delete-region (point-min) (point-max))))))
 
 

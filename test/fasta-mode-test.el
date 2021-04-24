@@ -353,10 +353,10 @@ ac"
         (insert (nth 0 test))
         (goto-char (nth 1 test))
         ;; (princ (nth 2 test))
-        ;; (princ (hash-alist (nth 2 test)))
-        (should (hash-equal
+        ;; (princ (bioseq-hash-alist (nth 2 test)))
+        (should (bioseq-hash-equal
                  (fasta-column-summary)
-                 (hash-alist (nth 2 test))))
+                 (bioseq-hash-alist (nth 2 test))))
         (delete-region (point-min) (point-max))))))
 
 
