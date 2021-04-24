@@ -270,10 +270,10 @@ This is an alias to `bioseq-unpaint'.")
 
 (defvar pro-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map "\C-c\C-f"  'pro-move-forward)
-    (define-key map "\C-c\C-b"  'pro-move-backward)
-    (define-key map "\C-c\C-w"  'pro-weight)
-    ;; (define-key map "\C-c\C-s"  'pro-summary)
+    (define-key map "\C-c\C-p\C-f"  'pro-move-forward)
+    (define-key map "\C-c\C-p\C-b"  'pro-move-backward)
+    (define-key map "\C-c\C-p\C-w"  'pro-weight)
+    (define-key map "\C-c\C-p\C-s"  'pro-summary)
     map)
   "Keymap for `pro-mode'.")
 

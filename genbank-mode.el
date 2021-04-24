@@ -25,14 +25,13 @@
   ;; use `make-keymap' if there are lots of keybindings
   (let ((map (make-sparse-keymap)))
     ;; Ctrl bindings
-    (define-key map "\C-ca"     'genbank-first)
-    (define-key map "\C-cz"     'genbank-last)
-    (define-key map "\C-cc"     'genbank-count)
-    (define-key map "\C-cd"     'genbank-delete)
-    (define-key map "\C-cf"     'genbank-forward)
-    (define-key map "\C-cb"     'genbank-backward)
-    (define-key map "\C-cm"     'genbank-mark)
-    (define-key map "\C-cg"     'genbank-2-fasta)
+    (define-key map "\C-c\C-a"  'genbank-first)
+    (define-key map "\C-c\C-z"  'genbank-last)
+    (define-key map "\C-c\C-c"  'genbank-count)
+    (define-key map "\C-c\C-d"  'genbank-delete)
+    (define-key map "\C-c\C-f"  'genbank-forward)
+    (define-key map "\C-c\C-b"  'genbank-backward)
+    (define-key map "\C-c\C-m"  'genbank-mark)
     map)
  "The local keymap for `genbank-mode'")
 
