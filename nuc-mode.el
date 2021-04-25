@@ -45,7 +45,7 @@
 
 For each inner list, the first element is allowed nuc bases; the second element
 is the complement of the first, and the rest is the degenerated bases
-for the first. Only for lowercase, as the upcased will be added automatically.")
+for the first.  Only for lowercase, as the upcased will be added automatically.")
 
 ;;;;; END OF USER CUSTOMIZABLE VARIABLES
 
@@ -64,7 +64,7 @@ for the first. Only for lowercase, as the upcased will be added automatically.")
     alphabet-set)
   "The set of all legal alphabets in DNA or RNA sequences.
 
-This is a hash table: keys are char and values are `t'. It serves
+This is a hash table: keys are char and values are t. It serves
 like a set object similar in Python language.")
 
 
@@ -73,8 +73,7 @@ like a set object similar in Python language.")
     (dolist (element nuc-base-alist)
       (aset d-vec (car element) (cddr element)))
   d-vec)
-  "A vector of degeneracies (list type) for each upper and lower
-case valid bases defined in `nuc-base-alist'.")
+  "A vector of degeneracies (list type) for each upper and lower case valid bases defined in `nuc-base-alist'.")
 
 (defvar nuc-dna-base-complement
   (let ((c-vec (vconcat (number-sequence 0 256))))  ; all alphabets chars are < 256
@@ -82,7 +81,8 @@ case valid bases defined in `nuc-base-alist'.")
       (aset c-vec (car element) (nth 1 element)))
     c-vec)
   "A vector of complements of upper and lower case bases.
- nuc-dna-base-complement[base] returns the complement of the base. see also
+
+For example, 'nuc-dna-base-complement[A]' returns 'U'.  see also
 `nuc-rna-base-complement'.")
 
 (defvar nuc-rna-base-complement
@@ -94,18 +94,19 @@ case valid bases defined in `nuc-base-alist'.")
     (aset c-vec ?U ?A)
     c-vec)
   "A vector of upper and lower case bases and their complements.
- nuc-rna-base-complement[base] returns the complement of the base. see also
+
+For example, 'nuc-rna-base-complement[A]' returns 'T'.  see also
 `nuc-dna-base-complement'.")
 
 
 ;;;###autoload
 (defun nuc-move-forward (count)
-  "Move forward COUNT bases. Move backward if negative.
+  "Move forward COUNT bases.  Move backward if negative.
 
 Skip `bioseq-cruft-regexp' but stop on the illegal base
 and report how many bases the point have been moved by.
 COUNT can be either positive or negative, indicating the
-moving direction. Return the number of bases that are moved thru.
+moving direction.  Return the number of bases that are moved thru.
 See `bioseq-forward-char'"
   (interactive "p")
   (bioseq-forward-char count nuc-alphabet-set))
@@ -114,7 +115,7 @@ See `bioseq-forward-char'"
 (defun nuc-move-backward (count)
   "Move backward COUNT bases, similar to `nuc-move-forward'.
 
-See also `bioseq-forward-char'. `(nuc-move-backward -1)'
+See also `bioseq-forward-char'.  `(nuc-move-backward -1)'
 and `(nuc-move-forward 1)' are equvialent."
   (interactive "p")
   ;; (proceed-char-repeatedly count 'backward-char))
@@ -141,13 +142,17 @@ See `nuc-delete-forward'."
 
 
 (defun nuc-count (beg end)
-  "Count the number of bases in the region or in the current line.
+  "Count the number of nucleotides between BEG and END.
 
-Check if each char is legal base. Return the count if the region
+Check if each char is legal base.  Return the count if the region
 contains only legal nucleic acid characters, which includes
 `nuc-alphabet-set', `bioseq-cruft-set'; otherwise return nil and
 report the location of the invalid characters in the echo region.
-This function calls `bioseq-count'. `nuc-p' is an alias of this function."
+This function calls `bioseq-count'.  `nuc-p' is an alias of this
+function.
+
+Interactively, BEG and END are the begin and end of the active
+region or the current line if no region is active."
   (bioseq-interactive-region-or-line)
   (let ((length (bioseq-count beg end nuc-alphabet-set)))
     (and length
@@ -163,7 +168,9 @@ This is an alias of `nuc-count'.")
 (defun nuc-rna-p (beg end)
   "Return the point of 'u' or 'U' if any is found; otherwise return nil.
 
-See also `nuc-dna-p' and `nuc-p'."
+Interactively, BEG and END are the begin and end of the active
+region or the current line if no region is active.  See also
+`nuc-dna-p' and `nuc-p'."
   (bioseq-interactive-region-or-line)
   (let ((case-fold-search t))           ; enable case insensitive search
     (save-excursion
@@ -173,6 +180,9 @@ See also `nuc-dna-p' and `nuc-p'."
 
 (defun nuc-dna-p (beg end)
   "Return the point of 't' or 'T' if any is found; otherwise return nil.
+
+Interactively, BEG and END are the begin and end of the active
+region or the current line if no region is active.
 
 See also `nuc-rna-p' and `nuc-p'."
   (bioseq-interactive-region-or-line)
@@ -196,7 +206,11 @@ See `nuc-dna-base-complement'."
   "Complement a region (or a line) of bases from BEG to END.
 
 Complement a region of the buffer by replacing nucleotide char
-base by base. Non-base char will be passed over unchanged."
+base by base.  Non-base char will be passed over unchanged.  Also
+reverse the sequence of the region if REVERSE is not nil.
+
+Interactively, BEG and END are the begin and end of the active
+region or the current line if no region is active."
   (bioseq-interactive-region-or-line)
   (let ((complement-vector nuc-dna-base-complement)
         (is-rna (nuc-rna-p beg end))
@@ -216,6 +230,9 @@ base by base. Non-base char will be passed over unchanged."
 ;;;###autoload
 (defun nuc-reverse-complement (beg end)
   "Reverse complement a region of DNA or RNA sequence.
+
+Interactively, BEG and END are the begin and end of the active
+region or the current line if no region is active.
 
 See also `nuc-complement'."
   (bioseq-interactive-region-or-line)
@@ -239,14 +256,16 @@ See also `nuc-complement'."
     (aset c-vec ?t ?u)
     (aset c-vec ?T ?U)
     c-vec)
-  "A vector used to replace T/t with U/u")
+  "A vector used to replace T/t with U/u.")
 
 ;;;###autoload
 (defun nuc-2rna (beg end &optional negate)
   "Convert the region or the current line to RNA.
 
-It basically converts 't' -> 'u' and 'T' -> 'U'.
-See also `nuc-2dna'."
+It basically converts 't' -> 'u' and 'T' -> 'U'.  Interactively,
+BEG and END are the begin and end of the active region or the
+current line if no region is active.  If NEGATE is not nil,
+convert to DNA.  See also `nuc-2dna'."
   (bioseq-interactive-region-or-line)
   (let ((sequence (buffer-substring-no-properties beg end))
         (replace-vector (if negate nuc--u2t nuc--t2u)))
@@ -262,15 +281,19 @@ See also `nuc-2dna'."
 (defun nuc-2dna (beg end)
   "Convert the region or current line to DNA.
 
-It basically converts 'u' -> 't' and 'U' -> 'T'.
-See also `nuc-2rna'."
+It basically converts 'u' -> 't' and 'U' -> 'T'.  Interactively,
+BEG and END are the begin and end of the active region or the
+current line if no region is active.  See also `nuc-2rna'."
   (bioseq-interactive-region-or-line)
   (nuc-2rna beg end t))
 
 (defun nuc-summary (beg end)
   "Print the frequencies of bases in the region or the current line.
 
-See also `bioseq-summary'."
+
+Interactively, BEG and END are the begin and end of the active
+region or the current line if no region is active.  See also
+`bioseq-summary'."
   (bioseq-interactive-region-or-line)
   (bioseq-summary beg end nuc-alphabet-set))
 
@@ -301,7 +324,10 @@ and 'mR' will be transformed to '[ac][ ]*[AG]'."
 
 A homopolymer is a sequence of identical bases, like AAAA or TTTTTTTT.
 The weighted homopolymer rate (WHR) of a sequence is a measure of
-the frequency of homopolymers in the sequence. "
+the frequency of homopolymers in the sequence.
+
+Interactively, BEG and END are the begin and end of the active
+region or the current line if no region is active."
   (bioseq-interactive-region-or-line)
   (let ((n  1.0)  (ni 0) (nis 0)
         old cur)
@@ -350,7 +376,10 @@ and background")
   "Color the nucleic acid region BEG to END.
 
 If CASE is nil, upcase and lowercase base chars will be colored the same;
-otherwise, not. See `bioseq-paint' for details."
+otherwise, not.  See `bioseq-paint' for details.
+
+Interactively, BEG and END are the begin and end of the active
+region or the current line if no region is active."
   (interactive "r\nP")
   (if (not (use-region-p))
       (setq beg (line-beginning-position)
@@ -367,9 +396,9 @@ It is an alias to `bioseq-unpaint'.")
 (defvar nuc-translation-table nil
   "Define the translation table.
 
-This is list. Its car is an int indication which genetic table it
+This is list.  Its car is an int indication which genetic table it
 is.  Its cdr is a hash table with codons as keys and encoded
-amino acids as values. This variable is set by
+amino acids as values.  This variable is set by
 `nuc-set-translation-table'.")
 
 
@@ -377,7 +406,7 @@ amino acids as values. This variable is set by
   "Set translation table to N.
 
 By default, this function set the table 1 as the translation table.
-For example, run `C-u 2 M-x nuc-set-translation-table' to set it to table 2."
+Interactively, N is set to numeric prefix argument."
   (interactive "p")
   (let (table)
     (or (setq table (genetic-code-table n))
@@ -389,7 +418,7 @@ For example, run `C-u 2 M-x nuc-set-translation-table' to set it to table 2."
 (defun nuc-decode (codon)
   "Return the list of amino acid(s) that are coded by the CODON.
 
-CODON must be uppercase string of 3 DNA letters. Example: (nuc-decode
+CODON must be uppercase string of 3 DNA letters.  Example: (nuc-decode
 \"TCM\") should return (83) and (nuc-decode \"MAT\") should
 return (72 78) for translation table 1."
   (interactive (list (read-from-minibuffer
@@ -403,7 +432,7 @@ return (72 78) for translation table 1."
         (dolist (third-base (aref nuc-base-degeneracy (nth 2 codon)))
           (setq degenerated-codon (format "%c%c%c" first-base second-base third-base))
           (setq aa (car (gethash degenerated-codon table)))
-          (or aa (error "Codon %s (after degeneration) is not recognized." degenerated-codon))
+          (or aa (error "Codon %s (after degeneration) is not recognized!" degenerated-codon))
           (or (memq aa aas)
               (setq aas (cons aa aas))))))
     (if (called-interactively-p 'interactive)
@@ -413,13 +442,16 @@ return (72 78) for translation table 1."
 
 ;;;###autoload
 (defun nuc-translate (beg end)
-  "Translate the DNA/RNA seq to protein seq using current translation table.
+  "Translate the nucleotides to protein using current translation table.
 
 The ambiguous codon will be handled correctly: if it is mapped to
 multiple amino acids, 'X' will be the output.
 
+Interactively, BEG and END are the begin and end of the active
+region or the current line if no region is active.
+
 This function translates DNA of 9K for ~6 sec (over 80% of the
-time is for `nuc-decode') and ~15 MB mem. It is not super fast,
+time is for `nuc-decode') and ~15 MB mem.  It is not super fast,
 but it is very rare you need to translate a sequence over 10K
 long."
   (bioseq-interactive-region-or-line)
@@ -430,7 +462,7 @@ long."
          str seq codon aa)
     (goto-char beg)
     ;; ask for confirmation if translate long sequence
-    (if (or (< n 10000) (y-or-n-p (format "translate %d nucleotides? it will take a while" n)))
+    (if (or (< n 10000) (y-or-n-p (format "Translate %d nucleotides (long sequence will take a while)? " n)))
         (progn
           (message "translating %d nucleotides to %d amino acids..." len (/ n 3))
           (nuc-move-forward len)
@@ -457,7 +489,7 @@ long."
     (define-key map (kbd "C-c C-n C-s") 'nuc-summary)
     (define-key map (kbd "C-c C-n C-t") 'nuc-translate)
     map)
-  "Keymap for `nuc-mode'.")
+  "Keymap for the 'nuc-mode' minor mode.")
 
 
 (define-minor-mode nuc-mode
