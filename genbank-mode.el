@@ -33,7 +33,7 @@
     (define-key map "\C-c\C-b"  'genbank-backward); it also binds to M-}
     (define-key map "\C-c\C-m"  'genbank-mark)    ; it also binds to M-h
     map)
- "The local keymap for `genbank-mode'")
+ "The local keymap for `genbank-mode'.")
 
 ;;;###autoload
 (add-to-list 'auto-mode-alist
@@ -113,16 +113,18 @@ Special commands:
 (defun genbank-forward (count)
   "Move forward to the end genbank record.
 
-It works in the style of `forward-paragraph'. COUNT needs to be positive integer.
-Return current point if it moved over COUNT of records; otherwise return nil."
+It works in the style of `forward-paragraph'.  COUNT needs to be
+positive integer.  Return current point if it moved over COUNT of
+records; otherwise return nil."
   (interactive "p")
   (bioseq-entry-forward count genbank-record-regexp))
 
 (defun genbank-backward (count)
   "Move the point the beginning of the genbank record.
 
-It works in the style of `backward-paragraph'. COUNT needs to be positive integer.
-Return current point if it moved over COUNT of records; otherwise return nil."
+It works in the style of `backward-paragraph'.  COUNT needs to be
+positive integer.  Return current point if it moved over COUNT of
+records; otherwise return nil."
   (interactive "p")
   (bioseq-entry-backward count genbank-record-regexp))
 
@@ -137,6 +139,7 @@ Return current point if it moved over COUNT of records; otherwise return nil."
   (bioseq-entry-last genbank-record-regexp))
 
 (defun genbank-count ()
+  "Count the number of genbank records in the file."
   (interactive)
   (bioseq-entry-count genbank-record-regexp))
 
@@ -166,7 +169,7 @@ the beginning of the genbank entry instead of the sequence."
 
 
 (defun genbank--2-fasta ()
-  "Convert current genbank record to fasta format"
+  "Convert current genbank record to fasta format."
   (let (str seq)
     (genbank-mark)
     (setq str (buffer-substring-no-properties (region-beginning) (region-end)))
@@ -182,13 +185,13 @@ the beginning of the genbank entry instead of the sequence."
     (insert "\n")))
 
 (defun genbank-2-fasta ()
-  "Convert current genbank record to fasta format"
+  "Convert current genbank record to fasta format."
   (interactive)
   (save-excursion
     (genbank--2-fasta)))
 
 (defun genbank-2-fasta-all ()
-  "Convert all genbank records to fasta format"
+  "Convert all genbank records to fasta format."
   (interactive)
   (save-excursion
     (goto-char (point-max))

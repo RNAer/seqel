@@ -64,7 +64,7 @@ the molecular weight.  for the first.")
   "The set of all legal alphabets in protein sequences.
 
 This is a hash table: keys are char (including both lower case
-and upper case) and values are `t'. It serves like a set object
+and upper case) and values are t. It serves like a set object
 similar in Python language.")
 
 
@@ -153,7 +153,10 @@ BEG and END defines the region to operate on."
   "Convert 3-letter IUPAC code to 1-letter IUPAC code.
 
 Currently it only converts 3-letter codes without any characters
-separating them."
+separating them.
+
+Interactively, BEG and END are the begin and end of the active
+region or the current line if no region is active."
   (bioseq-interactive-region-or-line)
   (condition-case err
       (let ((times (/ (- end beg) 3))
@@ -214,7 +217,10 @@ See also `nuc-delete-backward'."
 Return the count if the region contains only legal amino acid
 characters, including `pro-alphabet-set', `bioseq-cruft-set';
 otherwise return nil and report the location of the invalid
-characters in the echo region."
+characters in the echo region.
+
+Interactively, BEG and END are the begin and end of the active
+region or the current line if no region is active."
   (bioseq-interactive-region-or-line)
   (let ((length (bioseq-count beg end pro-alphabet-set)))
     (and length
@@ -227,7 +233,10 @@ characters in the echo region."
 
 
 (defun pro-summary (beg end)
-  "Summarize the frequencies of amino acids in the region BEG and END or the current line.
+  "Summarize the frequencies of amino acids in the region or the current line.
+
+Interactively, BEG and END are the begin and end of the active
+region or the current line if no region is active.
 
 See also `bioseq-summary'."
   (bioseq-interactive-region-or-line)
@@ -275,7 +284,7 @@ This is an alias to `bioseq-unpaint'.")
     (define-key map "\C-c\C-p\C-w"  'pro-weight)
     (define-key map "\C-c\C-p\C-s"  'pro-summary)
     map)
-  "Keymap for `pro-mode'.")
+  "Keymap for 'pro-mode' minor mode.")
 
 
 (define-minor-mode pro-mode

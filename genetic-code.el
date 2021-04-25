@@ -19,7 +19,9 @@
 (defun genetic-code-table (n)
   "Return tranlation table.
 
-The tables are downloaded from http://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi"
+N is an integer to set the translation table that
+can be downloaded from URL
+http://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi"
   (cond ((eq n 1) ; standard genetic code
          ;; 1st: codon
          ;; 2nd: amino acid
@@ -549,7 +551,9 @@ The tables are downloaded from http://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprint
            ("GGC" ?G ?-)
            ("GGA" ?G ?-)
            ("GGG" ?G ?-)))))
-  (provide 'genetic-code)
+
+
+(provide 'genetic-code)
 
 
 ;;; genetic-code.el ends here
