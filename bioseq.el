@@ -25,9 +25,10 @@
 
 (defvar bioseq-space
   '(?  ?\t ?\n ?\r)
-  "*Chars that represent all kinds of spaces which may appear between bases or amino acids.
+  "*Chars of whitespaces that may appear in sequences.
 
-It will be skipped during moving and search and anything involving counting.")
+It will be skipped during moving and search and anything
+involving counting.")
 
 (defvar bioseq-cruft-regexp
   (regexp-opt (mapcar #'char-to-string
@@ -43,7 +44,7 @@ It will be skipped during moving and search and anything involving counting.")
     alphabet-set)
   "The set of alphabets for `bioseq-gap' and `bioseq-space' in sequences.
 
-This is a hash table: keys are char and values are `t'. It serves
+This is a hash table: keys are char and values are t. It serves
 like a set object similar in Python language.")
 
 
@@ -60,6 +61,7 @@ like a set object similar in Python language.")
      "End of column error")
 
 (defmacro bioseq-interactive-region-or-line ()
+  "If no region is marked, mark current line."
   `(interactive
     (if (use-region-p) ; mark-active
         (list (region-beginning) (region-end))
@@ -70,8 +72,8 @@ like a set object similar in Python language.")
   "Move the cursor for COUNT times repeatedly from the point on.
 
 The next char has to belong to LEGAL-ALPHBET-SET to be
- counted. The `bioseq-cruft-regexp' char will be skipped, i.e., not
- counted. Return the actual count of legal char. COUNT can be
+ counted.  The `bioseq-cruft-regexp' char will be skipped, i.e., not
+ counted.  Return the actual count of legal char.  COUNT can be
  either positive or negative integer - if it is positive, move
  forward; if it is negative, move backward; if zero, don't move."
 
@@ -82,16 +84,17 @@ The next char has to belong to LEGAL-ALPHBET-SET to be
         (forward-char direction))
       (if (gethash (funcall fetch-char) legal-alphbet-set)
           (forward-char direction)
-        (error "Failed! Moved %d bases. You have illegal char here." (* direction x))))
+        (error "Failed! Moved %d bases.  You have illegal char here!" (* direction x))))
     count))
 
 
 (defun bioseq-summary (beg end &optional legal-char-set)
   "Count the number of all the characters in the region.
 
-Ignore char that does not belong to LEGAL-CHAR-SET. Use hash
-table to create dictionary-like data type. Return the hash table.
-This is fast (only 2 seconds for 5M base pairs)."
+Summarize the sequence marked between BEG and END.  Ignore char
+that does not belong to LEGAL-CHAR-SET.  Use hash table to create
+dictionary-like data type.  Return the hash table.  This is
+fast (only 2 seconds for 5M base pairs)."
   (bioseq-interactive-region-or-line)
   (let (my-hash size char count)
     (if legal-char-set
@@ -116,10 +119,12 @@ This is fast (only 2 seconds for 5M base pairs)."
 (defun bioseq-count (beg end &optional legal-char-set)
   "Count the chars that belong to LEGAL-CHAR-REGEXP.
 
-Chars of `bioseq-cruft-regexp' will be skipped. Return the count if
-the region contains only legal characters; otherwise return nil and
-report the location of the invalid characters. This function is used
-by `nuc-count' and `pro-count'."
+Count the residues of sequence region marked between BEG and
+END.  Chars of `bioseq-cruft-regexp' will be skipped.  Return the
+count if the region contains only legal characters (if
+LEGAL-CHAR-SET is provided); otherwise return nil and report the
+location of the invalid characters.  This function is used by
+`nuc-count' and `pro-count'."
   (let ((count 0) char)
     (save-excursion
       (goto-char beg)
@@ -138,7 +143,7 @@ by `nuc-count' and `pro-count'."
   "Return a list with (STEP-NUMBER + 1) number of colors in hex code.
 
 START and STOP should are the start and ending hue in the color gradient
-to create. And S and L are saturation and lightness.
+to create.  And S and L are saturation and lightness.
 
 For example, \"(bioseq-color-gradient-hsl 0 0.333 20)\" will produce color
 gradient from red to yellow to green. Please be aware that there is a
@@ -200,9 +205,9 @@ The first one is the text color and the second is the background.")
 (defmacro bioseq--def-char-face (letter backgrnd foregrnd grp)
   "A macro used to define faces.
 
-This will define a face named GRP-LETTER that belongs to the
-face group named GRP, with BACKGRND as background and FOREGRND
-as foreground colors."
+This will define a face named GRP-LETTER for character LETTER
+that belongs to the face group named GRP, with BACKGRND as
+background and FOREGRND as foreground colors."
   `(defface ,(intern (concat grp "-" letter))
      '((((type tty) (class color))
         (:background ,backgrnd :foreground ,foregrnd))
@@ -219,7 +224,7 @@ as foreground colors."
   "Color the sequences in the region BEG to END.
 
 If CASE is nil, upcase and lowercase chars will be colored the same;
-otherwise, not. FACE-PREFIX decides which face groups ('base-face' or
+otherwise, not.  FACE-GROUP decides which face groups ('base-face' or
 'aa-face') to use.
 
 TODO: this is slow for long sequences."
@@ -271,12 +276,16 @@ transformed into 'a[ ]*c[ ]*g[ ]*t'."
 
 
 (defun bioseq-isearch-forward (pattern &optional bound noerror)
-  "Search forward for PATTERN."
+  "Search forward for PATTERN.
+
+BOUND and NOERROR passes to function `re-search-forward'."
   (let ((string (bioseq-isearch-mangle-str pattern)))
     (re-search-forward string bound noerror)))
 
 (defun bioseq-isearch-backward (pattern &optional bound noerror)
-  "Search backward for PATTERN."
+  "Search backward for PATTERN.
+
+BOUND and NOERROR passes to function `re-search-backward'."
   (let ((string (bioseq-isearch-mangle-str pattern)))
     (re-search-backward string bound noerror)))
 
@@ -287,7 +296,7 @@ This serves as a warning that the string is being mangled."
   (setq ad-return-value (concat "SEQ " ad-return-value)))
 
 (defvar bioseq-isearch-p nil
-  "Whether sequence pattern isearch is enabled")
+  "Whether sequence pattern isearch is enabled.")
 
 (defun bioseq-toggle-isearch ()
   "Toggle the sequence isearch."
@@ -314,12 +323,14 @@ This serves as a warning that the string is being mangled."
 (defun bioseq-entry-forward (count entry-regexp)
   "Move forward to the beginning of next entry.
 
-It works in the style of `forward-paragraph'. Count need to be positive integer.
-Return current point if it moved over COUNT of entries; otherwise return nil."
+It works in the style of `forward-paragraph'.  COUNT needs to be
+positive integer.  ENTRY-REGEXP defines the boundary of
+entries.  Return current point if it moved over COUNT of entries;
+otherwise return nil.  See also `fasta-forward'."
   (if (looking-at entry-regexp)
       (setq count (1+ count)))
   (if (< count 1)
-      (error "The parameter COUNT should be positive integer."))
+      (error "The parameter COUNT should be positive integer!"))
   (if (re-search-forward entry-regexp nil 'move-to-point-max count)
       (progn (beginning-of-line) (point))
     nil))
@@ -328,22 +339,28 @@ Return current point if it moved over COUNT of entries; otherwise return nil."
 (defun bioseq-entry-backward (count entry-regexp)
   "Move the point to the beginning of previous entry.
 
-It works in the style of `backward-paragraph'. COUNT need to be positive integer.
-Return current point if it moved over COUNT of entries; otherwise return nil."
+It works in the style of `backward-paragraph'.  COUNT needs to be
+positive integer.  ENTRY-REGEXP defines the boundary of entries.
+Return current point if it moved over COUNT of entries; otherwise
+return nil.  See also `fasta-backward'."
   (if (> count 0)
       (re-search-backward entry-regexp nil 'move-to-point-min count)
-    (error "The argument COUNT should be positive integer.")))
+    (error "The argument COUNT should be positive integer!")))
 
 
 (defun bioseq-entry-last (entry-regexp)
-  "Go to the beginning of last entry."
+  "Go to the beginning of last entry.
+
+ENTRY-REGEXP defines the boundary of entries."
   ;; (while (bioseq-entry-forward 1))
   (goto-char (point-max))
   (bioseq-entry-backward 1 entry-regexp))
 
 
 (defun bioseq-entry-first (entry-regexp)
-  "Go to the beginning of first entry."
+  "Go to the beginning of first entry.
+
+ENTRY-REGEXP defines the boundary of entries."
   ;; (while (bioseq-entry-backward 1)))
   (goto-char (point-min))
   (or (looking-at entry-regexp)
@@ -351,7 +368,9 @@ Return current point if it moved over COUNT of entries; otherwise return nil."
 
 
 (defun bioseq-entry-count (entry-regexp)
-  "Count the number of entries in the buffer."
+  "Count the number of entries in the buffer.
+
+ENTRY-REGEXP defines the boundary of entries."
   (let ((total 0))
     (save-excursion
       (goto-char (point-max))
@@ -362,20 +381,20 @@ Return current point if it moved over COUNT of entries; otherwise return nil."
 
 
 (defun bioseq-hash-alist (alist)
-  "Convert association list to a hash table and return it.
+  "Convert association list ALIST to a hash table and return it.
 
-The car will be the key and the cdr will be the value. If
+The car will be the key and the cdr will be the value.  If
 there are multiple items with the same car, error will be
 reported."
   (let ((my-hash (make-hash-table :test 'equal :size (length alist))))
     (dolist (entry alist)
       (if (gethash (car entry) my-hash)
-          (error "repeat hashing"))
+          (error "The same key already exists!"))
       (puthash (car entry) (cdr entry) my-hash))
     my-hash))
 
 (defun bioseq-hash-equal (hash1 hash2)
-  "Compare two hash tables to see whether they are equal."
+  "Compare 2 hash tables HASH1 and HASH2 to see whether they are equal."
   (and (= (hash-table-count hash1)
           (hash-table-count hash2))
        (catch 'flag
@@ -390,7 +409,7 @@ reported."
 (defun bioseq--zip (function &rest args)
   "Apply FUNCTION to successive cars of all ARGS.
 
-Return the list of results. This is similar to the Python zip function."
+Return the list of results.  This is similar to the Python zip function."
   ;; If no list is exhausted,
   (if (not (memq nil args))
       ;; apply function to cars.
