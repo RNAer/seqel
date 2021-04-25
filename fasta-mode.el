@@ -1,4 +1,4 @@
-;;; fasta-mode.el --- A major mode for editing fasta files
+;;; fasta-mode.el --- A major mode for editing fasta files.
 
 ;; Copyright (C) 2021  Zech Xu
 
@@ -48,7 +48,7 @@
     (define-key map "\C-c\C-vp"  'fasta-column-paint)
     (define-key map "\C-c\C-vs"  'fasta-column-summary)
     map)
-  "The local keymap for `fasta-mode'")
+  "The local keymap for `fasta-mode'.")
 
 ;; map the paragraph key bindings to corresponding fasta functions
 (let ((equivs
@@ -106,7 +106,7 @@ Special commands:
 (defun fasta-find-file ()
   "Invoke `fasta-mode' if the buffer look like a fasta.
 
-Only if the major mode is `fundermental'. This function is added to
+Only if the major mode is `fundermental'.  This function is added to
 `find-file-hooks'."
   (save-excursion
     (goto-char (point-min))
@@ -130,8 +130,9 @@ Only if the major mode is `fundermental'. This function is added to
 (defun fasta-backward (count)
   "Move the point to the beginning of the fasta record.
 
-It works in the style of `backward-paragraph'. COUNT need to be positive integer.
-Return current point if it moved over COUNT of records; otherwise return nil."
+It works in the style of `backward-paragraph'.  COUNT need to be
+positive integer.  Return current point if it moved over COUNT of
+records; otherwise return nil."
   (interactive "p")
   (bioseq-entry-backward count fasta-record-regexp))
 
@@ -139,8 +140,9 @@ Return current point if it moved over COUNT of records; otherwise return nil."
 (defun fasta-forward (count)
   "Move forward to the end fasta record.
 
-It works in the style of `forward-paragraph'. Count need to be positive integer.
-Return current point if it moved over COUNT of records; otherwise return nil."
+It works in the style of `forward-paragraph'.  Count need to be
+positive integer.  Return current point if it moved over COUNT of
+records; otherwise return nil."
   (interactive "p")
   (bioseq-entry-forward count fasta-record-regexp))
 
@@ -181,7 +183,7 @@ the beginning of the fasta entry instead of the sequence."
 (defun fasta--format (width)
   "Format the current sequence to contain WIDTH chars per line.
 
-By default, each sequence is one line (if WIDTH is nil). The
+By default, each sequence is one line (if WIDTH is nil).  The
 white spaces will all be removed."
   (and width  (< width 1)
        (error "Width should be nil or positive integer"))
@@ -205,7 +207,7 @@ white spaces will all be removed."
 (defun fasta-format (&optional width)
   "Format the current sequence to contain WIDTH chars per line.
 
-It is just a wrapper around `fasta--format'. This can take >10
+It is just a wrapper around `fasta--format'.  This can take >10
 seconds for long sequences (> 5 M base pairs)."
   (interactive "P")
   (save-excursion
@@ -215,7 +217,8 @@ seconds for long sequences (> 5 M base pairs)."
 (defun fasta-format-all (&optional width)
   "Format all fasta sequences in the buffer.
 
-It calls `fasta--format' on each fasta records."
+It calls `fasta--format' on each fasta records.
+Optional argument WIDTH is to set a row width."
   (interactive "P")
   (save-excursion
     (goto-char (point-max))
@@ -234,7 +237,7 @@ It calls `fasta--format' on each fasta records."
 (defun fasta-position ()
   "Return the position of point in the current sequence.
 
-It will not count white spaces and sequence gaps. See also
+It will not count white spaces and sequence gaps.  See also
 `fasta-position-ali'."
   (interactive)
   (if (looking-at fasta-record-regexp)
@@ -276,7 +279,7 @@ It will not count white spaces and sequence gaps. See also
                (if nuc-mode  ; if nuc-mode is enabled
                    ;; (print (buffer-substring beg end))
                    (nuc-reverse-complement beg end)
-                 (error "nuc mode is not enabled"))))
+                 (error "The nuc mode is not enabled"))))
     ((debug error)
      (primitive-undo 1 buffer-undo-list)
      ;; get the original error message
@@ -309,7 +312,7 @@ It is just a wrapper on `fasta--rc'."
       (progn (fasta-mark)
              (if nuc-mode  ; if nuc-mode is enabled
                  (nuc-translate (region-beginning) (region-end))
-               (error "nuc mode is not enabled")))
+               (error "The nuc mode is not enabled")))
     ((debug error)
      (primitive-undo 1 buffer-undo-list)
      ;; get the original error message
@@ -343,7 +346,7 @@ It calls `fasta--translate' on each fasta record."
     (fasta-mark)
     (if pro-mode  ; if pro-mode is enabled
         (pro-weight (region-beginning) (region-end))
-      (error "pro mode is not enabled. `fasta-weight' is only for protein sequence"))))
+      (error "The pro mode is not enabled.  `fasta-weight' is only for protein sequence"))))
 
 
 (defun fasta-summary ()
@@ -361,7 +364,7 @@ See also `bioseq-summary', `nuc-summary', `pro-summary'."
   "Paint current fasta sequence by their residue identity.
 
 By default, lower and upper cases are painted in the same colors.
-C-u \\[fasta-paint] honors the cases."
+If CASE is not nil, this function honors the case."
   (condition-case err
       (progn (fasta-mark)
              (cond (nuc-mode
@@ -387,7 +390,8 @@ It calls `bioseq-unpaint'."
 (defun fasta-paint (&optional case)
   "Paint current sequence.
 
-It is just a wrapper around `fasta--paint'."
+It is just a wrapper around `fasta--paint'.  Optional argument
+CASE is set to non-nil to paint with case sensitivity."
   (interactive "P")
   (save-excursion
     (fasta--paint case)))
@@ -407,7 +411,8 @@ It calls `bioseq-unpaint' on each fasta record."
 (defun fasta-paint-all (&optional case)
   "Paint all sequences.
 
-It calls `fasta--paint' on each fasta record."
+It calls `fasta--paint' on each fasta record.  Optional argument
+CASE is set to non-nil to paint with case sensitivity."
   (interactive "P")
   (save-excursion
     (goto-char (point-max))
@@ -420,7 +425,7 @@ It calls `fasta--paint' on each fasta record."
   "A macro called by other column manipulation functions.
 
 FN is a piece of code that does some specific manipulation
-at the current column of all fasta records. See `fasta-insert-column'
+at the current column of all fasta records.  See `fasta-insert-column'
 and `fasta-delete-column' for an example of usage."
   `(save-excursion
      (let ((column (current-column))
@@ -437,12 +442,16 @@ and `fasta-delete-column' for an example of usage."
        ;; return to the original state if error is met.
        (end-of-col-err ; the single quote is dispensable
         (primitive-undo 1 buffer-undo-list)
-        (error "Abort: line %d is shorter than the column number (%d)."
+        (error "Abort: line %d is shorter than the column number (%d)"
                line column))))))
 
 
 (defun fasta-column-delete (&optional n)
-  "Delete current column."
+  "Delete current column(s) for all sequences.
+
+Delete the current column by default, unless the optional
+argument N is set to delete the number of chars starting from the
+cursor."
   (interactive "p")
   (fasta--column-action (delete-char n)))
 
@@ -456,15 +465,14 @@ and `fasta-delete-column' for an example of usage."
 (defun fasta-column-highlight (&optional to-face)
   "Highlight the current column with the face TO-FACE.
 
-If TO-FACE is not a face, mark with highlight face by default.
-Thus \\[fasta-highlight-column] will mark with highlight face;
-and C-u \\[fasta-highlight-column] will unmark the column."
-  (interactive "p")
+It can be used to highlight/un-highlight the current column in
+sequence alignment fasta file.  Interactively, TO-FACE is raw
+prefix argument.  If TO-FACE is omitted or nil, mark the column
+with highlight face by default; otherwise, unmark the column."
+  (interactive "P")
   ;; (princ to-face)
-  (cond ((equal to-face 1) ; without C-u
-         (setq to-face 'highlight))
-        ((numberp to-face)
-         (setq to-face nil)))
+  (or to-face ; without C-u
+      (setq to-face 'highlight))
   (fasta--column-action
    (put-text-property (point) (1+ (point)) 'font-lock-face to-face)))
 
@@ -472,8 +480,9 @@ and C-u \\[fasta-highlight-column] will unmark the column."
 (defun fasta-column-paint (&optional case)
   "Paint the current column according their aa or nuc bases.
 
-By default, lower and upper cases are painted in the same colors.
-C-u \\[fasta-paint-column] honors the cases"
+CASE is raw prefix argument.  If it is omitted or nil, lower and
+upper cases are painted in the same colors; otherwise, it honors
+the case."
   (interactive "P")
   (let ((current-char '(char-after)) to-face)
     (or case
@@ -483,7 +492,7 @@ C-u \\[fasta-paint-column] honors the cases"
           (pro-mode
            (setq to-face (list 'format "pro-aa-face-%c" current-char)))
           (t
-           (error "Unknown sequence type. Please specify protein or nucletide")))
+           (error "Unknown sequence type.  Please specify protein or nucletide")))
     (fasta--column-action
      (with-silent-modifications
        (put-text-property (point) (1+ (point))
@@ -512,11 +521,13 @@ If CASE is nil, the summary will be case insensitive."
 (defun fasta-bioseq-type (&optional threshold)
   "Enable the minor mode for either protein or nucleic acid.
 
-It will search the first 100 sequence residues (or the current
-sequence record, whichever is smaller) for unique nucletide base
-and unique protein amino acid IUPAC code. If found, the minor
-mode of `nuc-mode' or `pro-mode' will be enabled. If it is
-ambiguous, enable `nuc-mode' by default."
+It will search the first THRESHOLD number of sequence
+residues (100 if THRESHOLD is nil), or the current sequence
+record (whichever is smaller) for unique nucletide base and
+unique protein amino acid IUPAC code.  If found, the proper minor
+mode (variable `nuc-mode' or variable `pro-mode') will be
+enabled.  If it is ambiguous, enable variable `nuc-mode' by
+default."
   (let ((pro-aa-uniq '(?E ?F ?I ?J ?L ?P ?Q ?Z ?e ?f ?i ?j ?l ?p ?q ?z))
         current)
     (save-mark-and-excursion
