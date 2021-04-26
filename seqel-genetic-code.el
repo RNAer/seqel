@@ -1,4 +1,4 @@
-;;; genetic-code.el --- Store tables of genetic code
+;;; seqel-genetic-code.el --- Store tables of genetic code
 
 ;; Copyright (C) 2021  Zech Xu
 
@@ -16,7 +16,7 @@
 ;;; Code:
 
 
-(defun genetic-code-table (n)
+(defun seqel-genetic-code-table (n)
   "Return tranlation table.
 
 N is an integer to set the translation table that
@@ -553,7 +553,7 @@ http://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi"
            ("GGG" ?G ?-)))))
 
 
-(provide 'genetic-code)
+(provide 'seqel-genetic-code)
 
 
-;;; genetic-code.el ends here
+;;; seqel-genetic-code.el ends here

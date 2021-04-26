@@ -1,4 +1,4 @@
-;;; bioseq.el --- Util functions and variables shared by nuc-mode and pro-mode
+;;; seqel.el --- Util functions and variables
 
 ;; Copyright (C) 2021  Zech Xu
 
@@ -19,36 +19,36 @@
 
 
 ;; valid characters as alignment gaps in the sequences
-(defvar bioseq-gap
+(defvar seqel-gap
   '(?- ?.)
   "*Chars of '.' and '-' that represent a gap.")
 
-(defvar bioseq-space
+(defvar seqel-space
   '(?  ?\t ?\n ?\r)
   "*Chars of whitespaces that may appear in sequences.
 
 It will be skipped during moving and search and anything
 involving counting.")
 
-(defvar bioseq-cruft-regexp
+(defvar seqel-cruft-regexp
   (regexp-opt (mapcar #'char-to-string
-                      (concat bioseq-gap bioseq-space)))
-  "A regexp that matches cruft, including `bioseq-gap' and `bioseq-space'.")
+                      (concat seqel-gap seqel-space)))
+  "A regexp that matches cruft, including `seqel-gap' and `seqel-space'.")
 
-(defvar bioseq-cruft-set
+(defvar seqel-cruft-set
   (let ((alphabet-set (make-hash-table :test 'eq
-                                       :size (+ (length bioseq-gap)
-                                                (length bioseq-space)))))
-    (mapc (lambda (i) (puthash i t alphabet-set)) bioseq-gap)
-    (mapc (lambda (i) (puthash i t alphabet-set)) bioseq-space)
+                                       :size (+ (length seqel-gap)
+                                                (length seqel-space)))))
+    (mapc (lambda (i) (puthash i t alphabet-set)) seqel-gap)
+    (mapc (lambda (i) (puthash i t alphabet-set)) seqel-space)
     alphabet-set)
-  "The set of alphabets for `bioseq-gap' and `bioseq-space' in sequences.
+  "The set of alphabets for `seqel-gap' and `seqel-space' in sequences.
 
 This is a hash table: keys are char and values are t. It serves
 like a set object similar in Python language.")
 
 
-(defmacro bioseq-interactive-region-or-line ()
+(defmacro seqel-interactive-region-or-line ()
   "If no region is marked, mark current line."
   `(interactive
     (if (use-region-p) ; mark-active
@@ -56,11 +56,11 @@ like a set object similar in Python language.")
       (list (line-beginning-position) (line-end-position)))))
 
 
-(defun bioseq-forward-char (count legal-alphbet-set)
+(defun seqel-forward-char (count legal-alphbet-set)
   "Move the cursor for COUNT times repeatedly from the point on.
 
 The next char has to belong to LEGAL-ALPHBET-SET to be
- counted.  The `bioseq-cruft-regexp' char will be skipped, i.e., not
+ counted.  The `seqel-cruft-regexp' char will be skipped, i.e., not
  counted.  Return the actual count of legal char.  COUNT can be
  either positive or negative integer - if it is positive, move
  forward; if it is negative, move backward; if zero, don't move."
@@ -68,7 +68,7 @@ The next char has to belong to LEGAL-ALPHBET-SET to be
   (let ((direction (if (< count 0) -1 1))
         (fetch-char (if (< count 0) 'char-before 'char-after)))
     (dotimes (x (abs count))
-      (while (gethash (funcall fetch-char) bioseq-cruft-set)
+      (while (gethash (funcall fetch-char) seqel-cruft-set)
         (forward-char direction))
       (if (gethash (funcall fetch-char) legal-alphbet-set)
           (forward-char direction)
@@ -76,14 +76,14 @@ The next char has to belong to LEGAL-ALPHBET-SET to be
     count))
 
 
-(defun bioseq-summary (beg end &optional legal-char-set)
+(defun seqel-summary (beg end &optional legal-char-set)
   "Count the number of all the characters in the region.
 
 Summarize the sequence marked between BEG and END.  Ignore char
 that does not belong to LEGAL-CHAR-SET.  Use hash table to create
 dictionary-like data type.  Return the hash table.  This is
 fast (only 2 seconds for 5M base pairs)."
-  (bioseq-interactive-region-or-line)
+  (seqel-interactive-region-or-line)
   (let (my-hash size char count)
     (if legal-char-set
         (progn (setq my-hash (make-hash-table :test 'equal :size (hash-table-count legal-char-set)))
@@ -104,15 +104,15 @@ fast (only 2 seconds for 5M base pairs)."
       my-hash)))
 
 
-(defun bioseq-count (beg end &optional legal-char-set)
+(defun seqel-count (beg end &optional legal-char-set)
   "Count the chars that belong to LEGAL-CHAR-REGEXP.
 
 Count the residues of sequence region marked between BEG and
-END.  Chars of `bioseq-cruft-regexp' will be skipped.  Return the
+END.  Chars of `seqel-cruft-regexp' will be skipped.  Return the
 count if the region contains only legal characters (if
 LEGAL-CHAR-SET is provided); otherwise return nil and report the
 location of the invalid characters.  This function is used by
-`nuc-count' and `pro-count'."
+`nuc-count' and `seqel-pro-count'."
   (let ((count 0) char)
     (save-excursion
       (goto-char beg)
@@ -121,21 +121,21 @@ location of the invalid characters.  This function is used by
         (cond ((gethash char legal-char-set) (setq count (1+ count)))
               ;; allow any char if legal-char-set is not provided
               ((and legal-char-set
-                    (not (gethash char bioseq-cruft-set)))
+                    (not (gethash char seqel-cruft-set)))
                (error "Bad char '%c' found at line %d column %d"
                       char (line-number-at-pos) (current-column))))
         (forward-char)))
     count))
 
-(defun bioseq-color-gradient-hsl (start stop step-number &optional s l)
+(defun seqel-color-gradient-hsl (start stop step-number &optional s l)
   "Return a list with (STEP-NUMBER + 1) number of colors in hex code.
 
 START and STOP should are the start and ending hue in the color gradient
 to create.  And S and L are saturation and lightness.
 
-For example, \"(bioseq-color-gradient-hsl 0 0.333 20)\" will produce color
+For example, \"(seqel-color-gradient-hsl 0 0.333 20)\" will produce color
 gradient from red to yellow to green. Please be aware that there is a
-`bioseq-color-gradient' function defined in color.el, which produces color
+`color-gradient' function defined in color.el, which produces color
 gradient in RGB scales (for the example here, it will create gradient
 from red to green without yellow) besides other differences."
   (let* ((incremental (/ (- stop start) step-number)))
@@ -145,11 +145,11 @@ from red to green without yellow) besides other differences."
                                     (nth 0 rgb)
                                     (nth 1 rgb)
                                     (nth 2 rgb)))
-            (mapcar #'(lambda (hue) (bioseq-color-hsl-to-rgb hue s l))
+            (mapcar #'(lambda (hue) (color-hsl-to-rgb hue s l))
                     (number-sequence start stop incremental)))))
 
 
-(defvar bioseq-color-pairs
+(defvar seqel-color-pairs
   '(("#ffffff" "#000000")  ; white    on black
     ("#ff0000" "#000000")  ; red
     ("#00ff00" "#000000")  ; green
@@ -183,14 +183,14 @@ from red to green without yellow) besides other differences."
 
 The first one is the text color and the second is the background.")
 
-(defvar bioseq-color-pairs-cycle
-  (setcdr (last bioseq-color-pairs) bioseq-color-pairs)
+(defvar seqel-color-pairs-cycle
+  (setcdr (last seqel-color-pairs) seqel-color-pairs)
     "Color pairs that pass WCAG AAA test.
 
 The first one is the text color and the second is the background.")
 
 
-(defmacro bioseq--def-char-face (letter backgrnd foregrnd grp)
+(defmacro seqel--def-char-face (letter backgrnd foregrnd grp)
   "A macro used to define faces.
 
 This will define a face named GRP-LETTER for character LETTER
@@ -208,7 +208,7 @@ background and FOREGRND as foreground colors."
      ,(concat "Face for marking up " (upcase letter) "'s")))
 
 
-(defun bioseq-paint (beg end face-group &optional case)
+(defun seqel-paint (beg end face-group &optional case)
   "Color the sequences in the region BEG to END.
 
 If CASE is nil, upcase and lowercase chars will be colored the same;
@@ -222,7 +222,7 @@ TODO: this is slow for long sequences."
       (dotimes (i (- end beg))
         (setq char (char-after))
         ;; skip whitespaces and gap symbols
-        (if (not (gethash char bioseq-cruft-set))
+        (if (not (gethash char seqel-cruft-set))
             (progn (if case
                        (setq face (format "%s-%c" face-group char))
                      ;; let upcase base use the color of lowercase base color
@@ -232,9 +232,9 @@ TODO: this is slow for long sequences."
                      (put-text-property (+ beg i) (+ beg i 1) 'font-lock-face (intern face)))))
         (forward-char)))))
 
-(defun bioseq-unpaint (beg end)
+(defun seqel-unpaint (beg end)
   "Uncolor the sequences from BEG to END or the current line."
-  (bioseq-interactive-region-or-line)
+  (seqel-interactive-region-or-line)
   (with-silent-modifications
     (remove-text-properties beg end '(font-lock-face nil))))
 
@@ -243,7 +243,7 @@ TODO: this is slow for long sequences."
 
 ;; (defun bioseq-isearch-transform-string ()
 ;;   (interactive)
-;;   (let* ((string (bioseq-isearch-mangle-str isearch-string)))
+;;   (let* ((string (seqel-isearch-mangle-str isearch-string)))
 ;;     (setq isearch-string string
 ;;           isearch-message (mapconcat 'isearch-text-char-description string ""))
 ;;     (isearch-search-and-update)))
@@ -251,30 +251,30 @@ TODO: this is slow for long sequences."
 ;; (define-key isearch-mode-map (kbd "C-c C-t") 'bioseq-isearch-transform-string)
 
 
-(defun bioseq-isearch-mangle-str (str)
+(defun seqel-isearch-mangle-str (str)
   "Mangle the string STR into a regexp to search over cruft in sequence.
 
 Inserts a regexp between each base which matches sequence
 formatting cruft, namely, you don't need to worry about if there
 is any spaces separating between 'A' and 'T' if you'd like to
 find all the 'AT's in the sequence.  More technically, if
-`bioseq-cruft-regexp' is '[ ]', the search string 'acgt' would be
+`seqel-cruft-regexp' is '[ ]', the search string 'acgt' would be
 transformed into 'a[ ]*c[ ]*g[ ]*t'."
-  (mapconcat 'identity (split-string str "" 'omit-empty) (concat bioseq-cruft-regexp "*")))
+  (mapconcat 'identity (split-string str "" 'omit-empty) (concat seqel-cruft-regexp "*")))
 
 
-(defun bioseq-isearch-forward (pattern &optional bound noerror)
+(defun seqel-isearch-forward (pattern &optional bound noerror)
   "Search forward for PATTERN.
 
 BOUND and NOERROR passes to function `re-search-forward'."
-  (let ((string (bioseq-isearch-mangle-str pattern)))
+  (let ((string (seqel-isearch-mangle-str pattern)))
     (re-search-forward string bound noerror)))
 
-(defun bioseq-isearch-backward (pattern &optional bound noerror)
+(defun seqel-isearch-backward (pattern &optional bound noerror)
   "Search backward for PATTERN.
 
 BOUND and NOERROR passes to function `re-search-backward'."
-  (let ((string (bioseq-isearch-mangle-str pattern)))
+  (let ((string (seqel-isearch-mangle-str pattern)))
     (re-search-backward string bound noerror)))
 
 (defadvice isearch-message-prefix (after bioseq-isearch-ismp)
@@ -283,38 +283,38 @@ BOUND and NOERROR passes to function `re-search-backward'."
 This serves as a warning that the string is being mangled."
   (setq ad-return-value (concat "SEQ " ad-return-value)))
 
-(defvar bioseq-isearch-p nil
+(defvar seqel-isearch-p nil
   "Whether sequence pattern isearch is enabled.")
 
-(defun bioseq-toggle-isearch ()
+(defun seqel-toggle-isearch ()
   "Toggle the sequence isearch."
   (interactive)
-  (cond (bioseq-isearch-p
-         (setq bioseq-isearch-p nil)
+  (cond (seqel-isearch-p
+         (setq seqel-isearch-p nil)
          (message "sequence pattern isearch is off")
          (ad-disable-advice 'isearch-message-prefix 'after 'bioseq-isearch-ismp))
-        (t (setq bioseq-isearch-p t)
+        (t (setq seqel-isearch-p t)
            (message "sequence pattern isearch is on")
            (ad-enable-advice 'isearch-message-prefix 'after 'bioseq-isearch-ismp)))
   ;; in case there are other advices.
   (ad-activate 'isearch-message-prefix))
 
-(defun bioseq-isearch-search-fun ()
+(defun seqel-isearch-search-fun ()
   "Set to `isearch-search-fun-function'."
-  (if bioseq-isearch-p
-      (if isearch-forward 'bioseq-isearch-forward 'bioseq-isearch-backward)
+  (if seqel-isearch-p
+      (if isearch-forward 'seqel-isearch-forward 'seqel-isearch-backward)
     (isearch-search-fun-default)))
 
-(setq isearch-search-fun-function 'bioseq-isearch-search-fun)
+(setq isearch-search-fun-function 'seqel-isearch-search-fun)
 
 
-(defun bioseq-entry-forward (count entry-regexp)
+(defun seqel-entry-forward (count entry-regexp)
   "Move forward to the beginning of next entry.
 
 It works in the style of `forward-paragraph'.  COUNT needs to be
 positive integer.  ENTRY-REGEXP defines the boundary of
 entries.  Return current point if it moved over COUNT of entries;
-otherwise return nil.  See also `fasta-forward'."
+otherwise return nil.  See also `seqel-fasta-forward'."
   (if (looking-at entry-regexp)
       (setq count (1+ count)))
   (if (< count 1)
@@ -324,51 +324,51 @@ otherwise return nil.  See also `fasta-forward'."
     nil))
 
 
-(defun bioseq-entry-backward (count entry-regexp)
+(defun seqel-entry-backward (count entry-regexp)
   "Move the point to the beginning of previous entry.
 
 It works in the style of `backward-paragraph'.  COUNT needs to be
 positive integer.  ENTRY-REGEXP defines the boundary of entries.
 Return current point if it moved over COUNT of entries; otherwise
-return nil.  See also `fasta-backward'."
+return nil.  See also `seqel-fasta-backward'."
   (if (> count 0)
       (re-search-backward entry-regexp nil 'move-to-point-min count)
     (error "The argument COUNT should be positive integer!")))
 
 
-(defun bioseq-entry-last (entry-regexp)
+(defun seqel-entry-last (entry-regexp)
   "Go to the beginning of last entry.
 
 ENTRY-REGEXP defines the boundary of entries."
-  ;; (while (bioseq-entry-forward 1))
+  ;; (while (seqel-entry-forward 1))
   (goto-char (point-max))
-  (bioseq-entry-backward 1 entry-regexp))
+  (seqel-entry-backward 1 entry-regexp))
 
 
-(defun bioseq-entry-first (entry-regexp)
+(defun seqel-entry-first (entry-regexp)
   "Go to the beginning of first entry.
 
 ENTRY-REGEXP defines the boundary of entries."
-  ;; (while (bioseq-entry-backward 1)))
+  ;; (while (seqel-entry-backward 1)))
   (goto-char (point-min))
   (or (looking-at entry-regexp)
-      (bioseq-entry-forward 1 entry-regexp)))
+      (seqel-entry-forward 1 entry-regexp)))
 
 
-(defun bioseq-entry-count (entry-regexp)
+(defun seqel-entry-count (entry-regexp)
   "Count the number of entries in the buffer.
 
 ENTRY-REGEXP defines the boundary of entries."
   (let ((total 0))
     (save-excursion
       (goto-char (point-max))
-      (while (bioseq-entry-backward 1 entry-regexp)
+      (while (seqel-entry-backward 1 entry-regexp)
         (setq total (1+ total))))
     (message "Total %d sequences." total)
     total))
 
 
-(defun bioseq-hash-alist (alist)
+(defun seqel-hash-alist (alist)
   "Convert association list ALIST to a hash table and return it.
 
 The car will be the key and the cdr will be the value.  If
@@ -381,7 +381,7 @@ reported."
       (puthash (car entry) (cdr entry) my-hash))
     my-hash))
 
-(defun bioseq-hash-equal (hash1 hash2)
+(defun seqel-hash-equal (hash1 hash2)
   "Compare 2 hash tables HASH1 and HASH2 to see whether they are equal."
   (and (= (hash-table-count hash1)
           (hash-table-count hash2))
@@ -394,7 +394,7 @@ reported."
          (throw 'flag t))))
 
 
-(defun bioseq--zip (function &rest args)
+(defun seqel--zip (function &rest args)
   "Apply FUNCTION to successive cars of all ARGS.
 
 Return the list of results.  This is similar to the Python zip function."
@@ -402,11 +402,11 @@ Return the list of results.  This is similar to the Python zip function."
   (if (not (memq nil args))
       ;; apply function to cars.
       (cons (apply function (mapcar 'car args))
-            (apply 'bioseq--zip function
+            (apply 'seqel--zip function
                    ;; Recurse for rest of elements.
                    (mapcar 'cdr args)))))
 
 
-(provide 'bioseq)
+(provide 'seqel)
 
-;;; bioseq.el ends here
+;;; seqel.el ends here

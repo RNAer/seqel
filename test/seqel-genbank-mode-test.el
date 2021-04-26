@@ -1,9 +1,7 @@
-;;; genbank-mode-test.el --- a unit test for genbank-mode.el
-
-(require 'genbank-mode)
+(require 'seqel-genbank-mode)
 
 
-(ert-deftest genbank-forward-test ()
+(ert-deftest seqel-genbank-forward-test ()
   :tags '(genbank-mode)
   (let ((cases '(("" 1 1)
                  ("LOCUS       ABCM01000001          510929 bp    DNA     linear   BCT 20-JUN-2007
@@ -18,11 +16,11 @@ LOCUS       ABCM01000001          510929 bp    DNA     linear   BCT 20-JUN-2007
         (insert (nth 0 test))
         (goto-char (point-min))
         (setq current-prefix-arg (nth 1 test))
-        (call-interactively 'genbank-forward)
+        (call-interactively 'seqel-genbank-forward)
         (should (equal (line-number-at-pos) (nth 2 test)))
         (delete-region (point-min) (point-max))))))
 
-(ert-deftest genbank-backward-test ()
+(ert-deftest seqel-genbank-backward-test ()
   :tags '(genbank-mode)
   (let ((cases '(("" 1 1)
                  ("LOCUS       ABCM01000001          510929 bp    DNA     linear   BCT 20-JUN-2007
@@ -36,11 +34,11 @@ LOCUS       ABCM01000001          510929 bp    DNA     linear   BCT 20-JUN-2007
       (dolist (test cases)
         (insert (nth 0 test))
         (setq current-prefix-arg (nth 1 test))
-        (call-interactively 'genbank-backward)
+        (call-interactively 'seqel-genbank-backward)
         (should (equal (line-number-at-pos) (nth 2 test)))
         (delete-region (point-min) (point-max))))))
 
-(ert-deftest genbank-first-test ()
+(ert-deftest seqel-genbank-first-test ()
   :tags '(genbank-mode)
   (let ((cases '(""
                   "LOCUS       ABCM01000001          510929 bp    DNA     linear   BCT 20-JUN-2007
@@ -52,11 +50,11 @@ LOCUS       ABCM01000001          510929 bp    DNA     linear   BCT 20-JUN-2007
     (with-temp-buffer
       (dolist (test cases)
         (insert test)
-        (call-interactively 'genbank-first)
+        (call-interactively 'seqel-genbank-first)
         (should (equal (point-min) (point)))
         (delete-region (point-min) (point-max))))))
 
-(ert-deftest genbank-last-test ()
+(ert-deftest seqel-genbank-last-test ()
   :tags '(genbank-mode)
   (let ((cases '(("" . 1)
                  ("LOCUS       ABCM01000001          510929 bp    DNA     linear   BCT 20-JUN-2007
@@ -68,12 +66,12 @@ LOCUS       ABCM01000001          510929 bp    DNA     linear   BCT 20-JUN-2007
     (with-temp-buffer
       (dolist (test cases)
         (insert (car test))
-        (call-interactively 'genbank-last)
+        (call-interactively 'seqel-genbank-last)
         (should (equal (line-number-at-pos) (cdr test)))
         (delete-region (point-min) (point-max))))))
 
 
-(ert-deftest genbank-count-test ()
+(ert-deftest seqel-genbank-count-test ()
   :tags '(genbank-mode)
   (let ((cases '(("" . 0)
                  ("LOCUS       ABCM01000001          510929 bp    DNA     linear   BCT 20-JUN-2007
@@ -86,11 +84,11 @@ LOCUS       ABCM01000001          510929 bp    DNA     linear   BCT 20-JUN-2007
     (with-temp-buffer
       (dolist (test cases)
         (insert (car test))
-        (should (equal (genbank-count) (cdr test)))
+        (should (equal (seqel-genbank-count) (cdr test)))
         (delete-region (point-min) (point-max))))))
 
 
-(ert-deftest genbank-delete-test ()
+(ert-deftest seqel-genbank-delete-test ()
   :tags '(genbank-mode)
   (let ((cases '(("" . "")
                  ("LOCUS       ABCM01000001          510929 bp    DNA     linear   BCT 20-JUN-2007
@@ -105,13 +103,13 @@ LOCUS       ABCM01000002          510929 bp    DNA     linear   BCT 20-JUN-2007
       (dolist (test cases)
         (insert (car test))
         (goto-char (point-min))
-        (call-interactively 'genbank-delete)
+        (call-interactively 'seqel-genbank-delete)
         (setq tmp (buffer-string))
         (should (equal tmp (cdr test)))
         (delete-region (point-min) (point-max))))))
 
 
-(ert-deftest genbank-2-fasta-test ()
+(ert-deftest seqel-genbank-2-fasta-test ()
   :tags '(genbank-mode)
   (let ((cases '(; ("" . "")
                  ("LOCUS       ABCM01000001          510929 bp    DNA     linear   BCT 20-JUN-2007
@@ -127,9 +125,7 @@ TACGGTAACAGAAGTACTTTCTAAACACGGTATTGACCAGCGTGTGCTCAACCCCGACAATCTCAAGG
       (dolist (test cases)
         (insert (car test))
         (goto-char (point-min))
-        (call-interactively 'genbank-2-fasta)
+        (call-interactively 'seqel-genbank-2-fasta)
         (setq tmp (buffer-string))
         (should (equal tmp (cdr test)))
         (delete-region (point-min) (point-max))))))
-
-;; genbank-mode-test.el ends here

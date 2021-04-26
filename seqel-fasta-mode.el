@@ -1,4 +1,4 @@
-;;; fasta-mode.el --- A major mode for editing fasta files.
+;;; seqel-fasta-mode.el --- A major mode for editing fasta files.
 
 ;; Copyright (C) 2021  Zech Xu
 
@@ -15,50 +15,49 @@
 ;;; Code:
 
 
-(require 'bioseq)
-(require 'nuc-mode)
-(require 'pro-mode)
-(require 'genetic-code)
+(require 'seqel)
+(require 'seqel-nuc-mode)
+(require 'seqel-pro-mode)
 
 
-(defvar fasta-mode-hook nil
+(defvar seqel-fasta-mode-hook nil
   "*Hook to setup `fasta-mode'.")
 
 
-(defvar fasta-mode-map
+(defvar seqel-fasta-mode-map
   ;; use `make-keymap' instead of `make-sparse-keymap'
   ;; if there are lots of keybindings
   (let ((map (make-sparse-keymap)))
     ;; Ctrl bindings
-    (define-key map "\C-c\C-c"     'fasta-count)
-    (define-key map "\C-c\C-d"     'fasta-delete)
-    (define-key map "\C-c\C-a"     'fasta-first)
-    (define-key map "\C-c\C-z"     'fasta-last)
-    (define-key map "\C-c\C-f"     'fasta-forward) ; it also binds to M-}
-    (define-key map "\C-c\C-b"     'fasta-backward); it also binds to M-{
-    (define-key map "\C-c\C-m"     'fasta-mark)    ; it also binds to M-h
-    (define-key map "\C-c\C-l"     'fasta-length)
-    (define-key map "\C-c\C-p"     'fasta-position)
-    (define-key map "\C-c\C-w"     'fasta-weight)
-    (define-key map "\C-c\C-r"     'fasta-rc-all)
-    (define-key map "\C-c\C-t"     'fasta-translate-all)
-    (define-key map "\C-c\C-vd"  'fasta-column-delete)
-    (define-key map "\C-c\C-vi"  'fasta-column-insert)
-    (define-key map "\C-c\C-vh"  'fasta-column-highlight)
-    (define-key map "\C-c\C-vp"  'fasta-column-paint)
-    (define-key map "\C-c\C-vs"  'fasta-column-summary)
+    (define-key map "\C-c\C-c"     'seqel-fasta-count)
+    (define-key map "\C-c\C-d"     'seqel-fasta-delete)
+    (define-key map "\C-c\C-a"     'seqel-fasta-first)
+    (define-key map "\C-c\C-z"     'seqel-fasta-last)
+    (define-key map "\C-c\C-f"     'seqel-fasta-forward) ; it also binds to M-}
+    (define-key map "\C-c\C-b"     'seqel-fasta-backward); it also binds to M-{
+    (define-key map "\C-c\C-m"     'seqel-fasta-mark)    ; it also binds to M-h
+    (define-key map "\C-c\C-l"     'seqel-fasta-length)
+    (define-key map "\C-c\C-p"     'seqel-fasta-position)
+    (define-key map "\C-c\C-w"     'seqel-fasta-weight)
+    (define-key map "\C-c\C-r"     'seqel-fasta-rc-all)
+    (define-key map "\C-c\C-t"     'seqel-fasta-translate-all)
+    (define-key map "\C-c\C-vd"  'seqel-fasta-column-delete)
+    (define-key map "\C-c\C-vi"  'seqel-fasta-column-insert)
+    (define-key map "\C-c\C-vh"  'seqel-fasta-column-highlight)
+    (define-key map "\C-c\C-vp"  'seqel-fasta-column-paint)
+    (define-key map "\C-c\C-vs"  'seqel-fasta-column-summary)
     map)
   "The local keymap for `fasta-mode'.")
 
 ;; map the paragraph key bindings to corresponding fasta functions
 (let ((equivs
-       '((fasta-forward  . forward-paragraph)
-         (fasta-backward . backward-paragraph)
-         (fasta-mark     . mark-paragraph))))
+       '((seqel-fasta-forward  . forward-paragraph)
+         (seqel-fasta-backward . backward-paragraph)
+         (seqel-fasta-mark     . mark-paragraph))))
   (dolist (x equivs)
     (substitute-key-definition (cdr x)
                                (car x)
-                               fasta-mode-map
+                               seqel-fasta-mode-map
                                (current-global-map))))
 
 ;;;###autoload
@@ -66,7 +65,7 @@
              '("\\.\\(fasta\\|fa\\|fna\\|faa\\|aln\\)\\'" . fasta-mode))
 
 ;; this slows down the mode loading
-(defvar fasta-font-lock-keywords
+(defvar seqel-fasta-font-lock-keywords
   '(("^\\(>\\)\\([-_.|a-zA-Z0-9]+\\)\\(.*\\)?"
      (1 font-lock-keyword-face)
      (2 font-lock-function-name-face)
@@ -74,7 +73,7 @@
   "Expressions to highlight in `fasta-mode'.")
 
 
-(defvar fasta-record-regexp "^>.*$"
+(defvar seqel-fasta-record-regexp "^>.*$"
   "Fasta label that delimits records.")
 
 
@@ -83,27 +82,27 @@
   "Major mode for editing biological sequences in fasta format.
 
 Special commands:
-\\{fasta-mode-map}
-\\{nuc-mode-map}
-\\{pro-mode-map}"
+\\{seqel-fasta-mode-map}
+\\{seqel-nuc-mode-map}
+\\{seqel-pro-mode-map}"
   ;; This runs the normal hook change-major-mode-hook, then gets rid of
   ;; the buffer-local variables of the major mode previously in effect.
   ;; (kill-all-local-variables)
   ;; (setq mode-name "fasta")
   ;; (setq major-mode 'fasta-mode)
-  ;; (use-local-map fasta-mode-map)
+  ;; (use-local-map seqel-fasta-mode-map)
   ;; The above are automatically done if the mode is defined using
   ;; `define-derived-mode'.
   ;; the variable automatically becomes buffer-local when set
-  (setq font-lock-defaults '(fasta-font-lock-keywords))
+  (setq font-lock-defaults '(seqel-fasta-font-lock-keywords))
   ;; (set-syntax-table fasta-mode-syntax-table)
-  (run-hooks 'fasta-mode-hook))
+  (run-hooks 'seqel-fasta-mode-hook))
 
 
-(defvar fasta-setup-on-load t
+(defvar seqel-fasta-setup-on-load t
   "If not nil, set up fasta mode on buffer load by guessing buffer content.")
 
-(defun fasta-find-file ()
+(defun seqel-fasta-find-file ()
   "Invoke `fasta-mode' if the buffer look like a fasta.
 
 Only if the major mode is `fundermental'.  This function is added to
@@ -111,76 +110,76 @@ Only if the major mode is `fundermental'.  This function is added to
   (save-excursion
     (goto-char (point-min))
     (if (and (eq major-mode 'fundamental-mode)
-             (looking-at fasta-record-regexp))
+             (looking-at seqel-fasta-record-regexp))
         (fasta-mode))))
 
 ;;;###autoload
-(defun fasta-guess-on-load ()
+(defun seqel-fasta-guess-on-load ()
   "Whether to enable `fasta-mode' by guessing buffer content."
   (interactive)
-  (if fasta-setup-on-load
-      (progn (remove-hook 'find-file-hook 'fasta-find-file)
-             (setq fasta-setup-on-load nil)
+  (if seqel-fasta-setup-on-load
+      (progn (remove-hook 'find-file-hook 'seqel-fasta-find-file)
+             (setq seqel-fasta-setup-on-load nil)
              (message "Turned off fasta format guessing on load"))
-    (progn (add-hook 'find-file-hook 'fasta-find-file)
-           (setq fasta-setup-on-load t)
+    (progn (add-hook 'find-file-hook 'seqel-fasta-find-file)
+           (setq seqel-fasta-setup-on-load t)
            (message "Turned on fasta format guessing on load"))))
 
 
-(defun fasta-backward (count)
+(defun seqel-fasta-backward (count)
   "Move the point to the beginning of the fasta record.
 
 It works in the style of `backward-paragraph'.  COUNT need to be
 positive integer.  Return current point if it moved over COUNT of
 records; otherwise return nil."
   (interactive "p")
-  (bioseq-entry-backward count fasta-record-regexp))
+  (seqel-entry-backward count seqel-fasta-record-regexp))
 
 ;;;###autoload
-(defun fasta-forward (count)
+(defun seqel-fasta-forward (count)
   "Move forward to the end fasta record.
 
 It works in the style of `forward-paragraph'.  Count need to be
 positive integer.  Return current point if it moved over COUNT of
 records; otherwise return nil."
   (interactive "p")
-  (bioseq-entry-forward count fasta-record-regexp))
+  (seqel-entry-forward count seqel-fasta-record-regexp))
 
 
 ;;;###autoload
-(defun fasta-last ()
+(defun seqel-fasta-last ()
   "Go to the beginning of last fasta record."
   (interactive)
-  (bioseq-entry-last fasta-record-regexp))
+  (seqel-entry-last seqel-fasta-record-regexp))
 
 ;;;###autoload
-(defun fasta-first ()
+(defun seqel-fasta-first ()
   "Go to the beginning of first fasta record."
   (interactive)
-  (bioseq-entry-first fasta-record-regexp))
+  (seqel-entry-first seqel-fasta-record-regexp))
 
 ;;;###autoload
-(defun fasta-count ()
+(defun seqel-fasta-count ()
   "Count the number of fasta sequences in the buffer."
   (interactive)
-  (bioseq-entry-count fasta-record-regexp))
+  (seqel-entry-count seqel-fasta-record-regexp))
 
 
 ;;;###autoload
-(defun fasta-mark (&optional include-header)
+(defun seqel-fasta-mark (&optional include-header)
   "Put point at the beginning of the sequence and mark the end.
 
 If a prefix arg is provided or INCLUDE-HEADER is t, then put the point at
 the beginning of the fasta entry instead of the sequence."
   (interactive "P")
-  (if (fasta-forward 1)
+  (if (seqel-fasta-forward 1)
       (backward-char))
   (push-mark nil nil t)
-  (fasta-backward 1)
+  (seqel-fasta-backward 1)
   (or include-header
       (forward-line)))
 
-(defun fasta--format (width)
+(defun seqel--fasta-format (width)
   "Format the current sequence to contain WIDTH chars per line.
 
 By default, each sequence is one line (if WIDTH is nil).  The
@@ -188,10 +187,10 @@ white spaces will all be removed."
   (and width  (< width 1)
        (error "Width should be nil or positive integer"))
   (save-restriction
-    (fasta-mark)
+    (seqel-fasta-mark)
     (message "Formating the sequence...")
     (narrow-to-region (point) (mark))
-    ;; remove bioseq-spaces
+    ;; remove seqel-spaces
     (while (re-search-forward "\\s-+" nil t)
       ;; (setq count (1+ count))
       (replace-match "" nil nil))
@@ -204,52 +203,52 @@ white spaces will all be removed."
                  (insert-char ?\n))))))
 
 ;;;###autoload
-(defun fasta-format (&optional width)
+(defun seqel-fasta-format (&optional width)
   "Format the current sequence to contain WIDTH chars per line.
 
-It is just a wrapper around `fasta--format'.  This can take >10
+It is just a wrapper around `seqel--fasta-format'.  This can take >10
 seconds for long sequences (> 5 M base pairs)."
   (interactive "P")
   (save-excursion
-    (fasta--format width)))
+    (seqel--fasta-format width)))
 
 
-(defun fasta-format-all (&optional width)
+(defun seqel-fasta-format-all (&optional width)
   "Format all fasta sequences in the buffer.
 
-It calls `fasta--format' on each fasta records.
+It calls `seqel--fasta-format' on each fasta records.
 Optional argument WIDTH is to set a row width."
   (interactive "P")
   (save-excursion
     (goto-char (point-max))
-    (while (fasta-backward 1)
-      (fasta--format width)
-      (fasta-backward 1))))
+    (while (seqel-fasta-backward 1)
+      (seqel--fasta-format width)
+      (seqel-fasta-backward 1))))
 
 
-(defun fasta-delete ()
+(defun seqel-fasta-delete ()
   "Delete current fasta entry."
   (interactive)
-  (fasta-mark 'include-header)
+  (seqel-fasta-mark 'include-header)
   (delete-region (region-beginning) (region-end)))
 
 
-(defun fasta-position ()
+(defun seqel-fasta-position ()
   "Return the position of point in the current sequence.
 
 It will not count white spaces and sequence gaps.  See also
-`fasta-position-ali'."
+`seqel-fasta-position-ali'."
   (interactive)
-  (if (looking-at fasta-record-regexp)
+  (if (looking-at seqel-fasta-record-regexp)
       (error "Point is not in the sequence region"))
   (let ((pos (point))
         (count 0))
     (save-excursion
-      (or (fasta-backward 1)
+      (or (seqel-fasta-backward 1)
           (error "The start of the fasta record is not found"))
       (forward-line 1)
       (dotimes (i (- pos (point)))
-        (or (gethash (char-after) bioseq-cruft-set)
+        (or (gethash (char-after) seqel-cruft-set)
             (setq count (1+ count)))
         (forward-char)))
     (if (called-interactively-p 'interactive)
@@ -257,28 +256,28 @@ It will not count white spaces and sequence gaps.  See also
     count))
 
 
-(defun fasta-length ()
+(defun seqel-fasta-length ()
   "Return the length of current sequence."
   (interactive)
   (let (length)
     (save-excursion
-      (fasta-forward 1)
+      (seqel-fasta-forward 1)
       (backward-char)
-      (setq length (fasta-position)))
+      (setq length (seqel-fasta-position)))
     (if (called-interactively-p 'interactive)
         (message "Sequence length %d" length))
     length))
 
 
-(defun fasta--rc ()
+(defun seqel--seqel-fasta-rc ()
   "Reverse complement current DNA/RNA sequence."
   (condition-case err
-      (progn (fasta-mark)
+      (progn (seqel-fasta-mark)
              (let ((beg (region-beginning))
                    (end (region-end)))
                (if nuc-mode  ; if nuc-mode is enabled
                    ;; (print (buffer-substring beg end))
-                   (nuc-reverse-complement beg end)
+                   (seqel-nuc-reverse-complement beg end)
                  (error "The nuc mode is not enabled"))))
     ((debug error)
      (primitive-undo 1 buffer-undo-list)
@@ -286,32 +285,32 @@ It will not count white spaces and sequence gaps.  See also
      (error "%s" (error-message-string err)))))
 
 ;;;###autoload
-(defun fasta-rc ()
+(defun seqel-fasta-rc ()
   "Reverse complement current DNA/RNA sequence.
 
-It is just a wrapper on `fasta--rc'."
+It is just a wrapper on `seqel--seqel-fasta-rc'."
   (interactive)
   (save-excursion
-    (fasta--rc))
+    (seqel--seqel-fasta-rc))
   (message "Reverse complemented the current sequence."))
 
-(defun fasta-rc-all ()
+(defun seqel-fasta-rc-all ()
   "Reverse complement every DNA/RNA sequence in the buffer."
   (interactive)
   (save-excursion
     (goto-char (point-max))
-    (while (fasta-backward 1)
-      (fasta--rc)
-      (fasta-backward 1)))
+    (while (seqel-fasta-backward 1)
+      (seqel--seqel-fasta-rc)
+      (seqel-fasta-backward 1)))
   (message "Reverse complemented all the sequences in the buffer."))
 
 
-(defun fasta--translate ()
+(defun seqel--fasta-translate ()
   "Translate the current fasta sequence to amino acids."
   (condition-case err
-      (progn (fasta-mark)
+      (progn (seqel-fasta-mark)
              (if nuc-mode  ; if nuc-mode is enabled
-                 (nuc-translate (region-beginning) (region-end))
+                 (seqel-nuc-translate (region-beginning) (region-end))
                (error "The nuc mode is not enabled")))
     ((debug error)
      (primitive-undo 1 buffer-undo-list)
@@ -319,58 +318,58 @@ It is just a wrapper on `fasta--rc'."
      (error "%s" (error-message-string err)))))
 
 ;;;###autoload
-(defun fasta-translate ()
+(defun seqel-fasta-translate ()
   "Translate the current fasta sequence to amino acids.
 
-It is just a wrapper on `fasta--translate'."
+It is just a wrapper on `seqel--fasta-translate'."
   (interactive)
   (save-excursion
-    (fasta--translate)))
+    (seqel--fasta-translate)))
 
-(defun fasta-translate-all ()
+(defun seqel-fasta-translate-all ()
   "Translate every DNA/RNA sequence in the buffer to amino acids.
 
-It calls `fasta--translate' on each fasta record."
+It calls `seqel--fasta-translate' on each fasta record."
   (interactive)
   (save-excursion
     (goto-char (point-max))
-    (while (fasta-backward 1)
-      (fasta--translate)
-      (fasta-backward 1))))
+    (while (seqel-fasta-backward 1)
+      (seqel--fasta-translate)
+      (seqel-fasta-backward 1))))
 
 
-(defun fasta-weight ()
+(defun seqel-fasta-weight ()
   "Calculate the molecular weight of the current protein entry."
   (interactive)
   (save-excursion
-    (fasta-mark)
+    (seqel-fasta-mark)
     (if pro-mode  ; if pro-mode is enabled
-        (pro-weight (region-beginning) (region-end))
-      (error "The pro mode is not enabled.  `fasta-weight' is only for protein sequence"))))
+        (seqel-pro-weight (region-beginning) (region-end))
+      (error "The pro mode is not enabled.  `seqel-fasta-weight' is only for protein sequence"))))
 
 
-(defun fasta-summary ()
+(defun seqel-fasta-summary ()
   "Print the frequencies of characters in the fasta sequence.
 
-See also `bioseq-summary', `nuc-summary', `pro-summary'."
+See also `seqel-summary', `seqel-nuc-summary', `seqel-pro-summary'."
   (interactive)
   (save-excursion
-    (fasta-mark)
+    (seqel-fasta-mark)
     (if pro-mode
-        (pro-summary (point) (mark))
-      (nuc-summary (point) (mark)))))
+        (seqel-pro-summary (point) (mark))
+      (seqel-nuc-summary (point) (mark)))))
 
-(defun fasta--paint (&optional case)
+(defun seqel--fasta-paint (&optional case)
   "Paint current fasta sequence by their residue identity.
 
 By default, lower and upper cases are painted in the same colors.
 If CASE is not nil, this function honors the case."
   (condition-case err
-      (progn (fasta-mark)
+      (progn (seqel-fasta-mark)
              (cond (nuc-mode
-                    (nuc-paint (region-beginning) (region-end) case))
+                    (seqel-nuc-paint (region-beginning) (region-end) case))
                    (pro-mode
-                    (pro-paint (region-beginning) (region-end) case))
+                    (seqel-pro-paint (region-beginning) (region-end) case))
                    (t
                     (error "Unknown seq type"))))
     ((debug error)
@@ -378,67 +377,67 @@ If CASE is not nil, this function honors the case."
      ;; get the original error message
      (error "%s" (error-message-string err)))))
 
-(defun fasta-unpaint ()
+(defun seqel-fasta-unpaint ()
   "Unpaint current sequence.
 
-It calls `bioseq-unpaint'."
+It calls `seqel-unpaint'."
   (interactive)
   (save-excursion
-    (fasta-mark)
-    (bioseq-unpaint (region-beginning) (region-end))))
+    (seqel-fasta-mark)
+    (seqel-unpaint (region-beginning) (region-end))))
 
-(defun fasta-paint (&optional case)
+(defun seqel-fasta-paint (&optional case)
   "Paint current sequence.
 
-It is just a wrapper around `fasta--paint'.  Optional argument
+It is just a wrapper around `seqel--fasta-paint'.  Optional argument
 CASE is set to non-nil to paint with case sensitivity."
   (interactive "P")
   (save-excursion
-    (fasta--paint case)))
+    (seqel--fasta-paint case)))
 
-(defun fasta-unpaint-all ()
+(defun seqel-fasta-unpaint-all ()
   "Unpaint all the sequences.
 
-It calls `bioseq-unpaint' on each fasta record."
+It calls `seqel-unpaint' on each fasta record."
   (interactive)
   (save-excursion
     (goto-char (point-max))
-    (while (fasta-backward 1)
-      (fasta-mark)
-      (bioseq-unpaint (region-beginning) (region-end))
-      (fasta-backward 1))))
+    (while (seqel-fasta-backward 1)
+      (seqel-fasta-mark)
+      (seqel-unpaint (region-beginning) (region-end))
+      (seqel-fasta-backward 1))))
 
-(defun fasta-paint-all (&optional case)
+(defun seqel-fasta-paint-all (&optional case)
   "Paint all sequences.
 
-It calls `fasta--paint' on each fasta record.  Optional argument
+It calls `seqel--fasta-paint' on each fasta record.  Optional argument
 CASE is set to non-nil to paint with case sensitivity."
   (interactive "P")
   (save-excursion
     (goto-char (point-max))
-    (while (fasta-backward 1)
-      (fasta--paint case)
-      (fasta-backward 1))))
+    (while (seqel-fasta-backward 1)
+      (seqel--fasta-paint case)
+      (seqel-fasta-backward 1))))
 
 ;;; column manipulations
-(defmacro fasta--column-action (&rest fn)
+(defmacro seqel--fasta-column-action (&rest fn)
   "A macro called by other column manipulation functions.
 
 FN is a piece of code that does some specific manipulation
 at the current column of all fasta records.  See `fasta-insert-column'
-and `fasta-delete-column' for an example of usage."
+and `seqel-fasta-delete-column' for an example of usage."
   `(save-excursion
      (let ((column (current-column))
            pos line)
        (condition-case err
            (progn (goto-char (point-max))
-                  (while (fasta-backward 1)
+                  (while (seqel-fasta-backward 1)
                     (forward-line) ; move to the sequence region
                     (setq line (line-number-at-pos))
                     (if (< (move-to-column column) column)
                         (signal 'error '(move-to-column)))
                     ,@fn
-                    (fasta-backward 1)))
+                    (seqel-fasta-backward 1)))
        ;; return to the original state if error is met.
        (error
         (primitive-undo 1 buffer-undo-list)
@@ -446,23 +445,23 @@ and `fasta-delete-column' for an example of usage."
                line column))))))
 
 
-(defun fasta-column-delete (&optional n)
+(defun seqel-fasta-column-delete (&optional n)
   "Delete current column(s) for all sequences.
 
 Delete the current column by default, unless the optional
 argument N is set to delete the number of chars starting from the
 cursor."
   (interactive "p")
-  (fasta--column-action (delete-char n)))
+  (seqel--fasta-column-action (delete-char n)))
 
 
-(defun fasta-column-insert (str)
+(defun seqel-fasta-column-insert (str)
   "Insert a string STR at the column."
   (interactive "sInsert string: ")
-  (fasta--column-action (insert str)))
+  (seqel--fasta-column-action (insert str)))
 
 
-(defun fasta-column-highlight (&optional to-face)
+(defun seqel-fasta-column-highlight (&optional to-face)
   "Highlight the current column with the face TO-FACE.
 
 It can be used to highlight/un-highlight the current column in
@@ -473,11 +472,11 @@ with highlight face by default; otherwise, unmark the column."
   ;; (princ to-face)
   (or to-face ; without C-u
       (setq to-face 'highlight))
-  (fasta--column-action
+  (seqel--fasta-column-action
    (put-text-property (point) (1+ (point)) 'font-lock-face to-face)))
 
 
-(defun fasta-column-paint (&optional case)
+(defun seqel-fasta-column-paint (&optional case)
   "Paint the current column according their aa or nuc bases.
 
 CASE is raw prefix argument.  If it is omitted or nil, lower and
@@ -493,21 +492,21 @@ the case."
            (setq to-face (list 'format "pro-aa-face-%c" current-char)))
           (t
            (error "Unknown sequence type.  Please specify protein or nucletide")))
-    (fasta--column-action
+    (seqel--fasta-column-action
      (with-silent-modifications
        (put-text-property (point) (1+ (point))
                           'font-lock-face
                           (intern (eval to-face)))))))
 
 
-(defun fasta-column-summary (&optional case)
+(defun seqel-fasta-column-summary (&optional case)
   "Summary of the column.
 
 If CASE is nil, the summary will be case insensitive."
   (interactive "P")
   (let ((my-hash (make-hash-table :test 'equal))
         count char)
-    (fasta--column-action (setq char (char-after))
+    (seqel--fasta-column-action (setq char (char-after))
                           (or case (setq char (upcase char)))
                           (setq count (gethash char my-hash))
                           (if count
@@ -518,7 +517,7 @@ If CASE is nil, the summary will be case insensitive."
       my-hash)))
 
 
-(defun fasta-bioseq-type (&optional threshold)
+(defun seqel-fasta-bioseq-type (&optional threshold)
   "Enable the minor mode for either protein or nucleic acid.
 
 It will search the first THRESHOLD number of sequence
@@ -532,7 +531,7 @@ default."
         current)
     (save-mark-and-excursion
         (catch 'bioseq-type
-          (fasta-mark)
+          (seqel-fasta-mark)
           ;; 100 sequence residues or the current sequence length
           (dotimes (i (min (or threshold 100) (- (region-end) (region-beginning))))
             (setq current (char-after))
@@ -548,16 +547,16 @@ default."
         (throw 'bioseq-type 'nuc)))))
 
 
-(add-hook 'fasta-mode-hook
+(add-hook 'seqel-fasta-mode-hook
           (lambda ()
-            (fasta-bioseq-type)
+            (seqel-fasta-bioseq-type)
             ;; these modes can slow the loading of a large fasta file;
             ;; disable these minor modes
             (flyspell-mode -1)
             (linum-mode -1)))
 
 
-(provide 'fasta-mode)
+(provide 'seqel-fasta-mode)
 
 
-;;; fasta-mode.el ends here
+;;; seqel-fasta-mode.el ends here

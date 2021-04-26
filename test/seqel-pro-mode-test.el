@@ -1,9 +1,6 @@
-;;; pro-mode-test.el --- a unit test for pro-mode.el
+(require 'seqel-pro-mode)
 
-(require 'pro-mode)
-(require 'seq)
-
-(ert-deftest pro-weight-test ()
+(ert-deftest seqel-pro-weight-test ()
   :tags '(pro-mode)
   (let ((cases '(("ACDEFGHIKLMNPQRSTVWY" . 2378)
                  ("Aa" . 142)
@@ -12,21 +9,21 @@
     (with-temp-buffer
       (dolist (test cases)
         (insert (car test)) ; prepare the buffer
-        (should (equal (round (call-interactively 'pro-weight))
+        (should (equal (round (call-interactively 'seqel-pro-weight))
                        (cdr test)))
         (delete-region (point-min) (point-max))))))
 
-(ert-deftest pro-weight-error-test ()
+(ert-deftest seqel-pro-weight-error-test ()
   :tags '(pro-mode)
   (let ((cases '("?ACDEFGHIKLMNPQRSTVWY")))
     (with-temp-buffer
       (dolist (test cases)
         (insert test) ; prepare the buffer
-        (should-error (call-interactively 'pro-weight))
+        (should-error (call-interactively 'seqel-pro-weight))
         (delete-region (point-min) (point-max))))))
 
 
-(ert-deftest pro-count-test ()
+(ert-deftest seqel-pro-count-test ()
   :tags '(pro-mode)
   (let ((cases '(("ABCDEFGHIJKLMNPQRSTVWXYZabcdefghijklmnpqrstvwxyz" . 48)
                  ("12345"    .       nil)))
@@ -38,13 +35,13 @@
         (goto-char (point-max))
         (setq exp (cdr test))
         (if exp
-            (should (equal (call-interactively 'pro-count) exp))
-          (should-error (call-interactively 'pro-count)))
+            (should (equal (call-interactively 'seqel-pro-count) exp))
+          (should-error (call-interactively 'seqel-pro-count)))
 
         (delete-region (point-min) (point-max))))))
 
 
-(ert-deftest pro-3-2-1-2-3-test ()
+(ert-deftest seqel-pro-3-2-1-2-3-test ()
   :tags '(pro-mode)
   (let ((cases '(("AlaCysAspGluPheGlyHisIleLysAsxXaaGlx" . "ACDEFGHIKBXZ")
                  ("AsnProGlnArgSerThrValTrpTyr" . "NPQRSTVWY"))))
@@ -53,17 +50,17 @@
         (insert (car test))
         (set-mark (point-min))
         (goto-char (point-max))
-        (call-interactively 'pro-3-2-1)
+        (call-interactively 'seqel-pro-3-2-1)
         (should (equal (buffer-string) (cdr test)))
 
         (set-mark (point-min))
         (goto-char (point-max))
-        (call-interactively 'pro-1-2-3)
+        (call-interactively 'seqel-pro-1-2-3)
         (should (equal (buffer-string) (car test)))
 
         (delete-region (point-min) (point-max))))))
 
-(ert-deftest pro-summary-test ()
+(ert-deftest seqel-pro-summary-test ()
   :tags '(pro-mode)
   (let ((cases '(("ABCa" .
                   ((?A . 1) (?B . 1) (?C . 1) (?a . 1)))))
@@ -71,10 +68,7 @@
     (with-temp-buffer
       (dolist (test cases)
         (insert (car test))
-        (setq obs (pro-summary (point-min) (point-max)))
+        (setq obs (seqel-pro-summary (point-min) (point-max)))
         (maphash (lambda (k v) (if (= 0 (gethash k obs)) (remhash k obs))) obs)
-        (should (bioseq-hash-equal obs (bioseq-hash-alist (cdr test))))
+        (should (seqel-hash-equal obs (seqel-hash-alist (cdr test))))
         (delete-region (point-min) (point-max))))))
-
-
-;; pro-mode-test.el ends here

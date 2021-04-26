@@ -1,11 +1,6 @@
-;;; nuc-mode-test.el --- a unit test for nuc-mode.el
+(require 'seqel-nuc-mode)
 
-(require 'nuc-mode)
-(require 'seq)
-(require 'genetic-code)
-
-
-(ert-deftest nuc-move-forward-test ()
+(ert-deftest seqel-nuc-move-forward-test ()
   ;; the tags is used to group the tests together.
   :tags '(nuc-mode)
   ;; buffer content, how many to move, cursor position (not point is 1-based)
@@ -19,14 +14,14 @@
         (goto-char 0)
         ;; set the numeric prefix
         (setq current-prefix-arg (nth 1 test))
-        (call-interactively 'nuc-move-forward)
+        (call-interactively 'seqel-nuc-move-forward)
         (should (equal (point) (nth 2 test)))
         ;; important to clean up the buffer
         (delete-region (point-min) (point-max))))))
 
 
-(ert-deftest nuc-move-backward-test ()
-  ;; test nuc-move-forward
+(ert-deftest seqel-nuc-move-backward-test ()
+  ;; test seqel-nuc-move-forward
   ;; the tags is used to group the tests together.
   :tags '(nuc-mode)
   ;; buffer content, how many to move backward, cursor position (1-based)
@@ -39,13 +34,13 @@
         (goto-char (point-max))
         ;; set the numeric prefix
         (setq current-prefix-arg (nth 1 test))
-        (call-interactively 'nuc-move-backward)
+        (call-interactively 'seqel-nuc-move-backward)
         (message "%d %d %d" (point) (point-min) (point-max))
         (should (equal (point) (nth 2 test)))
         ;; important to clean up the buffer
         (delete-region (point-min) (point-max))))))
 
-(ert-deftest nuc-delete-forward-test ()
+(ert-deftest seqel-nuc-delete-forward-test ()
   ;; the tags is used to group the tests together.
   :tags '(nuc-mode)
   ;; seq, set initial poin position (1-based), func args, expected res
@@ -59,7 +54,7 @@
         (goto-char (nth 1 test))
         ;; set the numeric prefix
         (setq current-prefix-arg (nth 2 test))
-        (call-interactively 'nuc-delete-forward)
+        (call-interactively 'seqel-nuc-delete-forward)
         (should (equal (buffer-string) (nth 3 test)))
         ;; important to clean up the buffer
         (delete-region (point-min) (point-max))))))
@@ -76,14 +71,14 @@
         (goto-char (nth 1 test))
         ;; set the numeric prefix
         (setq current-prefix-arg (nth 2 test))
-        (should-error (call-interactively 'nuc-delete-forward))
+        (should-error (call-interactively 'seqel-nuc-delete-forward))
         ;; the original str should be unchanged
         (should (equal (buffer-string) (nth 0 test)))
         ;; important to clean up the buffer
         (delete-region (point-min) (point-max))))))
 
 
-(ert-deftest nuc-whr-test ()
+(ert-deftest seqel-nuc-whr-test ()
   ;; the tags is used to group the tests together.
   :tags '(nuc-mode)
   (let ((cases '(("TGATTCAAGCATTCGATC" . 1.6)
@@ -94,12 +89,12 @@
         ;; create the mark region
         (set-mark (point-min))
         (goto-char (point-max))
-        (should (equal (call-interactively 'nuc-whr)
+        (should (equal (call-interactively 'seqel-nuc-whr)
                        (cdr test)))
         (delete-region (point-min) (point-max))))))
 
 
-(ert-deftest nuc-count-test ()
+(ert-deftest seqel-nuc-count-test ()
   :tags '(nuc-mode)
   (let ((cases '(("acgutmrwsykvhdbnACGUTMRWSYKVHDBN" . 32)
                  ("abc12345"    .       nil)))
@@ -111,12 +106,12 @@
         (goto-char (point-max))
         (setq exp (cdr test))
         (if exp
-            (should (equal (call-interactively 'nuc-count) exp))
-          (should-error (call-interactively 'nuc-count)))
+            (should (equal (call-interactively 'seqel-nuc-count) exp))
+          (should-error (call-interactively 'seqel-nuc-count)))
         (delete-region (point-min) (point-max))))))
 
 
-(ert-deftest nuc-rna-p-test ()
+(ert-deftest seqel-nuc-rna-p-test ()
   :tags '(nuc-mode)
   (let ((cases '(("acgumrwsykvhdbnACGUMRWSYKVHDBN" . t)
                  ("acgtmrwsykvhdbnACGTMRWSYKVHDBN" . nil))))
@@ -126,12 +121,12 @@
         (set-mark (point-min))
         (goto-char (point-max))
         (if (cdr test)
-            (should (call-interactively 'nuc-rna-p))
-          (should-not (call-interactively 'nuc-rna-p)))
+            (should (call-interactively 'seqel-nuc-rna-p))
+          (should-not (call-interactively 'seqel-nuc-rna-p)))
         (delete-region (point-min) (point-max))))))
 
 
-(ert-deftest nuc-dna-p-test ()
+(ert-deftest seqel-nuc-dna-p-test ()
   :tags '(nuc-mode)
   (let ((cases '(("acgumrwsykvhdbnACGUMRWSYKVHDBN" . nil)
                  ("acgtmrwsykvhdbnACGTMRWSYKVHDBN" . t))))
@@ -141,12 +136,12 @@
         (set-mark (point-min))
         (goto-char (point-max))
         (if (cdr test)
-            (should (call-interactively 'nuc-dna-p))
-          (should-not (call-interactively 'nuc-dna-p)))
+            (should (call-interactively 'seqel-nuc-dna-p))
+          (should-not (call-interactively 'seqel-nuc-dna-p)))
         (delete-region (point-min) (point-max))))))
 
 
-(ert-deftest nuc-2rna-test ()
+(ert-deftest seqel-nuc-2rna-test ()
   :tags '(nuc-mode)
   (let ((cases '(("acgtmrwsykvhdbnACGTMRWSYKVHDBN" . "acgumrwsykvhdbnACGUMRWSYKVHDBN"))))
     (with-temp-buffer
@@ -154,12 +149,12 @@
         (insert (car test))
         (set-mark (point-min))
         (goto-char (point-max))
-        (call-interactively 'nuc-2rna)
+        (call-interactively 'seqel-nuc-2rna)
         (should (equal (cdr test) (buffer-string)))
         (delete-region (point-min) (point-max))))))
 
 
-(ert-deftest nuc-2dna-test ()
+(ert-deftest seqel-nuc-2dna-test ()
   :tags '(nuc-mode)
   (let ((cases '(("acgumrwsykvhdbnACGUMRWSYKVHDBN" . "acgtmrwsykvhdbnACGTMRWSYKVHDBN"))))
     (with-temp-buffer
@@ -167,12 +162,12 @@
         (insert (car test))
         (set-mark (point-min))
         (goto-char (point-max))
-        (call-interactively 'nuc-2dna)
+        (call-interactively 'seqel-nuc-2dna)
         (should (equal (cdr test) (buffer-string)))
         (delete-region (point-min) (point-max))))))
 
 
-(ert-deftest nuc-complement-test ()
+(ert-deftest seqel-nuc-complement-test ()
   :tags '(nuc-mode)
   (let ((cases '(("Atg C" . "Tac G")
                  ("acgtmrwsykvhdbnACGTMRWSYKVHDBN" . "tgcakywsrmbdhvnTGCAKYWSRMBDHVN")
@@ -182,7 +177,7 @@
         (insert (car test))
         (set-mark (point-min))
         (goto-char (point-max))
-        (call-interactively 'nuc-complement)
+        (call-interactively 'seqel-nuc-complement)
         (should (equal (buffer-string) (cdr test)))
         (delete-region (point-min) (point-max))))))
 
@@ -205,7 +200,7 @@
         (delete-region (point-min) (point-max))))))
 
 
-(ert-deftest nuc-summary-test ()
+(ert-deftest seqel-nuc-summary-test ()
   :tags '(nuc-mode)
   (let ((cases '(("acgtmrwsykvhdbnACGTMRWSYKVHDBN.- " .
                   ((?a . 1) (?c . 1) (?g . 1) (?t . 1)
@@ -220,25 +215,25 @@
     (with-temp-buffer
       (dolist (test cases)
         (insert (car test))
-        (setq obs (nuc-summary (point-min) (point-max)))
+        (setq obs (seqel-nuc-summary (point-min) (point-max)))
         (maphash (lambda (k v) (if (= 0 (gethash k obs)) (remhash k obs))) obs)
         (should
          ;; `equal' can not compare hash tables
-         (bioseq-hash-equal obs (bioseq-hash-alist (cdr test))))
+         (seqel-hash-equal obs (seqel-hash-alist (cdr test))))
         (delete-region (point-min) (point-max))))))
 
 
-(ert-deftest nuc-decode-test ()
+(ert-deftest seqel-nuc-decode-test ()
   :tags '(nuc-mode)
   (let ((cases '(("CTM" ?L)
                  ((?C ?T ?M) ?L)
                  ("MAT" ?H ?N))))
-    (nuc-set-translation-table 1)
+    (seqel-nuc-set-translation-table 1)
     (dolist (test cases)
-      (should (equal (cdr test) (nuc-decode (car test)))))))
+      (should (equal (cdr test) (seqel-nuc-decode (car test)))))))
 
 
-(ert-deftest nuc-translate-test ()
+(ert-deftest seqel-nuc-translate-test ()
   :tags '(nuc-mode)
   ;; http://in-silico.net/tools/biology/sequence_conversion
   (let ((cases '(("accatttcm mtc" . "TISX")
@@ -248,12 +243,12 @@
         (insert (car test))
         (set-mark (point-min))
         (goto-char (point-max))
-        (call-interactively 'nuc-translate)
+        (call-interactively 'seqel-nuc-translate)
         (should (equal (buffer-string) (cdr test)))
         (delete-region (point-min) (point-max))))))
 
 
-(ert-deftest nuc-paint-test ()
+(ert-deftest seqel-nuc-paint-test ()
   :tags '(nuc-mode)
   (let ((cases '(("aAt" t (nuc-base-face-a nuc-base-face-A nuc-base-face-t))
                  ("aAt" nil (nuc-base-face-A nuc-base-face-A nuc-base-face-T)))))
@@ -264,7 +259,7 @@
         (goto-char (point-max))
         ;; set the optional case argument
         (setq current-prefix-arg (nth 1 test))
-        (call-interactively 'nuc-paint)
+        (call-interactively 'seqel-nuc-paint)
         ;; the painting does not change buffer content
         (should
          (equal (buffer-string)
@@ -278,13 +273,11 @@
         (erase-buffer)))))
 
 
-(ert-deftest nuc-bioseq-isearch-mangle-str-degeneracy-test ()
+(ert-deftest seqel-nuc-isearch-mangle-str-degeneracy-test ()
   :tags '(nuc-mode)
   (let ((cases '(("mR" . "[ac][\t\n .-]*[AG]")
                  ("aTGc" . "[a][\t\n .-]*[T][\t\n .-]*[G][\t\n .-]*[c]"))))
     (dolist (test cases)
       (should
-       (equal (nuc-bioseq-isearch-mangle-str-degeneracy (car test))
+       (equal (seqel-nuc-isearch-mangle-str-degeneracy (car test))
               (cdr test))))))
-
-;;; nuc-mode-test.el ends here

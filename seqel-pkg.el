@@ -18,8 +18,8 @@
 (define-package
   "seqel"   ; package name
   "1.0"     ; version
-  "biological sequence manipulation"    ; description
-  )
+  "biological sequence manipulation")    ; description
+
 
 ;;; seqel-pkg.el ends here
 

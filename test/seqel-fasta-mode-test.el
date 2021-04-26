@@ -1,9 +1,7 @@
-;;; nuc-mode-test.el --- a unit test for nuc-mode.el
-
-(require 'fasta-mode)
+(require 'seqel-fasta-mode)
 
 
-(ert-deftest fasta-forward-test ()
+(ert-deftest seqel-fasta-forward-test ()
   :tags '(fasta-mode)
   (let ((cases '(("" 1 1)
                  (">a
@@ -18,13 +16,13 @@ AcGu
         (insert (nth 0 test))
         (goto-char (point-min))
         (setq current-prefix-arg (nth 1 test))
-        (call-interactively 'fasta-forward)
+        (call-interactively 'seqel-fasta-forward)
         ;; set its value back to avoid side effects for other functions
         (setq current-prefix-arg nil)
         (should (equal (line-number-at-pos) (nth 2 test)))
         (delete-region (point-min) (point-max))))))
 
-(ert-deftest fasta-backward-test ()
+(ert-deftest seqel-fasta-backward-test ()
   :tags '(fasta-mode)
   (let ((cases '(("" 1 1)
                  (">a
@@ -38,13 +36,13 @@ AcGu
       (dolist (test cases)
         (insert (nth 0 test))
         (setq current-prefix-arg (nth 1 test))
-        (call-interactively 'fasta-backward)
+        (call-interactively 'seqel-fasta-backward)
         ;; set its value back to avoid side effects for other functions
         (setq current-prefix-arg nil)
         (should (equal (line-number-at-pos) (nth 2 test)))
         (delete-region (point-min) (point-max))))))
 
-(ert-deftest fasta-first-test ()
+(ert-deftest seqel-fasta-first-test ()
   :tags '(fasta-mode)
   (let ((cases '(""
                  ">a
@@ -56,11 +54,11 @@ AcGu
     (with-temp-buffer
       (dolist (test cases)
         (insert test)
-        (call-interactively 'fasta-first)
+        (call-interactively 'seqel-fasta-first)
         (should (equal (point-min) (point)))
         (delete-region (point-min) (point-max))))))
 
-(ert-deftest fasta-last-test ()
+(ert-deftest seqel-fasta-last-test ()
   :tags '(fasta-mode)
   (let ((cases '(("" . 1)
                  (">a
@@ -74,11 +72,11 @@ AcGu
       (dolist (test cases)
         (insert (car test))
         (goto-char (point-min))
-        (call-interactively 'fasta-last)
+        (call-interactively 'seqel-fasta-last)
         (should (equal (line-number-at-pos) (cdr test)))
         (delete-region (point-min) (point-max))))))
 
-(ert-deftest fasta-count-test ()
+(ert-deftest seqel-fasta-count-test ()
   :tags '(fasta-mode)
   (let ((cases '(("" . 0)
                  (">a
@@ -91,11 +89,11 @@ AcGu
     (with-temp-buffer
       (dolist (test cases)
         (insert (car test))
-        (should (equal (call-interactively 'fasta-count) (cdr test)))
+        (should (equal (call-interactively 'seqel-fasta-count) (cdr test)))
         (delete-region (point-min) (point-max))))))
 
-(ert-deftest fasta-mark-test ()
-  :tags '(fasta-mark)
+(ert-deftest seqel-fasta-mark-test ()
+  :tags '(seqel-fasta-mark)
   (let ((cases '(("" 1 1)
                  (">a
 acgu
@@ -107,13 +105,13 @@ AcGu
         (with-temp-buffer
       (dolist (test cases)
         (insert (car test))
-        (fasta-mark)
+        (seqel-fasta-mark)
         (should (equal (region-beginning) (nth 1 test)))
         (should (equal (region-end) (nth 2 test)))
         (delete-region (point-min) (point-max))))))
 
 
-(ert-deftest fasta-format-test ()
+(ert-deftest seqel-fasta-format-test ()
   :tags '(fasta-mode)
     (let ((cases '((
 ">seq_name b
@@ -138,13 +136,13 @@ augctt")))
         (insert (nth 0 test))
         (goto-char (point-min))
         (setq current-prefix-arg (nth 1 test))
-        (call-interactively 'fasta-format)
+        (call-interactively 'seqel-fasta-format)
         (setq tmp (buffer-string))
         (should (equal tmp (nth 2 test)))
         (delete-region (point-min) (point-max))))))
 
 
-(ert-deftest fasta-format-all-test ()
+(ert-deftest seqel-fasta-format-all-test ()
   :tags '(fasta-mode)
     (let ((cases '((
 ">seq_name b
@@ -169,12 +167,12 @@ t")))
       (dolist (test cases)
         (insert (nth 0 test))
         (setq current-prefix-arg (nth 1 test))
-        (call-interactively 'fasta-format-all)
+        (call-interactively 'seqel-fasta-format-all)
         (setq tmp (buffer-string))
         (should (equal tmp (nth 2 test)))
         (delete-region (point-min) (point-max))))))
 
-(ert-deftest fasta-delete-test ()
+(ert-deftest seqel-fasta-delete-test ()
   :tags '(fasta-mode)
   (let ((cases '(("" . "")
                  (">seq_name a
@@ -188,13 +186,13 @@ a"))))
       (dolist (test cases)
         (insert (car test))
         (goto-char (point-min))
-        (call-interactively 'fasta-delete)
+        (call-interactively 'seqel-fasta-delete)
         (setq tmp (buffer-string))
         (should (equal tmp (cdr test)))
         (delete-region (point-min) (point-max))))))
 
 
-(ert-deftest fasta-length-test ()
+(ert-deftest seqel-fasta-length-test ()
   :tags '(fasta-mode)
   (let ((cases '((
 ">seq_name a
@@ -206,11 +204,11 @@ a" . 15))))
       (dolist (test cases)
         (insert (car test))
         (goto-char (point-min))
-        (should (equal (call-interactively 'fasta-length) (cdr test)))
+        (should (equal (call-interactively 'seqel-fasta-length) (cdr test)))
         (delete-region (point-min) (point-max))))))
 
 
-(ert-deftest fasta-position-test ()
+(ert-deftest seqel-fasta-position-test ()
   :tags '(fasta-mode)
   (let ((cases '((
 ">seq_name a
@@ -221,11 +219,11 @@ augct"
       (dolist (test cases)
         (insert (nth 0 test))
         (goto-char (nth 1 test))
-        (should (equal (call-interactively 'fasta-position) (nth 2 test)))
+        (should (equal (call-interactively 'seqel-fasta-position) (nth 2 test)))
         (delete-region (point-min) (point-max))))))
 
 
-(ert-deftest fasta-rc-test ()
+(ert-deftest seqel-fasta-rc-test ()
   :tags '(fasta-mode)
   (let ((cases '((
 ">seq_name a
@@ -239,12 +237,12 @@ GCAU	 gca")))
       (dolist (test cases)
         (insert (car test))
         (nuc-mode 1)
-        (call-interactively 'fasta-rc)
+        (call-interactively 'seqel-fasta-rc)
         (setq tmp (buffer-string))
         (should (equal tmp (cdr test)))
         (delete-region (point-min) (point-max))))))
 
-(ert-deftest fasta-translate-test ()
+(ert-deftest seqel-fasta-translate-test ()
   :tags '(fasta-mode)
    (let ((cases '((
 ">seq_name a
@@ -266,12 +264,12 @@ Mc
       (dolist (test cases)
         (insert (car test))
         (nuc-mode 1)
-        (call-interactively 'fasta-translate)
+        (call-interactively 'seqel-fasta-translate)
         (setq tmp (buffer-string))
         (should (equal tmp (cdr test)))
         (delete-region (point-min) (point-max))))))
 
-(ert-deftest fasta-weight-test ()
+(ert-deftest seqel-fasta-weight-test ()
   :tags '(fasta-mode)
    (let ((cases '((
 ">seq_name a
@@ -282,10 +280,10 @@ VAINDPFIDL NYMVYMFQYD STHGKFHGTV
       (dolist (test cases)
         (insert (car test))
         (pro-mode 1)
-        (should (equal (fround (call-interactively 'fasta-weight)) (cdr test)))
+        (should (equal (fround (call-interactively 'seqel-fasta-weight)) (cdr test)))
         (delete-region (point-min) (point-max))))))
 
-(ert-deftest fasta-column-delete-test ()
+(ert-deftest seqel-fasta-column-delete-test ()
   :tags '(fasta-mode)
   (let ((cases '((1   ; should case: test the buffer after deletion
                   ">seq_name a\naugctAUGCTaugct\n\n>seq_name b\naugct\n"
@@ -301,15 +299,15 @@ VAINDPFIDL NYMVYMFQYD STHGKFHGTV
         (insert (nth 1 test))
         (goto-char (nth 2 test))
         (cond ((= type-test 1)
-               (call-interactively 'fasta-column-delete)
+               (call-interactively 'seqel-fasta-column-delete)
                (setq tmp (buffer-string))
                (should (equal tmp (nth 3 test))))
               ((= type-test 2)
-               (should-error (call-interactively 'fasta-column-delete))))
+               (should-error (call-interactively 'seqel-fasta-column-delete))))
          (delete-region (point-min) (point-max))))))
 
 
-(ert-deftest fasta-column-insert-test ()
+(ert-deftest seqel-fasta-column-insert-test ()
   :tags '(fasta-mode)
     (let ((cases '((">seq_name a
 augctAUGCTaugct
@@ -328,13 +326,13 @@ augctA")))
       (dolist (test cases)
         (insert (nth 0 test))
         (goto-char (nth 1 test))
-        (fasta-column-insert (nth 2 test))
+        (seqel-fasta-column-insert (nth 2 test))
         (setq tmp (buffer-string))
         (should (equal tmp (nth 3 test)))
         (delete-region (point-min) (point-max))))))
 
 
-(ert-deftest fasta-column-summary-test ()
+(ert-deftest seqel-fasta-column-summary-test ()
   :tags '(fasta-mode)
   (let ((cases '((
 ">seq_name a
@@ -353,14 +351,14 @@ ac"
         (insert (nth 0 test))
         (goto-char (nth 1 test))
         ;; (princ (nth 2 test))
-        ;; (princ (bioseq-hash-alist (nth 2 test)))
-        (should (bioseq-hash-equal
-                 (fasta-column-summary)
-                 (bioseq-hash-alist (nth 2 test))))
+        ;; (princ (seqel-hash-alist (nth 2 test)))
+        (should (seqel-hash-equal
+                 (seqel-fasta-column-summary)
+                 (seqel-hash-alist (nth 2 test))))
         (delete-region (point-min) (point-max))))))
 
 
-(ert-deftest fasta-bioseq-type-test ()
+(ert-deftest seqel-fasta-bioseq-type-test ()
   :tags '(fasta-mode)
   (let ((cases '((">seq1
 A" . nuc-mode)
@@ -371,14 +369,14 @@ AAAAAAEFZ" . pro-mode))))
     (dolist (test cases)
       (with-temp-buffer
         (insert (car test))
-        (fasta-bioseq-type)
+        (seqel-fasta-bioseq-type)
         ;; return true if the mode is active
         (should (and (symbolp (cdr test)) (symbol-value (cdr test))))
         ;; disable both modes to start with clean buffer
         (nuc-mode -1)
         (pro-mode -1)))))
 
-(ert-deftest fasta-bioseq-type-test-error ()
+(ert-deftest seqel-fasta-bioseq-type-test-error ()
   :tags '(fasta-mode)
   (let ((cases '((">seq1
 A" . pro-mode)
@@ -389,10 +387,8 @@ AEFZ" . nuc-mode))))
     (dolist (test cases)
       (with-temp-buffer
         (insert (car test))
-        (fasta-bioseq-type)
+        (seqel-fasta-bioseq-type)
         (princ (and (symbolp (cdr test)) (symbol-value (cdr test))))
         (should (not (and (symbolp (cdr test)) (symbol-value (cdr test)))))
         (nuc-mode -1)
         (pro-mode -1)))))
-
-;; fasta-mode-test.el ends here
