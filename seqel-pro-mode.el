@@ -284,10 +284,10 @@ This is an alias to `seqel-unpaint'.")
     (define-key map "\C-c\C-p\C-w"  'seqel-pro-weight)
     (define-key map "\C-c\C-p\C-s"  'seqel-pro-summary)
     map)
-  "Keymap for 'pro-mode' minor mode.")
+  "Keymap for 'seqel-pro-mode' minor mode.")
 
 
-(define-minor-mode pro-mode
+(define-minor-mode seqel-pro-mode
   "Protein mode
 
 It should be not enabled with `nuc-mode' at the same time."

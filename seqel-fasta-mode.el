@@ -78,7 +78,7 @@
 
 
 ;;;###autoload
-(define-derived-mode fasta-mode text-mode "fasta"
+(define-derived-mode seqel-fasta-mode text-mode "fasta"
   "Major mode for editing biological sequences in fasta format.
 
 Special commands:
@@ -103,7 +103,7 @@ Special commands:
   "If not nil, set up fasta mode on buffer load by guessing buffer content.")
 
 (defun seqel-fasta-find-file ()
-  "Invoke `fasta-mode' if the buffer look like a fasta.
+  "Invoke `seqel-fasta-mode' if the buffer look like a fasta.
 
 Only if the major mode is `fundermental'.  This function is added to
 `find-file-hooks'."

@@ -489,14 +489,14 @@ long."
     (define-key map (kbd "C-c C-n C-s") 'seqel-nuc-summary)
     (define-key map (kbd "C-c C-n C-t") 'seqel-nuc-translate)
     map)
-  "Keymap for the 'nuc-mode' minor mode.")
+  "Keymap for the 'seqel-nuc-mode' minor mode.")
 
 
-(define-minor-mode nuc-mode
+(define-minor-mode seqel-nuc-mode
   "Nucleic acid mode.
 
 It should not be enabled with `pro-mode' at the same time."
-  ;; the fun auto defines a buffer local variable `nuc-mode'
+  ;; the fun auto defines a buffer local variable `seqel-nuc-mode'
   ;; and this key value set its initial value
   :init-value nil
   ;; the name, a string, to show in the modeline

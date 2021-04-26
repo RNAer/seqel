@@ -19,7 +19,7 @@
 (require 'seqel-pro-mode)
 
 (defvar seqel-genbank-mode-hook nil
-  "*Hook to setup `genbank-mode'.")
+  "*Hook to setup `seqel-genbank-mode'.")
 
 (defvar seqel-genbank-mode-map
   ;; use `make-keymap' if there are lots of keybindings
@@ -33,11 +33,11 @@
     (define-key map "\C-c\C-b"  'seqel-genbank-backward); it also binds to M-}
     (define-key map "\C-c\C-m"  'seqel-genbank-mark)    ; it also binds to M-h
     map)
- "The local keymap for `genbank-mode'.")
+ "The local keymap for `seqel-genbank-mode'.")
 
 ;;;###autoload
 (add-to-list 'auto-mode-alist
-             '("\\.\\(genbank\\|gb\\|gbk\\)\\'" . genbank-mode))
+             '("\\.\\(genbank\\|gb\\|gbk\\)\\'" . seqel-genbank-mode))
 
 ;; map the paragraph key bindings to corresponding functions
 (let ((equivs
@@ -77,11 +77,11 @@
     ;; line numbers at the beginning of sequence...
     ("^[ \t]*\\([0-9]+\\)"
      (1 font-lock-string-face)))
-  "Expressions to highlight in `genbank-mode'.")
+  "Expressions to highlight in `seqel-genbank-mode'.")
 
 
 ;;;###autoload
-(define-derived-mode genbank-mode text-mode "genbank"
+(define-derived-mode seqel-genbank-mode text-mode "genbank"
   "Major mode for editing sequences in genbank format.
 
 Special commands:
@@ -92,7 +92,7 @@ Special commands:
   ;; the buffer-local variables of the major mode previously in effect.
   ;; (kill-all-local-variables)
   ;; (setq mode-name "genbank")
-  ;; (setq major-mode 'genbank-mode)
+  ;; (setq major-mode 'seqel-genbank-mode)
   ;; (use-local-map seqel-genbank-mode-map)
   ;; The above are automatically done if the mode is defined using
   ;; `define-derived-mode'.
