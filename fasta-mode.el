@@ -436,11 +436,11 @@ and `fasta-delete-column' for an example of usage."
                     (forward-line) ; move to the sequence region
                     (setq line (line-number-at-pos))
                     (if (< (move-to-column column) column)
-                        (signal 'end-of-col-err '(move-to-column)))
+                        (signal 'error '(move-to-column)))
                     ,@fn
                     (fasta-backward 1)))
        ;; return to the original state if error is met.
-       (end-of-col-err ; the single quote is dispensable
+       (error
         (primitive-undo 1 buffer-undo-list)
         (error "Abort: line %d is shorter than the column number (%d)"
                line column))))))

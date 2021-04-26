@@ -48,18 +48,6 @@ This is a hash table: keys are char and values are t. It serves
 like a set object similar in Python language.")
 
 
-;; define a new error symbol
-(put 'end-of-col-err
-     'error-conditions
-     ;; This error has three condition names:
-     ;; 1) end-of-col-err, the narrowest classification;
-     ;; 2) my-own-errors, which we imagine is a wider classification;
-     ;; 3) and error, which is the widest of all.
-     '(error my-own-errors end-of-col-err))
-(put 'end-of-col-err
-     'error-message
-     "End of column error")
-
 (defmacro bioseq-interactive-region-or-line ()
   "If no region is marked, mark current line."
   `(interactive
