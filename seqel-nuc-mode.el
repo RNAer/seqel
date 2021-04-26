@@ -153,7 +153,7 @@ function.
 
 Interactively, BEG and END are the begin and end of the active
 region or the current line if no region is active."
-  (seqel-interactive-region-or-line)
+  (interactive (seqel-region-or-line))
   (let ((length (seqel-count beg end seqel-nuc-alphabet-set)))
     (and length
          (called-interactively-p 'interactive)
@@ -171,7 +171,7 @@ This is an alias of `seqel-nuc-count'.")
 Interactively, BEG and END are the begin and end of the active
 region or the current line if no region is active.  See also
 `seqel-nuc-dna-p' and `nuc-p'."
-  (seqel-interactive-region-or-line)
+  (interactive (seqel-region-or-line))
   (let ((case-fold-search t))           ; enable case insensitive search
     (save-excursion
       (goto-char beg)
@@ -185,7 +185,7 @@ Interactively, BEG and END are the begin and end of the active
 region or the current line if no region is active.
 
 See also `seqel-nuc-rna-p' and `nuc-p'."
-  (seqel-interactive-region-or-line)
+  (interactive (seqel-region-or-line))
   (let ((case-fold-search t))
     (save-excursion
       (goto-char beg)
@@ -211,7 +211,7 @@ reverse the sequence of the region if REVERSE is not nil.
 
 Interactively, BEG and END are the begin and end of the active
 region or the current line if no region is active."
-  (seqel-interactive-region-or-line)
+  (interactive (seqel-region-or-line))
   (let ((complement-vector seqel-nuc-dna-base-complement)
         (is-rna (seqel-nuc-rna-p beg end))
         (sequence (buffer-substring-no-properties beg end)))
@@ -235,7 +235,7 @@ Interactively, BEG and END are the begin and end of the active
 region or the current line if no region is active.
 
 See also `seqel-nuc-complement'."
-  (seqel-interactive-region-or-line)
+  (interactive (seqel-region-or-line))
   (seqel-nuc-complement beg end t)
   (if (called-interactively-p 'interactive)
       (message "Reverse complemented the selected region")))
@@ -266,7 +266,7 @@ It basically converts 't' -> 'u' and 'T' -> 'U'.  Interactively,
 BEG and END are the begin and end of the active region or the
 current line if no region is active.  If NEGATE is not nil,
 convert to DNA.  See also `seqel-nuc-2dna'."
-  (seqel-interactive-region-or-line)
+  (interactive (seqel-region-or-line))
   (let ((sequence (buffer-substring-no-properties beg end))
         (replace-vector (if negate seqel--nuc-u2t seqel--nuc-t2u)))
     (delete-region beg end)
@@ -284,7 +284,7 @@ convert to DNA.  See also `seqel-nuc-2dna'."
 It basically converts 'u' -> 't' and 'U' -> 'T'.  Interactively,
 BEG and END are the begin and end of the active region or the
 current line if no region is active.  See also `seqel-nuc-2rna'."
-  (seqel-interactive-region-or-line)
+  (interactive (seqel-region-or-line))
   (seqel-nuc-2rna beg end t))
 
 (defun seqel-nuc-summary (beg end)
@@ -294,7 +294,7 @@ current line if no region is active.  See also `seqel-nuc-2rna'."
 Interactively, BEG and END are the begin and end of the active
 region or the current line if no region is active.  See also
 `seqel-summary'."
-  (seqel-interactive-region-or-line)
+  (interactive (seqel-region-or-line))
   (seqel-summary beg end seqel-nuc-alphabet-set))
 
 
@@ -328,7 +328,7 @@ the frequency of homopolymers in the sequence.
 
 Interactively, BEG and END are the begin and end of the active
 region or the current line if no region is active."
-  (seqel-interactive-region-or-line)
+  (interactive (seqel-region-or-line))
   (let ((n  1.0)  (ni 0) (nis 0)
         old cur)
     (save-excursion
@@ -454,7 +454,7 @@ This function translates DNA of 9K for ~6 sec (over 80% of the
 time is for `seqel-nuc-decode') and ~15 MB mem.  It is not super fast,
 but it is very rare you need to translate a sequence over 10K
 long."
-  (seqel-interactive-region-or-line)
+  (interactive (seqel-region-or-line))
   (let* (;; check valid of the sequence and count the number of bases
          (n (seqel-nuc-count beg end))
          (x (% n 3))

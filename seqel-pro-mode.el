@@ -111,7 +111,7 @@ It is used to convert 3-letter codes to 1-letter codes.")
 
 (defun seqel-pro-weight (beg end)
   "Return molecular weight of the region BEG and END or the current line."
-  (seqel-interactive-region-or-line)
+  (interactive (seqel-region-or-line))
   (let ((sum-mw 0) (times (- end beg)) char mw)
     (save-excursion
       (goto-char beg)
@@ -132,7 +132,7 @@ It is used to convert 3-letter codes to 1-letter codes.")
   "Convert 1-letter IUPAC code to 3-letter IUPAC code.
 
 BEG and END defines the region to operate on."
-  (seqel-interactive-region-or-line)
+  (interactive (seqel-region-or-line))
   (condition-case err
       (let ((times (- end beg)) char)
         (goto-char beg)
@@ -157,7 +157,7 @@ separating them.
 
 Interactively, BEG and END are the begin and end of the active
 region or the current line if no region is active."
-  (seqel-interactive-region-or-line)
+  (interactive (seqel-region-or-line))
   (condition-case err
       (let ((times (/ (- end beg) 3))
             code letter)
@@ -221,7 +221,7 @@ characters in the echo region.
 
 Interactively, BEG and END are the begin and end of the active
 region or the current line if no region is active."
-  (seqel-interactive-region-or-line)
+  (interactive (seqel-region-or-line))
   (let ((length (seqel-count beg end seqel-pro-alphabet-set)))
     (and length
          (called-interactively-p 'interactive)
@@ -239,7 +239,7 @@ Interactively, BEG and END are the begin and end of the active
 region or the current line if no region is active.
 
 See also `seqel-summary'."
-  (seqel-interactive-region-or-line)
+  (interactive (seqel-region-or-line))
   (seqel-summary beg end seqel-pro-alphabet-set))
 
 ;; define aa faces belonging to pro-aa-face group

@@ -48,12 +48,11 @@ This is a hash table: keys are char and values are t. It serves
 like a set object similar in Python language.")
 
 
-(defmacro seqel-interactive-region-or-line ()
-  "If no region is marked, mark current line."
-  `(interactive
-    (if (use-region-p) ; mark-active
-        (list (region-beginning) (region-end))
-      (list (line-beginning-position) (line-end-position)))))
+(defun seqel-region-or-line ()
+  "Return (BEG END) positions of region (if active) or current line."
+  (if (use-region-p)
+      (list (region-beginning) (region-end))
+    (list (line-beginning-position) (line-end-position))))
 
 
 (defun seqel-forward-char (count legal-alphbet-set)
@@ -83,7 +82,7 @@ Summarize the sequence marked between BEG and END.  Ignore char
 that does not belong to LEGAL-CHAR-SET.  Use hash table to create
 dictionary-like data type.  Return the hash table.  This is
 fast (only 2 seconds for 5M base pairs)."
-  (seqel-interactive-region-or-line)
+  (interactive (seqel-region-or-line))
   (let (my-hash size char count)
     (if legal-char-set
         (progn (setq my-hash (make-hash-table :test 'equal :size (hash-table-count legal-char-set)))
@@ -234,7 +233,7 @@ TODO: this is slow for long sequences."
 
 (defun seqel-unpaint (beg end)
   "Uncolor the sequences from BEG to END or the current line."
-  (seqel-interactive-region-or-line)
+  (interactive (seqel-region-or-line))
   (with-silent-modifications
     (remove-text-properties beg end '(font-lock-face nil))))
 
