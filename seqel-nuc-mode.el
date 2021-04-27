@@ -21,7 +21,7 @@
 ;;;;;; USER CUSTOMIZABLE VARIABLES START HERE
 
 
-(defvar seqel--nuc-base-alist
+(defvar seqel-nuc--base-alist
   '((?a  ?t ?a)
     (?t  ?a ?t)
     (?u  ?a ?u)
@@ -52,9 +52,9 @@ for the first.  Only for lowercase, as the upcased will be added automatically."
 (defvar seqel-nuc-base-alist
   (append (mapcar (lambda (x)
                     (mapcar #'upcase x))
-                  seqel--nuc-base-alist)
-          seqel--nuc-base-alist)
-  "Similar to `seqel--nuc-base-alist', just with uppercase bases added.")
+                  seqel-nuc--base-alist)
+          seqel-nuc--base-alist)
+  "Similar to `seqel-nuc--base-alist', just with uppercase bases added.")
 
 
 (defvar seqel-nuc-alphabet-set
@@ -148,7 +148,7 @@ Check if each char is legal base.  Return the count if the region
 contains only legal nucleic acid characters, which includes
 `seqel-nuc-alphabet-set', `seqel-cruft-set'; otherwise return nil and
 report the location of the invalid characters in the echo region.
-This function calls `seqel-count'.  `nuc-p' is an alias of this
+This function calls `seqel-count'.  `seqel-nuc-p' is an alias of this
 function.
 
 Interactively, BEG and END are the begin and end of the active
@@ -160,7 +160,7 @@ region or the current line if no region is active."
          (message "Base count: %d" length))
     length))
 
-(defalias 'nuc-p 'seqel-nuc-count
+(defalias 'seqel-nuc-p 'seqel-nuc-count
   "Check the validity of the region as nucleotide sequence.
 
 This is an alias of `seqel-nuc-count'.")
@@ -170,7 +170,7 @@ This is an alias of `seqel-nuc-count'.")
 
 Interactively, BEG and END are the begin and end of the active
 region or the current line if no region is active.  See also
-`seqel-nuc-dna-p' and `nuc-p'."
+`seqel-nuc-dna-p' and `seqel-nuc-p'."
   (interactive (seqel-region-or-line))
   (let ((case-fold-search t))           ; enable case insensitive search
     (save-excursion
@@ -184,7 +184,7 @@ region or the current line if no region is active.  See also
 Interactively, BEG and END are the begin and end of the active
 region or the current line if no region is active.
 
-See also `seqel-nuc-rna-p' and `nuc-p'."
+See also `seqel-nuc-rna-p' and `seqel-nuc-p'."
   (interactive (seqel-region-or-line))
   (let ((case-fold-search t))
     (save-excursion
@@ -241,9 +241,9 @@ See also `seqel-nuc-complement'."
       (message "Reverse complemented the selected region")))
 
 
-(defalias 'nuc-rc 'seqel-nuc-reverse-complement)
+(defalias 'seqel-nuc-rc 'seqel-nuc-reverse-complement)
 
-(defvar seqel--nuc-u2t
+(defvar seqel-nuc--u2t
   (let ((c-vec (vconcat (number-sequence 0 256))))  ; all alphabets chars are < 256
     (aset c-vec ?u ?t)
     (aset c-vec ?U ?T)
@@ -251,7 +251,7 @@ See also `seqel-nuc-complement'."
   "A vector used to replace U/u with T/t.")
 
 
-(defvar seqel--nuc-t2u
+(defvar seqel-nuc--t2u
   (let ((c-vec (vconcat (number-sequence 0 256))))  ; all alphabets chars are < 256
     (aset c-vec ?t ?u)
     (aset c-vec ?T ?U)
@@ -268,7 +268,7 @@ current line if no region is active.  If NEGATE is not nil,
 convert to DNA.  See also `seqel-nuc-2dna'."
   (interactive (seqel-region-or-line))
   (let ((sequence (buffer-substring-no-properties beg end))
-        (replace-vector (if negate seqel--nuc-u2t seqel--nuc-t2u)))
+        (replace-vector (if negate seqel-nuc--u2t seqel-nuc--t2u)))
     (delete-region beg end)
     (dotimes (i (- end beg))
       ;; replace the sequence inplace. this is the fastest and also
@@ -387,7 +387,7 @@ region or the current line if no region is active."
   (seqel-paint beg end "nuc-base-face" case))
 
 ;;;###autoload
-(defalias 'nuc-unpaint 'seqel-unpaint
+(defalias 'seqel-nuc-unpaint 'seqel-unpaint
   "Uncolor the nucleotide sequence region.
 
 It is an alias to `seqel-unpaint'.")
@@ -485,7 +485,7 @@ long."
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-c C-n C-f") 'seqel-nuc-move-forward)
     (define-key map (kbd "C-c C-n C-b") 'seqel-nuc-move-backward)
-    (define-key map (kbd "C-c C-n C-r") 'nuc-rc)
+    (define-key map (kbd "C-c C-n C-r") 'seqel-nuc-rc)
     (define-key map (kbd "C-c C-n C-s") 'seqel-nuc-summary)
     (define-key map (kbd "C-c C-n C-t") 'seqel-nuc-translate)
     map)

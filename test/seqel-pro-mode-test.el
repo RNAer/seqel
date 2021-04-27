@@ -1,5 +1,6 @@
 (require 'seqel-pro-mode)
 
+
 (ert-deftest seqel-pro-weight-test ()
   :tags '(pro-mode)
   (let ((cases '(("ACDEFGHIKLMNPQRSTVWY" . 2378)

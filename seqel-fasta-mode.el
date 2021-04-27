@@ -21,7 +21,7 @@
 
 
 (defvar seqel-fasta-mode-hook nil
-  "*Hook to setup `fasta-mode'.")
+  "*Hook to setup `seqel-fasta-mode'.")
 
 
 (defvar seqel-fasta-mode-map
@@ -47,7 +47,7 @@
     (define-key map "\C-c\C-vp"  'seqel-fasta-column-paint)
     (define-key map "\C-c\C-vs"  'seqel-fasta-column-summary)
     map)
-  "The local keymap for `fasta-mode'.")
+  "The local keymap for `seqel-fasta-mode'.")
 
 ;; map the paragraph key bindings to corresponding fasta functions
 (let ((equivs
@@ -62,7 +62,7 @@
 
 ;;;###autoload
 (add-to-list 'auto-mode-alist
-             '("\\.\\(fasta\\|fa\\|fna\\|faa\\|aln\\)\\'" . fasta-mode))
+             '("\\.\\(fasta\\|fa\\|fna\\|faa\\|aln\\)\\'" . seqel-fasta-mode))
 
 ;; this slows down the mode loading
 (defvar seqel-fasta-font-lock-keywords
@@ -70,7 +70,7 @@
      (1 font-lock-keyword-face)
      (2 font-lock-function-name-face)
      (3 font-lock-comment-face)))
-  "Expressions to highlight in `fasta-mode'.")
+  "Expressions to highlight in `seqel-fasta-mode'.")
 
 
 (defvar seqel-fasta-record-regexp "^>.*$"
@@ -89,7 +89,7 @@ Special commands:
   ;; the buffer-local variables of the major mode previously in effect.
   ;; (kill-all-local-variables)
   ;; (setq mode-name "fasta")
-  ;; (setq major-mode 'fasta-mode)
+  ;; (setq major-mode 'seqel-fasta-mode)
   ;; (use-local-map seqel-fasta-mode-map)
   ;; The above are automatically done if the mode is defined using
   ;; `define-derived-mode'.
@@ -111,11 +111,11 @@ Only if the major mode is `fundermental'.  This function is added to
     (goto-char (point-min))
     (if (and (eq major-mode 'fundamental-mode)
              (looking-at seqel-fasta-record-regexp))
-        (fasta-mode))))
+        (seqel-fasta-mode))))
 
 ;;;###autoload
 (defun seqel-fasta-guess-on-load ()
-  "Whether to enable `fasta-mode' by guessing buffer content."
+  "Whether to enable `seqel-fasta-mode' by guessing buffer content."
   (interactive)
   (if seqel-fasta-setup-on-load
       (progn (remove-hook 'find-file-hook 'seqel-fasta-find-file)
@@ -179,7 +179,7 @@ the beginning of the fasta entry instead of the sequence."
   (or include-header
       (forward-line)))
 
-(defun seqel--fasta-format (width)
+(defun seqel-fasta--format (width)
   "Format the current sequence to contain WIDTH chars per line.
 
 By default, each sequence is one line (if WIDTH is nil).  The
@@ -206,23 +206,25 @@ white spaces will all be removed."
 (defun seqel-fasta-format (&optional width)
   "Format the current sequence to contain WIDTH chars per line.
 
-It is just a wrapper around `seqel--fasta-format'.  This can take >10
-seconds for long sequences (> 5 M base pairs)."
+It wraps around `seqel-fasta--format'.  This can take ~10
+seconds for long sequences (> 5M base pairs).  If WIDTH is
+nil, each fasta sequence will be formatted into a single line."
   (interactive "P")
   (save-excursion
-    (seqel--fasta-format width)))
+    (seqel-fasta--format width)))
 
 
 (defun seqel-fasta-format-all (&optional width)
   "Format all fasta sequences in the buffer.
 
-It calls `seqel--fasta-format' on each fasta records.
-Optional argument WIDTH is to set a row width."
+It calls `seqel-fasta--format' on each fasta records.
+Optional argument WIDTH is to set a row width; if nil,
+each fasta sequence will be formatted into a single line."
   (interactive "P")
   (save-excursion
     (goto-char (point-max))
     (while (seqel-fasta-backward 1)
-      (seqel--fasta-format width)
+      (seqel-fasta--format width)
       (seqel-fasta-backward 1))))
 
 
@@ -236,16 +238,15 @@ Optional argument WIDTH is to set a row width."
 (defun seqel-fasta-position ()
   "Return the position of point in the current sequence.
 
-It will not count white spaces and sequence gaps.  See also
-`seqel-fasta-position-ali'."
+It will not count white spaces and sequence gaps."
   (interactive)
   (if (looking-at seqel-fasta-record-regexp)
-      (error "Point is not in the sequence region"))
+      (error "Point is not in the sequence region!"))
   (let ((pos (point))
         (count 0))
     (save-excursion
       (or (seqel-fasta-backward 1)
-          (error "The start of the fasta record is not found"))
+          (error "The start of the fasta record is not found!"))
       (forward-line 1)
       (dotimes (i (- pos (point)))
         (or (gethash (char-after) seqel-cruft-set)
@@ -269,13 +270,13 @@ It will not count white spaces and sequence gaps.  See also
     length))
 
 
-(defun seqel--seqel-fasta-rc ()
+(defun seqel-fasta--rc ()
   "Reverse complement current DNA/RNA sequence."
   (condition-case err
       (progn (seqel-fasta-mark)
              (let ((beg (region-beginning))
                    (end (region-end)))
-               (if nuc-mode  ; if nuc-mode is enabled
+               (if seqel-nuc-mode  ; if seqel-nuc-mode is enabled
                    ;; (print (buffer-substring beg end))
                    (seqel-nuc-reverse-complement beg end)
                  (error "The nuc mode is not enabled"))))
@@ -288,10 +289,10 @@ It will not count white spaces and sequence gaps.  See also
 (defun seqel-fasta-rc ()
   "Reverse complement current DNA/RNA sequence.
 
-It is just a wrapper on `seqel--seqel-fasta-rc'."
+It wraps on `seqel-fasta--rc'."
   (interactive)
   (save-excursion
-    (seqel--seqel-fasta-rc))
+    (seqel-fasta--rc))
   (message "Reverse complemented the current sequence."))
 
 (defun seqel-fasta-rc-all ()
@@ -300,16 +301,16 @@ It is just a wrapper on `seqel--seqel-fasta-rc'."
   (save-excursion
     (goto-char (point-max))
     (while (seqel-fasta-backward 1)
-      (seqel--seqel-fasta-rc)
+      (seqel-fasta--rc)
       (seqel-fasta-backward 1)))
   (message "Reverse complemented all the sequences in the buffer."))
 
 
-(defun seqel--fasta-translate ()
+(defun seqel-fasta--translate ()
   "Translate the current fasta sequence to amino acids."
   (condition-case err
       (progn (seqel-fasta-mark)
-             (if nuc-mode  ; if nuc-mode is enabled
+             (if seqel-nuc-mode  ; if seqel-nuc-mode is enabled
                  (seqel-nuc-translate (region-beginning) (region-end))
                (error "The nuc mode is not enabled")))
     ((debug error)
@@ -321,20 +322,20 @@ It is just a wrapper on `seqel--seqel-fasta-rc'."
 (defun seqel-fasta-translate ()
   "Translate the current fasta sequence to amino acids.
 
-It is just a wrapper on `seqel--fasta-translate'."
+It is just a wrapper on `seqel-fasta--translate'."
   (interactive)
   (save-excursion
-    (seqel--fasta-translate)))
+    (seqel-fasta--translate)))
 
 (defun seqel-fasta-translate-all ()
   "Translate every DNA/RNA sequence in the buffer to amino acids.
 
-It calls `seqel--fasta-translate' on each fasta record."
+It calls `seqel-fasta--translate' on each fasta record."
   (interactive)
   (save-excursion
     (goto-char (point-max))
     (while (seqel-fasta-backward 1)
-      (seqel--fasta-translate)
+      (seqel-fasta--translate)
       (seqel-fasta-backward 1))))
 
 
@@ -343,7 +344,7 @@ It calls `seqel--fasta-translate' on each fasta record."
   (interactive)
   (save-excursion
     (seqel-fasta-mark)
-    (if pro-mode  ; if pro-mode is enabled
+    (if seqel-pro-mode  ; if seqel-pro-mode is enabled
         (seqel-pro-weight (region-beginning) (region-end))
       (error "The pro mode is not enabled.  `seqel-fasta-weight' is only for protein sequence"))))
 
@@ -355,20 +356,20 @@ See also `seqel-summary', `seqel-nuc-summary', `seqel-pro-summary'."
   (interactive)
   (save-excursion
     (seqel-fasta-mark)
-    (if pro-mode
+    (if seqel-pro-mode
         (seqel-pro-summary (point) (mark))
       (seqel-nuc-summary (point) (mark)))))
 
-(defun seqel--fasta-paint (&optional case)
+(defun seqel-fasta--paint (&optional case)
   "Paint current fasta sequence by their residue identity.
 
 By default, lower and upper cases are painted in the same colors.
 If CASE is not nil, this function honors the case."
   (condition-case err
       (progn (seqel-fasta-mark)
-             (cond (nuc-mode
+             (cond (seqel-nuc-mode
                     (seqel-nuc-paint (region-beginning) (region-end) case))
-                   (pro-mode
+                   (seqel-pro-mode
                     (seqel-pro-paint (region-beginning) (region-end) case))
                    (t
                     (error "Unknown seq type"))))
@@ -389,11 +390,11 @@ It calls `seqel-unpaint'."
 (defun seqel-fasta-paint (&optional case)
   "Paint current sequence.
 
-It is just a wrapper around `seqel--fasta-paint'.  Optional argument
+It is just a wrapper around `seqel-fasta--paint'.  Optional argument
 CASE is set to non-nil to paint with case sensitivity."
   (interactive "P")
   (save-excursion
-    (seqel--fasta-paint case)))
+    (seqel-fasta--paint case)))
 
 (defun seqel-fasta-unpaint-all ()
   "Unpaint all the sequences.
@@ -410,17 +411,17 @@ It calls `seqel-unpaint' on each fasta record."
 (defun seqel-fasta-paint-all (&optional case)
   "Paint all sequences.
 
-It calls `seqel--fasta-paint' on each fasta record.  Optional argument
+It calls `seqel-fasta--paint' on each fasta record.  Optional argument
 CASE is set to non-nil to paint with case sensitivity."
   (interactive "P")
   (save-excursion
     (goto-char (point-max))
     (while (seqel-fasta-backward 1)
-      (seqel--fasta-paint case)
+      (seqel-fasta--paint case)
       (seqel-fasta-backward 1))))
 
 ;;; column manipulations
-(defmacro seqel--fasta-column-action (&rest fn)
+(defmacro seqel-fasta--column-action (&rest fn)
   "A macro called by other column manipulation functions.
 
 FN is a piece of code that does some specific manipulation
@@ -452,13 +453,13 @@ Delete the current column by default, unless the optional
 argument N is set to delete the number of chars starting from the
 cursor."
   (interactive "p")
-  (seqel--fasta-column-action (delete-char n)))
+  (seqel-fasta--column-action (delete-char n)))
 
 
 (defun seqel-fasta-column-insert (str)
   "Insert a string STR at the column."
   (interactive "sInsert string: ")
-  (seqel--fasta-column-action (insert str)))
+  (seqel-fasta--column-action (insert str)))
 
 
 (defun seqel-fasta-column-highlight (&optional to-face)
@@ -472,7 +473,7 @@ with highlight face by default; otherwise, unmark the column."
   ;; (princ to-face)
   (or to-face ; without C-u
       (setq to-face 'highlight))
-  (seqel--fasta-column-action
+  (seqel-fasta--column-action
    (put-text-property (point) (1+ (point)) 'font-lock-face to-face)))
 
 
@@ -486,13 +487,13 @@ the case."
   (let ((current-char '(char-after)) to-face)
     (or case
         (setq current-char (list 'upcase current-char)))
-    (cond (nuc-mode
+    (cond (seqel-nuc-mode
            (setq to-face (list 'format "nuc-base-face-%c" current-char)))
-          (pro-mode
+          (seqel-pro-mode
            (setq to-face (list 'format "pro-aa-face-%c" current-char)))
           (t
            (error "Unknown sequence type.  Please specify protein or nucletide")))
-    (seqel--fasta-column-action
+    (seqel-fasta--column-action
      (with-silent-modifications
        (put-text-property (point) (1+ (point))
                           'font-lock-face
@@ -506,7 +507,7 @@ If CASE is nil, the summary will be case insensitive."
   (interactive "P")
   (let ((my-hash (make-hash-table :test 'equal))
         count char)
-    (seqel--fasta-column-action (setq char (char-after))
+    (seqel-fasta--column-action (setq char (char-after))
                           (or case (setq char (upcase char)))
                           (setq count (gethash char my-hash))
                           (if count
@@ -524,8 +525,8 @@ It will search the first THRESHOLD number of sequence
 residues (100 if THRESHOLD is nil), or the current sequence
 record (whichever is smaller) for unique nucletide base and
 unique protein amino acid IUPAC code.  If found, the proper minor
-mode (variable `nuc-mode' or variable `pro-mode') will be
-enabled.  If it is ambiguous, enable variable `nuc-mode' by
+mode (variable `seqel-nuc-mode' or variable `seqel-pro-mode') will be
+enabled.  If it is ambiguous, enable variable `seqel-nuc-mode' by
 default."
   (let ((pro-aa-uniq '(?E ?F ?I ?J ?L ?P ?Q ?Z ?e ?f ?i ?j ?l ?p ?q ?z))
         current)
@@ -536,14 +537,14 @@ default."
           (dotimes (i (min (or threshold 100) (- (region-end) (region-beginning))))
             (setq current (char-after))
             (cond ((memq current pro-aa-uniq)
-                   (pro-mode)
+                   (seqel-pro-mode)
                    (throw 'bioseq-type 'pro))
                   ((= ?U (upcase current))
-                   (nuc-mode)
+                   (seqel-nuc-mode)
                    (throw 'bioseq-type 'nuc)))
             (forward-char))
-        ;; if no uniq char found for pro or nuc sequences; enable nuc-mode by default
-        (nuc-mode)
+        ;; if no uniq char found for pro or nuc sequences; enable seqel-nuc-mode by default
+        (seqel-nuc-mode)
         (throw 'bioseq-type 'nuc)))))
 
 

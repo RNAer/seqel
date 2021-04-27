@@ -229,7 +229,7 @@ region or the current line if no region is active."
     length))
 
 
-(defalias 'pro-p 'seqel-pro-count)
+(defalias 'seqel-pro-p 'seqel-pro-count)
 
 
 (defun seqel-pro-summary (beg end)
@@ -271,7 +271,7 @@ otherwise, not.  See `seqel-paint' for details."
   (seqel-paint beg end "pro-aa-face" case))
 
 ;;;###autoload
-(defalias 'pro-unpaint 'seqel-unpaint
+(defalias 'seqel-pro-unpaint 'seqel-unpaint
   "Uncolor the region of protein sequence.
 
 This is an alias to `seqel-unpaint'.")

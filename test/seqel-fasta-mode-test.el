@@ -236,11 +236,12 @@ GCAU	 gca")))
     (with-temp-buffer
       (dolist (test cases)
         (insert (car test))
-        (nuc-mode 1)
+        (seqel-nuc-mode 1)
         (call-interactively 'seqel-fasta-rc)
         (setq tmp (buffer-string))
         (should (equal tmp (cdr test)))
         (delete-region (point-min) (point-max))))))
+
 
 (ert-deftest seqel-fasta-translate-test ()
   :tags '(fasta-mode)
@@ -263,7 +264,7 @@ Mc
     (with-temp-buffer
       (dolist (test cases)
         (insert (car test))
-        (nuc-mode 1)
+        (seqel-nuc-mode 1)
         (call-interactively 'seqel-fasta-translate)
         (setq tmp (buffer-string))
         (should (equal tmp (cdr test)))
@@ -279,7 +280,7 @@ VAINDPFIDL NYMVYMFQYD STHGKFHGTV
     (with-temp-buffer
       (dolist (test cases)
         (insert (car test))
-        (pro-mode 1)
+        (seqel-pro-mode 1)
         (should (equal (fround (call-interactively 'seqel-fasta-weight)) (cdr test)))
         (delete-region (point-min) (point-max))))))
 
@@ -361,11 +362,11 @@ ac"
 (ert-deftest seqel-fasta-bioseq-type-test ()
   :tags '(fasta-mode)
   (let ((cases '((">seq1
-A" . nuc-mode)
+A" . seqel-nuc-mode)
                  (">seq1
-AUCG" . nuc-mode)
+AUCG" . seqel-nuc-mode)
                  (">seq1
-AAAAAAEFZ" . pro-mode))))
+AAAAAAEFZ" . seqel-pro-mode))))
     (dolist (test cases)
       (with-temp-buffer
         (insert (car test))
@@ -373,22 +374,22 @@ AAAAAAEFZ" . pro-mode))))
         ;; return true if the mode is active
         (should (and (symbolp (cdr test)) (symbol-value (cdr test))))
         ;; disable both modes to start with clean buffer
-        (nuc-mode -1)
-        (pro-mode -1)))))
+        (seqel-nuc-mode -1)
+        (seqel-pro-mode -1)))))
 
 (ert-deftest seqel-fasta-bioseq-type-test-error ()
   :tags '(fasta-mode)
   (let ((cases '((">seq1
-A" . pro-mode)
+A" . seqel-pro-mode)
                  (">seq1
-AUCG" . pro-mode)
+AUCG" . seqel-pro-mode)
                  (">seq1
-AEFZ" . nuc-mode))))
+AEFZ" . seqel-nuc-mode))))
     (dolist (test cases)
       (with-temp-buffer
         (insert (car test))
         (seqel-fasta-bioseq-type)
         (princ (and (symbolp (cdr test)) (symbol-value (cdr test))))
         (should (not (and (symbolp (cdr test)) (symbol-value (cdr test)))))
-        (nuc-mode -1)
-        (pro-mode -1)))))
+        (seqel-nuc-mode -1)
+        (seqel-pro-mode -1)))))

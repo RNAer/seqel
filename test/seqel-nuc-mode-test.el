@@ -1,5 +1,6 @@
 (require 'seqel-nuc-mode)
 
+
 (ert-deftest seqel-nuc-move-forward-test ()
   ;; the tags is used to group the tests together.
   :tags '(nuc-mode)

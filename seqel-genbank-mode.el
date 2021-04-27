@@ -173,7 +173,7 @@ the beginning of the genbank entry instead of the sequence."
   (let (str seq)
     (seqel-genbank-mark)
     (setq str (buffer-substring-no-properties (region-beginning) (region-end)))
-    (if nuc-mode
+    (if seqel-nuc-mode
         (setq seq (mapcan (lambda (i) (if (gethash i seqel-nuc-alphabet-set) (list (upcase i)))) str))
       (setq seq (mapcan (lambda (i) (if (gethash i seqel-pro-alphabet-set) (list (upcase i)))) str)))
     (seqel-genbank-mark 'whole)
