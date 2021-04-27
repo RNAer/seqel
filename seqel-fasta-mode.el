@@ -200,7 +200,8 @@ white spaces will all be removed."
                ;; (message "%d %d %d" width (point) (region-end))
                (dotimes (i (/ (- (point-max) (point-min)) width))
                  (forward-char width)
-                 (insert-char ?\n))))))
+                 (insert-char ?\n)))))
+  (message "done"))
 
 ;;;###autoload
 (defun seqel-fasta-format (&optional width)

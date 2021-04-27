@@ -501,7 +501,8 @@ long."
                                          (if (> (length aas) 1)
                                              ?X
                                            (car aas))))
-                           (number-sequence 0  (1- (/ n 3))))))))))
+                           (number-sequence 0  (1- (/ n 3)))))))))
+  (message "done."))
 
 
 (defvar seqel-nuc-mode-map
