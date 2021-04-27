@@ -18,6 +18,10 @@
 (require 'seqel)
 
 
+(defvar seqel-pro-mode-hook nil
+  "*Hook to setup `seqel-pro-mode'.")
+
+
 (defvar seqel-pro-aa-alist
   ;; put a question mark before the char will evaluate it to digit ascii code
   '((?A  "Ala"  71.09   ?a)
@@ -294,7 +298,12 @@ It should be not enabled with `nuc-mode' at the same time."
   :init-value nil
   ;; the name, a string, to show in the modeline
   :lighter " protein"
-  :keymap seqel-pro-mode-map)
+  :keymap seqel-pro-mode-map
+  (run-hooks 'seqel-pro-mode-hook))
+
+
+(add-hook 'seqel-pro-mode-hook (lambda ()
+                                 (setq-local seqel-isearch-p t)))
 
 
 (provide 'seqel-pro-mode)

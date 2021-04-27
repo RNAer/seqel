@@ -20,6 +20,9 @@
 
 ;;;;;; USER CUSTOMIZABLE VARIABLES START HERE
 
+(defvar seqel-nuc-mode-hook nil
+  "*Hook to setup `seqel-nuc-mode'.")
+
 
 (defvar seqel-nuc--base-alist
   '((?a  ?t ?a)
@@ -317,6 +320,26 @@ and 'mR' will be transformed to '[ac][ ]*[AG]'."
                   (string-to-list str)))
     (mapconcat 'identity degenerate-str-list (concat seqel-cruft-regexp "*"))))
 
+(defun seqel-nuc-isearch-forward (pattern &optional bound noerror)
+  "Search forward for PATTERN.
+
+BOUND and NOERROR passes to function `re-search-forward'."
+  (let ((string (seqel-nuc-isearch-mangle-str-degeneracy pattern)))
+    (re-search-forward string bound noerror)))
+
+(defun seqel-nuc-isearch-backward (pattern &optional bound noerror)
+  "Search backward for PATTERN.
+
+BOUND and NOERROR passes to function `re-search-backward'."
+  (let ((string (seqel-nuc-isearch-mangle-str-degeneracy pattern)))
+    (re-search-backward string bound noerror)))
+
+(defun seqel-nuc--isearch-search-fun ()
+  "This function will be assigned to `isearch-search-fun-function'."
+  (if seqel-isearch-p
+      (if isearch-forward 'seqel-nuc-isearch-forward 'seqel-nuc-isearch-backward)
+    (isearch-search-fun-default)))
+
 
 ;; weighted homopolymer rate (WHR)
 (defun seqel-nuc-whr (beg end)
@@ -503,7 +526,13 @@ It should not be enabled with `pro-mode' at the same time."
   :lighter " nucleotide"
   :keymap seqel-nuc-mode-map
   ;; set the translation table to 1 if it is nil
-  (or seqel-nuc-translation-table (seqel-nuc-set-translation-table 1)))
+  (or seqel-nuc-translation-table (seqel-nuc-set-translation-table 1))
+  (run-hooks 'seqel-nuc-mode-hook))
+
+
+(add-hook 'seqel-nuc-mode-hook (lambda ()
+                                 (setq-local seqel-isearch-p t)
+                                 (setq isearch-search-fun-function 'seqel-nuc--isearch-search-fun)))
 
 
 (provide 'seqel-nuc-mode)

@@ -29,18 +29,18 @@
   ;; if there are lots of keybindings
   (let ((map (make-sparse-keymap)))
     ;; Ctrl bindings
-    (define-key map "\C-c\C-c"     'seqel-fasta-count)
-    (define-key map "\C-c\C-d"     'seqel-fasta-delete)
-    (define-key map "\C-c\C-a"     'seqel-fasta-first)
-    (define-key map "\C-c\C-z"     'seqel-fasta-last)
-    (define-key map "\C-c\C-f"     'seqel-fasta-forward) ; it also binds to M-}
-    (define-key map "\C-c\C-b"     'seqel-fasta-backward); it also binds to M-{
-    (define-key map "\C-c\C-m"     'seqel-fasta-mark)    ; it also binds to M-h
-    (define-key map "\C-c\C-l"     'seqel-fasta-length)
-    (define-key map "\C-c\C-p"     'seqel-fasta-position)
-    (define-key map "\C-c\C-w"     'seqel-fasta-weight)
-    (define-key map "\C-c\C-r"     'seqel-fasta-rc-all)
-    (define-key map "\C-c\C-t"     'seqel-fasta-translate-all)
+    (define-key map "\C-c\C-c"   'seqel-fasta-count)
+    (define-key map "\C-c\C-d"   'seqel-fasta-delete)
+    (define-key map "\C-c\C-a"   'seqel-fasta-first)
+    (define-key map "\C-c\C-z"   'seqel-fasta-last)
+    (define-key map "\C-c\C-f"   'seqel-fasta-forward) ; it also binds to M-}
+    (define-key map "\C-c\C-b"   'seqel-fasta-backward); it also binds to M-{
+    (define-key map "\C-c\C-m"   'seqel-fasta-mark)    ; it also binds to M-h
+    (define-key map "\C-c\C-l"   'seqel-fasta-length)
+    (define-key map "\C-c\C-p"   'seqel-fasta-position)
+    (define-key map "\C-c\C-w"   'seqel-fasta-weight)
+    (define-key map "\C-c\C-r"   'seqel-fasta-rc-all)
+    (define-key map "\C-c\C-t"   'seqel-fasta-translate-all)
     (define-key map "\C-c\C-vd"  'seqel-fasta-column-delete)
     (define-key map "\C-c\C-vi"  'seqel-fasta-column-insert)
     (define-key map "\C-c\C-vh"  'seqel-fasta-column-highlight)

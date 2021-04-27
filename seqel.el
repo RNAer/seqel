@@ -276,35 +276,25 @@ BOUND and NOERROR passes to function `re-search-backward'."
   (let ((string (seqel-isearch-mangle-str pattern)))
     (re-search-backward string bound noerror)))
 
-(defadvice isearch-message-prefix (after bioseq-isearch-ismp)
-  "Modify the isearch prompt string to show seq search is active.
-
-This serves as a warning that the string is being mangled."
-  (setq ad-return-value (concat "SEQ " ad-return-value)))
-
 (defvar seqel-isearch-p nil
-  "Whether sequence pattern isearch is enabled.")
+  "Whether biological sequence pattern isearch is enabled.")
 
 (defun seqel-toggle-isearch ()
   "Toggle the sequence isearch."
   (interactive)
   (cond (seqel-isearch-p
          (setq seqel-isearch-p nil)
-         (message "sequence pattern isearch is off")
-         (ad-disable-advice 'isearch-message-prefix 'after 'bioseq-isearch-ismp))
-        (t (setq seqel-isearch-p t)
-           (message "sequence pattern isearch is on")
-           (ad-enable-advice 'isearch-message-prefix 'after 'bioseq-isearch-ismp)))
-  ;; in case there are other advices.
-  (ad-activate 'isearch-message-prefix))
+         (message "bio sequence pattern isearch is off"))
+        (t (setq-local seqel-isearch-p t)
+           (message "bio sequence pattern isearch is on"))))
 
-(defun seqel-isearch-search-fun ()
-  "Set to `isearch-search-fun-function'."
+(defun seqel--isearch-search-fun ()
+  "This function will be assigned to `isearch-search-fun-function'."
   (if seqel-isearch-p
       (if isearch-forward 'seqel-isearch-forward 'seqel-isearch-backward)
     (isearch-search-fun-default)))
 
-(setq isearch-search-fun-function 'seqel-isearch-search-fun)
+(setq isearch-search-fun-function 'seqel--isearch-search-fun)
 
 
 (defun seqel-entry-forward (count entry-regexp)
