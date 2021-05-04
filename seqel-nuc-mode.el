@@ -528,12 +528,9 @@ It should not be enabled with `pro-mode' at the same time."
   :keymap seqel-nuc-mode-map
   ;; set the translation table to 1 if it is nil
   (or seqel-nuc-translation-table (seqel-nuc-set-translation-table 1))
+  (setq-local seqel-isearch-p t)
+  (setq isearch-search-fun-function 'seqel-nuc--isearch-search-fun)
   (run-hooks 'seqel-nuc-mode-hook))
-
-
-(add-hook 'seqel-nuc-mode-hook (lambda ()
-                                 (setq-local seqel-isearch-p t)
-                                 (setq isearch-search-fun-function 'seqel-nuc--isearch-search-fun)))
 
 
 (provide 'seqel-nuc-mode)

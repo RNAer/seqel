@@ -299,11 +299,8 @@ It should be not enabled with `nuc-mode' at the same time."
   ;; the name, a string, to show in the modeline
   :lighter " protein"
   :keymap seqel-pro-mode-map
+  (setq-local seqel-isearch-p t)
   (run-hooks 'seqel-pro-mode-hook))
-
-
-(add-hook 'seqel-pro-mode-hook (lambda ()
-                                 (setq-local seqel-isearch-p t)))
 
 
 (provide 'seqel-pro-mode)
