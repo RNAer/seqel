@@ -14,6 +14,11 @@
 
 ;;; Code:
 
+(define-package
+  "seqel"   ; package name
+  "1.0"     ; version
+  "biological sequence manipulation")    ; description
+
 
 (require 'color)
 
