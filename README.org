@@ -90,6 +90,9 @@
 
    footnote^{1}: default N is one; you can combine with ~C-u~ to set N to other values
 
+** We also recommend use `helm` or `ivy` for command completion so you don't need to remember all the command. For example, with helm enabled:
+   [[image:command-completion-demo][command-completion-demo.gif]]
+
 ** search for sequence pattern/motif
    - You can search a sequence motif using =C-s= (=isearch-forward=).
    - By default, IPUAC degeneracy codes is supported and whitespaces, gaps, and other irrelevant characters in the middle of a matching hit are ignored. Users can disable this behavior and return back to conventional isearch by ~M-x seqel-toggle-isearch~.
