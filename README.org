@@ -4,6 +4,7 @@
 * A simple demo screencast
   [[image:usage-demo][demo.gif]]
 * Installation
+  ~seqel~ requires Emacs version >= 26.
   1. Clone the packages with ~git clone https://github.com/RNAer/seqel.git~
   2. Open Emacs run ~M-x package-install-file~, and then input the cloned package directory.
 
