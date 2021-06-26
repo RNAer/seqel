@@ -60,6 +60,15 @@
                                seqel-fasta-mode-map
                                (current-global-map))))
 
+;; create pull-down menu options on menu bar.
+(define-key seqel-fasta-mode-map [menu-bar seqel] (cons "Seqel" (make-sparse-keymap "Seqel")))
+(define-key seqel-fasta-mode-map [menu-bar seqel fasta-rc] '("Previous Sequence" . seqel-fasta-backward))
+(define-key seqel-fasta-mode-map [menu-bar seqel fasta-length] '("Next Sequence" . seqel-fasta-forward))
+(define-key seqel-fasta-mode-map [menu-bar seqel fasta-count] '("Sequence Count" . seqel-fasta-count))
+(define-key seqel-fasta-mode-map [menu-bar seqel fasta-rc] '("Reverse Complement" . seqel-fasta-rc-all))
+(define-key seqel-fasta-mode-map [menu-bar seqel fasta-length] '("Sequence Length" . seqel-fasta-length))
+
+
 ;;;###autoload
 (add-to-list 'auto-mode-alist
              '("\\.\\(fasta\\|fa\\|fna\\|faa\\|aln\\)\\'" . seqel-fasta-mode))

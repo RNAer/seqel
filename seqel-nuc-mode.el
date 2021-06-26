@@ -385,7 +385,7 @@ This is a list of lists.  For each inner list, it contains 3
 atoms: a nuc base in char type, hex-code colors for foreground
 and background")
 
-
+;;; add them to the group of "nuc-base-face"
 (mapc (lambda (elem)
         (let ((l (format "%c" (nth 0 elem)))
               (f (nth 2 elem))

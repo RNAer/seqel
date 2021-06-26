@@ -50,6 +50,14 @@
                                seqel-genbank-mode-map
                                (current-global-map))))
 
+
+;; create pull-down menu options on menu bar.
+(define-key seqel-genbank-mode-map [menu-bar seqel] (cons "Seqel" (make-sparse-keymap "Seqel")))
+(define-key seqel-genbank-mode-map [menu-bar seqel genbank-rc] '("Previous Sequence" . seqel-genbank-backward))
+(define-key seqel-genbank-mode-map [menu-bar seqel genbank-length] '("Next Sequence" . seqel-genbank-forward))
+(define-key seqel-genbank-mode-map [menu-bar seqel genbank-count] '("Sequence Count" . seqel-genbank-count))
+
+
 (defvar seqel-genbank-font-lock-keywords
   '(("^\\(LOCUS\\) +\\([-_.a-zA-Z_0-9]+\\)" ;; are '-_.' allowed?
      (1 font-lock-keyword-face)
