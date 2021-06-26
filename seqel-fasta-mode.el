@@ -428,23 +428,27 @@ CASE is set to non-nil to paint with case sensitivity."
 FN is a piece of code that does some specific manipulation
 at the current column of all fasta records.  See `fasta-insert-column'
 and `seqel-fasta-delete-column' for an example of usage."
-  `(save-excursion
-     (let ((column (current-column))
-           pos line)
+  `(save-mark-and-excursion
+     (let ((pos (point))
+           seq-pos length)
        (condition-case err
-           (progn (goto-char (point-max))
+           (progn (seqel-fasta-backward 1)
+                  (forward-line) ; move to the seq region of current fasta entry
+                  (setq seq-pos (- pos (point)))
+                  (goto-char (point-max))
                   (while (seqel-fasta-backward 1)
                     (forward-line) ; move to the sequence region
-                    (setq line (line-number-at-pos))
-                    (if (< (move-to-column column) column)
-                        (signal 'error '(move-to-column)))
+                    (seqel-fasta-mark)
+                    (setq length (- (mark) (point)))
+                    (if (< length 1)
+                        (signal 'error 'sequence-too-short))
+                    (forward-char seq-pos)
                     ,@fn
                     (seqel-fasta-backward 1)))
        ;; return to the original state if error is met.
        (error
         (primitive-undo 1 buffer-undo-list)
-        (error "Abort: line %d is shorter than the column number (%d)"
-               line column))))))
+        (error "Abort: sequence is shorter than the column number"))))))
 
 
 (defun seqel-fasta-column-delete (&optional n)
