@@ -72,11 +72,22 @@ and upper case) and values are t. It serves like a set object
 similar in Python language.")
 
 
-(defvar seqel-pro-aa-acidic "DE")
-(defvar seqel-pro-aa-basic "RHK")
-(defvar seqel-pro-aa-hydrophobic "AHILMFVPGWY")
-(defvar seqel-pro-aa-hydrophilic "")
-(defvar seqel-pro-aa-amphipathic "")
+(defvar seqel-pro-aa-hydrophobic '(?A ?I ?L ?M ?F ?V ?W))
+(defvar seqel-pro-aa-pos '(?K ?R))
+(defvar seqel-pro-aa-neg '(?E ?D))
+(defvar seqel-pro-aa-polar '(?N ?Q ?S ?T))
+(defvar seqel-pro-aa-aromatic '(?H ?Y))
+(eval (macroexpand `(seqel--def-char-face "hydrophobic" "RoyalBlue" "white" "pro-aa-background")))
+(eval (macroexpand `(seqel--def-char-face "pos" "brown" "white" "pro-aa-background")))
+(eval (macroexpand `(seqel--def-char-face "neg" "purple" "white" "pro-aa-background")))
+(eval (macroexpand `(seqel--def-char-face "polar" "green yellow" "white" "pro-aa-background")))
+(eval (macroexpand `(seqel--def-char-face "aromatic" "cyan4" "white" "pro-aa-background")))
+
+(eval (macroexpand `(seqel--def-char-face "hydrophobic" "white" "RoyalBlue" "pro-aa-foreground")))
+(eval (macroexpand `(seqel--def-char-face "pos" "white" "brown" "pro-aa-foreground")))
+(eval (macroexpand `(seqel--def-char-face "neg" "white" "purple" "pro-aa-foreground")))
+(eval (macroexpand `(seqel--def-char-face "polar" "white" "green yellow" "pro-aa-foreground")))
+(eval (macroexpand `(seqel--def-char-face "aromatic" "white" "cyan4" "pro-aa-foreground")))
 
 
 (defvar seqel-pro-aa-mw
@@ -261,6 +272,34 @@ a nuc base in char type, hex-code colors for foreground and background")
               (b (nth 1 elem)))
           (eval (macroexpand `(seqel--def-char-face ,l ,b ,f "pro-aa-face")))))
       seqel-pro-aa-colors)
+
+
+;;;###autoload
+(defun seqel-pro-paint-alternative (beg end)
+  (interactive "r")
+  (if (not (use-region-p))
+      (setq beg (line-beginning-position)
+            end (line-end-position)))
+  (save-excursion
+    (let (char face)
+      (goto-char beg)
+      (dotimes (i (- end beg))
+        (setq char (char-after))
+        (cond ((member char seqel-pro-aa-hydrophobic)
+               (setq face 'pro-aa-background-hydrophobic))
+              ((member char seqel-pro-aa-polar)
+               (setq face 'pro-aa-background-polar))
+              ((member char seqel-pro-aa-pos)
+               (setq face 'pro-aa-background-pos))
+              ((member char seqel-pro-aa-neg)
+               (setq face 'pro-aa-background-neg))
+              ((member char seqel-pro-aa-aromatic)
+               (setq face 'pro-aa-background-aromatic))
+              (t (setq face 'default)))
+        (with-silent-modifications
+          (put-text-property (+ beg i) (+ beg i 1) 'font-lock-face face))
+        (forward-char)))))
+
 
 ;;;###autoload
 (defun seqel-pro-paint (beg end &optional case)
