@@ -2,104 +2,113 @@
 #+OPTIONS: ^:{}
 
 * A simple demo screencast
-  [[image:usage-demo][demo.gif]]
+[[image:usage-demo][demo.gif]]
 * Installation
-  ~seqel~ requires Emacs version >= 26.
+~seqel~ requires Emacs version >= 26.
+
+- Download and package install
   1. Clone the packages with ~git clone https://github.com/RNAer/seqel.git~
   2. Open Emacs run ~M-x package-install-file~, and then input the cloned package directory.
-
+- Or add to ~load-path~
+  #+begin_src emacs-lisp
+    (add-to-list 'load-path "~/git/seqel")
+    (require 'seqel)
+  #+end_src
+- For latest Emacs, it can also be installed with ~use-package~:
+  #+begin_src emacs-lisp
+  (use-package seqel
+    :vc (:url https://github.com/RNAer/seqel.git))
+  #+end_src
 * Usage
 ** modes
-   There are 2 emacs major mode for sequence file formats:
-   1. ~seqel-fasta-mode~: fasta file
-   2. ~seqel-genbank-mode~: genbank file
+There are 2 emacs major modes for sequence file formats:
+1. ~seqel-fasta-mode~: fasta file
+2. ~seqel-genbank-mode~: genbank file
 
-   Besides major mode, ~seqel~ implements 2 minor modes for DNA/RNA (~seqel-nuc-mode~) and protein (~seqel-pro-mode~) sequences, respectively.
+Besides major mode, ~seqel~ implements 2 minor modes for DNA/RNA (~seqel-nuc-mode~) and protein (~seqel-pro-mode~) sequences, respectively.
 
-   For both major modes, ~seqel~ will automatically determine whether it is nucleotide or protein sequences and turn on the corresponding minor mode.
+For both major modes, ~seqel~ will automatically determine whether it is nucleotide or protein sequences and turn on the corresponding minor mode.
 ** major functionalities
-   | emacs command                 | key binding    | functionality                                                               | in what mode |
-   |-------------------------------+----------------+-----------------------------------------------------------------------------+--------------|
-   | seqel-fasta-mode              |                | enable fasta mode                                                           |              |
-   | seqel-fasta-format            |                | format the current sequence into rows of the same width                     | fasta-mode   |
-   | seqel-fasta-format-all        |                | format all the sequences into the same width                                | fasta-mode   |
-   | seqel-fasta-count             | C-c C-c        | count the number of fasta sequences in the file                             | fasta-mode   |
-   | seqel-fasta-delete            | C-c C-d        | delete the current fasta sequence                                           | fasta-mode   |
-   | seqel-fasta-first             | C-c C-a        | move the cursor to the 1st fasta sequence                                   | fasta-mode   |
-   | seqel-fasta-last              | C-c C-z        | move the cursor to the last fasta sequence                                  | fasta-mode   |
-   | seqel-fasta-forward           | C-c C-f or M-} | move the cursor forwards by N fasta sequence(s)^{1}                         | fasta-mode   |
-   | seqel-fasta-backward          | C-c C-b or M-{ | move the cursor backwards by N fasta sequence(s)^{1}                        | fasta-mode   |
-   | seqel-fasta-mark              | C-c C-m or M-h | select the current fasta sequence                                           | fasta-mode   |
-   | seqel-fasta-length            | C-c C-l        | compute the sequence length of the current fasta sequence                   | fasta-mode   |
-   | seqel-fasta-position          | C-c C-p        | return current residue position (skip white spaces and alignment gaps)      | fasta-mode   |
-   | seqel-fasta-weight            | C-c C-w        | return the molecular weight of current sequence (for protein)               | fasta-mode   |
-   | seqel-fasta-rc                |                | reverse complement the current fasta sequence (for DNA/RNA)                 | fasta-mode   |
-   | seqel-seqel-fasta-rc-all      | C-c C-r        | reverse complement all the fasta sequences in the file (for DNA/RNA)        | fasta-mode   |
-   | seqel-fasta-translate         |                | translate the current DNA/RNA sequence to protein sequence                  | fasta-mode   |
-   | seqel-fasta-translate-all     | C-c C-t        | translate all the DNA/RNA sequence to protein sequence                      | fasta-mode   |
-   | seqel-fasta-paint             |                | color the current fasta sequence with colors according to residues          | fasta-mode   |
-   | seqel-fasta-paint-all         |                | color all the fasta sequences with colors according to residues             | fasta-mode   |
-   | seqel-fasta-unpaint           |                | uncolor the current fasta sequence                                          | fasta-mode   |
-   | seqel-fasta-unpaint-all       |                | uncolor all the fasta sequences                                             | fasta-mode   |
-   | seqel-fasta-column-highlight  | C-c C-v h      | highlight current column in all sequences                                   | fasta-mode   |
-   | seqel-fasta-column-paint      | C-c C-v p      | color the current column with colors according to residues                  | fasta-mode   |
-   | seqel-fasta-column-summary    | C-c C-v s      | return the residue frequencies of the current column                        | fasta-mode   |
-   | seqel-fasta-column-insert     | C-c C-v i      | insert a column in all sequences                                            | fasta-mode   |
-   | seqel-fasta-column-delete     | C-c C-v d      | delete current column in all sequences (useful in aligned fasta files)      | fasta-mode   |
-   | seqel-genbank-mode            |                | enable genbank mode                                                         |              |
-   | seqel-genbank-2-fasta         |                | convert current genbank record to fasta format                              | genbank-mode |
-   | seqel-genbank-2-fasta-all     |                | convert all the genbank records in the file to fasta format                 | genbank-mode |
-   | seqel-genbank-count           | C-c C-c        | count the number of genbank records in the file                             | genbank-mode |
-   | seqel-genbank-delete          | C-c C-d        | delete the current genbank record                                           | genbank-mode |
-   | seqel-genbank-first           | C-c C-a        | move the cursor to the 1st genbank record                                   | genbank-mode |
-   | seqel-genbank-last            | C-c C-z        | move the cursor to the last genbank record                                  | genbank-mode |
-   | seqel-genbank-forward         | C-c C-f or M-} | move the cursor forwards by N genbank record(s)^{1}                         | genbank-mode |
-   | seqel-genbank-backward        | C-c C-b or M-{ | move the cursor backwards by N genbank record(s)^{1}                        | genbank-mode |
-   | seqel-genbank-mark            | C-c C-m or M-h | select and highlight the current genbank record                             | genbank-mode |
-   | seqel-genbank-length          | C-c C-l        | compute the sequence length of the current genbank record                   | genbank-mode |
-   | seqel-nuc-mode                |                | enable or disable nucleotide minor mode                                     |              |
-   | seqel-nuc-move-forward        | C-c C-n C-f    | move the cursor forwards by N nucleotide(s)^{1}                             | nuc-mode     |
-   | seqel-nuc-move-backward       | C-c C-n C-b    | move the cursor backwards by N nucleotide(s)^{1}                            | nuc-mode     |
-   | seqel-nuc-delete-forward      |                | delete N nucleotide(s) forwards^{1}                                         | nuc-mode     |
-   | seqel-nuc-delete-backward     |                | delete N nucleotide(s) backwards^{1}                                        | nuc-mode     |
-   | seqel-nuc-count               |                | count the number of nucleotides in the current sequence                     | nuc-mode     |
-   | seqel-nuc-summary             |                | compute and show the frequencies of all bases in the sequence               | nuc-mode     |
-   | seqel-nuc-paint               |                | color the sequence by its nucleotide bases                                  | nuc-mode     |
-   | seqel-nuc-unpaint             |                | undo the coloring                                                           | nuc-mode     |
-   | seqel-nuc-complement          |                | complement the nucleotide sequence                                          | nuc-mode     |
-   | seqel-nuc-rc                  | C-c C-n C-r    | reverse complement the nucleotide sequence                                  | nuc-mode     |
-   | seqel-nuc-2rna                |                | convert the sequence to RNA                                                 | nuc-mode     |
-   | seqel-nuc-2dna                |                | convert the sequence to DNA                                                 | nuc-mode     |
-   | seqel-nuc-whr                 |                | compute the weighted homopolymer rate of the sequence                       | nuc-mode     |
-   | seqel-nuc-set-translate-table |                | set the translation table. Default is to use table 1.                       | nuc-mode     |
-   | seqel-nuc-translate           | C-c C-n C-t    | translate the sequence into protein                                         | nuc-mode     |
-   | seqel-nuc-rna-p               |                | check if the sequence is RNA or not                                         | nuc-mode     |
-   | seqel-nuc-dna-p               |                | check if the sequence is DNA or not                                         | nuc-mode     |
-   | seqel-pro-mode                |                | enable or disable protein minor mode                                        |              |
-   | seqel-pro-move-forward        | C-c C-p C-f    | move the cursor forwards by N amino acid(s)^{1}                             | pro-mode     |
-   | seqel-pro-move-backward       | C-c C-p C-b    | move the cursor backwards by N amino acid(s)^{1}                            | pro-mode     |
-   | seqel-pro-delete-forward      |                | delete N amino acid(s) forwards^{1}                                         | pro-mode     |
-   | seqel-pro-delete-backward     |                | delete N amino acid(s) backwards^{1}                                        | pro-mode     |
-   | seqel-pro-count               |                | count the number of amino acids in the sequence                             | pro-mode     |
-   | seqel-pro-summary             |                | compute and show the frequencies of all amino acids in the sequence         | pro-mode     |
-   | seqel-pro-paint               |                | color the sequence by its amino acids                                       | pro-mode     |
-   | seqel-pro-unpaint             |                | undo the coloring                                                           | pro-mode     |
-   | seqel-pro-weight              | C-c C-p C-w    | compute molecular weight of the protein sequence                            | pro-mode     |
-   | seqel-pro-1-2-3               |                | covnert 1-letter IUPAC code to 3-letter IUPAC code for the protein sequence | pro-mode     |
-   | seqel-pro-3-2-1               |                | convert 3-letter to 1-letter code                                           | pro-mode     |
+| emacs command                 | key binding    | functionality                                                               | in what mode |
+|-------------------------------+----------------+-----------------------------------------------------------------------------+--------------|
+| seqel-fasta-mode              |                | enable fasta mode                                                           |              |
+| seqel-fasta-format            |                | format the current sequence into rows of the same width                     | fasta-mode   |
+| seqel-fasta-format-all        |                | format all the sequences into the same width                                | fasta-mode   |
+| seqel-fasta-count             | C-c C-c        | count the number of fasta sequences in the file                             | fasta-mode   |
+| seqel-fasta-delete            | C-c C-d        | delete the current fasta sequence                                           | fasta-mode   |
+| seqel-fasta-first             | C-c C-a        | move the cursor to the 1st fasta sequence                                   | fasta-mode   |
+| seqel-fasta-last              | C-c C-z        | move the cursor to the last fasta sequence                                  | fasta-mode   |
+| seqel-fasta-forward           | C-c C-f or M-} | move the cursor forwards by N fasta sequence(s)^{1}                         | fasta-mode   |
+| seqel-fasta-backward          | C-c C-b or M-{ | move the cursor backwards by N fasta sequence(s)^{1}                        | fasta-mode   |
+| seqel-fasta-mark              | C-c C-m or M-h | select the current fasta sequence                                           | fasta-mode   |
+| seqel-fasta-length            | C-c C-l        | compute the sequence length of the current fasta sequence                   | fasta-mode   |
+| seqel-fasta-position          | C-c C-p        | return current residue position (skip white spaces and alignment gaps)      | fasta-mode   |
+| seqel-fasta-weight            | C-c C-w        | return the molecular weight of current sequence (for protein)               | fasta-mode   |
+| seqel-fasta-rc                |                | reverse complement the current fasta sequence (for DNA/RNA)                 | fasta-mode   |
+| seqel-seqel-fasta-rc-all      | C-c C-r        | reverse complement all the fasta sequences in the file (for DNA/RNA)        | fasta-mode   |
+| seqel-fasta-translate         |                | translate the current DNA/RNA sequence to protein sequence                  | fasta-mode   |
+| seqel-fasta-translate-all     | C-c C-t        | translate all the DNA/RNA sequence to protein sequence                      | fasta-mode   |
+| seqel-fasta-paint             |                | color the current fasta sequence with colors according to residues          | fasta-mode   |
+| seqel-fasta-paint-all         |                | color all the fasta sequences with colors according to residues             | fasta-mode   |
+| seqel-fasta-unpaint           |                | uncolor the current fasta sequence                                          | fasta-mode   |
+| seqel-fasta-unpaint-all       |                | uncolor all the fasta sequences                                             | fasta-mode   |
+| seqel-fasta-column-highlight  | C-c C-v h      | highlight current column in all sequences                                   | fasta-mode   |
+| seqel-fasta-column-paint      | C-c C-v p      | color the current column with colors according to residues                  | fasta-mode   |
+| seqel-fasta-column-summary    | C-c C-v s      | return the residue frequencies of the current column                        | fasta-mode   |
+| seqel-fasta-column-insert     | C-c C-v i      | insert a column in all sequences                                            | fasta-mode   |
+| seqel-fasta-column-delete     | C-c C-v d      | delete current column in all sequences (useful in aligned fasta files)      | fasta-mode   |
+| seqel-genbank-mode            |                | enable genbank mode                                                         |              |
+| seqel-genbank-2-fasta         |                | convert current genbank record to fasta format                              | genbank-mode |
+| seqel-genbank-2-fasta-all     |                | convert all the genbank records in the file to fasta format                 | genbank-mode |
+| seqel-genbank-count           | C-c C-c        | count the number of genbank records in the file                             | genbank-mode |
+| seqel-genbank-delete          | C-c C-d        | delete the current genbank record                                           | genbank-mode |
+| seqel-genbank-first           | C-c C-a        | move the cursor to the 1st genbank record                                   | genbank-mode |
+| seqel-genbank-last            | C-c C-z        | move the cursor to the last genbank record                                  | genbank-mode |
+| seqel-genbank-forward         | C-c C-f or M-} | move the cursor forwards by N genbank record(s)^{1}                         | genbank-mode |
+| seqel-genbank-backward        | C-c C-b or M-{ | move the cursor backwards by N genbank record(s)^{1}                        | genbank-mode |
+| seqel-genbank-mark            | C-c C-m or M-h | select and highlight the current genbank record                             | genbank-mode |
+| seqel-genbank-length          | C-c C-l        | compute the sequence length of the current genbank record                   | genbank-mode |
+| seqel-nuc-mode                |                | enable or disable nucleotide minor mode                                     |              |
+| seqel-nuc-move-forward        | C-c C-n C-f    | move the cursor forwards by N nucleotide(s)^{1}                             | nuc-mode     |
+| seqel-nuc-move-backward       | C-c C-n C-b    | move the cursor backwards by N nucleotide(s)^{1}                            | nuc-mode     |
+| seqel-nuc-delete-forward      |                | delete N nucleotide(s) forwards^{1}                                         | nuc-mode     |
+| seqel-nuc-delete-backward     |                | delete N nucleotide(s) backwards^{1}                                        | nuc-mode     |
+| seqel-nuc-count               |                | count the number of nucleotides in the current sequence                     | nuc-mode     |
+| seqel-nuc-summary             |                | compute and show the frequencies of all bases in the sequence               | nuc-mode     |
+| seqel-nuc-paint               |                | color the sequence by its nucleotide bases                                  | nuc-mode     |
+| seqel-nuc-unpaint             |                | undo the coloring                                                           | nuc-mode     |
+| seqel-nuc-complement          |                | complement the nucleotide sequence                                          | nuc-mode     |
+| seqel-nuc-rc                  | C-c C-n C-r    | reverse complement the nucleotide sequence                                  | nuc-mode     |
+| seqel-nuc-2rna                |                | convert the sequence to RNA                                                 | nuc-mode     |
+| seqel-nuc-2dna                |                | convert the sequence to DNA                                                 | nuc-mode     |
+| seqel-nuc-whr                 |                | compute the weighted homopolymer rate of the sequence                       | nuc-mode     |
+| seqel-nuc-set-translate-table |                | set the translation table. Default is to use table 1.                       | nuc-mode     |
+| seqel-nuc-translate           | C-c C-n C-t    | translate the sequence into protein                                         | nuc-mode     |
+| seqel-nuc-rna-p               |                | check if the sequence is RNA or not                                         | nuc-mode     |
+| seqel-nuc-dna-p               |                | check if the sequence is DNA or not                                         | nuc-mode     |
+| seqel-pro-mode                |                | enable or disable protein minor mode                                        |              |
+| seqel-pro-move-forward        | C-c C-p C-f    | move the cursor forwards by N amino acid(s)^{1}                             | pro-mode     |
+| seqel-pro-move-backward       | C-c C-p C-b    | move the cursor backwards by N amino acid(s)^{1}                            | pro-mode     |
+| seqel-pro-delete-forward      |                | delete N amino acid(s) forwards^{1}                                         | pro-mode     |
+| seqel-pro-delete-backward     |                | delete N amino acid(s) backwards^{1}                                        | pro-mode     |
+| seqel-pro-count               |                | count the number of amino acids in the sequence                             | pro-mode     |
+| seqel-pro-summary             |                | compute and show the frequencies of all amino acids in the sequence         | pro-mode     |
+| seqel-pro-paint               |                | color the sequence by its amino acids                                       | pro-mode     |
+| seqel-pro-unpaint             |                | undo the coloring                                                           | pro-mode     |
+| seqel-pro-weight              | C-c C-p C-w    | compute molecular weight of the protein sequence                            | pro-mode     |
+| seqel-pro-1-2-3               |                | covnert 1-letter IUPAC code to 3-letter IUPAC code for the protein sequence | pro-mode     |
+| seqel-pro-3-2-1               |                | convert 3-letter to 1-letter code                                           | pro-mode     |
 
-   footnote^{1}: default N is one; you can combine with ~C-u~ to set N to other values
-
-** We also recommend use `helm` or `ivy` for command completion so you don't need to remember all the command. For example, with helm enabled:
-   [[image:command-completion-demo][command-completion-demo.gif]]
+footnote^{1}: default N is one; you can combine with ~C-u~ to set N to other values
 
 ** search for sequence pattern/motif
-   - You can search a sequence motif using =C-s= (=isearch-forward=).
-   - By default, IPUAC degeneracy codes is supported and whitespaces, gaps, and other irrelevant characters in the middle of a matching hit are ignored. Users can disable this behavior and return back to conventional isearch by ~M-x seqel-toggle-isearch~.
+- You can search a sequence motif using =C-s= (=isearch-forward=).
+- By default, IPUAC degeneracy codes is supported and whitespaces, gaps, and other irrelevant characters in the middle of a matching hit are ignored. Users can disable this behavior and return back to conventional isearch by ~M-x seqel-toggle-isearch~.
 
 * For developers
 ** unit tests
-   The package is unit tested using ~ert~ module of Emacs. You can run all the unit tests with linux command:
-   #+begin_src sh
-     make test
-   #+end_src
+The package is unit tested using ~ert~ module of Emacs. You can run all the unit tests with linux command:
+#+begin_src sh
+  make test  # use the default emacs installed on your OS
+  make test EMACS=/usr/local/Cellar/emacs-plus@30/30.0.60/Emacs.app/Contents/MacOS/Emacs  # or you can use another emacs installed at other places.
+#+end_src
