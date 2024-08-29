@@ -128,7 +128,7 @@ It is used to convert 3-letter codes to 1-letter codes.")
   "Return molecular weight of the region BEG and END or the current line."
   (interactive (seqel-region-or-line))
   (let ((sum-mw 0) (times (- end beg)) char mw)
-    (save-excursion
+    (save-mark-and-excursion
       (goto-char beg)
       (dotimes (x times)
         (setq char (char-after))
@@ -266,6 +266,7 @@ This is a list of lists.  For each inner list, it contains 3 atoms:
 a nuc base in char type, hex-code colors for foreground and background")
 
 
+;; create faces
 (mapc (lambda (elem)
         (let ((l (format "%c" (nth 0 elem)))
               (f (nth 2 elem))
@@ -280,7 +281,7 @@ a nuc base in char type, hex-code colors for foreground and background")
   (if (not (use-region-p))
       (setq beg (line-beginning-position)
             end (line-end-position)))
-  (save-excursion
+  (save-mark-and-excursion
     (let (char face)
       (goto-char beg)
       (dotimes (i (- end beg))

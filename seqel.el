@@ -32,7 +32,7 @@
   '(?  ?\t ?\n ?\r)
   "*Chars of whitespaces that may appear in sequences.
 
-It will be skipped during moving and search and anything
+It will be skipped during move or search or anything
 involving counting.")
 
 (defvar seqel-cruft-regexp
@@ -76,7 +76,7 @@ The next char has to belong to LEGAL-ALPHBET-SET to be
         (forward-char direction))
       (if (gethash (funcall fetch-char) legal-alphbet-set)
           (forward-char direction)
-        (error "Failed! Moved %d bases.  You have illegal char here!" (* direction x))))
+        (error "Failed! Moved %d residues.  You have illegal char here!" (* direction x))))
     count))
 
 
@@ -95,7 +95,7 @@ fast (only 2 seconds for 5M base pairs)."
       ;; any char is allowed if legal char is not provided
       (progn (setq my-hash (make-hash-table :test 'equal :size 255))
              (mapc (lambda (i) (puthash i 0 my-hash)) (number-sequence 0 255))))
-    (save-excursion
+    (save-mark-and-excursion
       (goto-char beg)
       (dotimes (x (- end beg))
         (setq char (char-after))
@@ -118,7 +118,7 @@ LEGAL-CHAR-SET is provided); otherwise return nil and report the
 location of the invalid characters.  This function is used by
 `nuc-count' and `seqel-pro-count'."
   (let ((count 0) char)
-    (save-excursion
+    (save-mark-and-excursion
       (goto-char beg)
       (dotimes (i (- end beg))
         (setq char (char-after))
@@ -220,7 +220,7 @@ otherwise, not.  FACE-GROUP decides which face groups ('base-face' or
 'aa-face') to use.
 
 TODO: this is slow for long sequences."
-  (save-excursion
+  (save-mark-and-excursion
     (let (char face)
       (goto-char beg)
       (dotimes (i (- end beg))
@@ -354,7 +354,7 @@ ENTRY-REGEXP defines the boundary of entries."
 
 ENTRY-REGEXP defines the boundary of entries."
   (let ((total 0))
-    (save-excursion
+    (save-mark-and-excursion
       (goto-char (point-max))
       (while (seqel-entry-backward 1 entry-regexp)
         (setq total (1+ total))))

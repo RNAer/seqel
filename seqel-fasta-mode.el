@@ -110,7 +110,7 @@ Special commands:
 
 Only if the major mode is `fundermental'.  This function is added to
 `find-file-hooks'."
-  (save-excursion
+  (save-mark-and-excursion
     (goto-char (point-min))
     (if (and (eq major-mode 'fundamental-mode)
              (looking-at seqel-fasta-record-regexp))
@@ -214,7 +214,7 @@ It wraps around `seqel-fasta--format'.  This can take ~10
 seconds for long sequences (> 5M base pairs).  If WIDTH is
 nil, each fasta sequence will be formatted into a single line."
   (interactive "P")
-  (save-excursion
+  (save-mark-and-excursion
     (seqel-fasta--format width)))
 
 
@@ -225,7 +225,7 @@ It calls `seqel-fasta--format' on each fasta records.
 Optional argument WIDTH is to set a row width; if nil,
 each fasta sequence will be formatted into a single line."
   (interactive "P")
-  (save-excursion
+  (save-mark-and-excursion
     (goto-char (point-max))
     (while (seqel-fasta-backward 1)
       (seqel-fasta--format width)
@@ -248,7 +248,7 @@ It will not count white spaces and sequence gaps."
       (error "Point is not in the sequence region!"))
   (let ((pos (point))
         (count 0))
-    (save-excursion
+    (save-mark-and-excursion
       (or (seqel-fasta-backward 1)
           (error "The start of the fasta record is not found!"))
       (forward-line 1)
@@ -265,7 +265,7 @@ It will not count white spaces and sequence gaps."
   "Return the length of current sequence."
   (interactive)
   (let (length)
-    (save-excursion
+    (save-mark-and-excursion
       (seqel-fasta-forward 1)
       (backward-char)
       (setq length (seqel-fasta-position)))
@@ -295,14 +295,14 @@ It will not count white spaces and sequence gaps."
 
 It wraps on `seqel-fasta--rc'."
   (interactive)
-  (save-excursion
+  (save-mark-and-excursion
     (seqel-fasta--rc))
   (message "Reverse complemented the current sequence."))
 
 (defun seqel-fasta-rc-all ()
   "Reverse complement every DNA/RNA sequence in the buffer."
   (interactive)
-  (save-excursion
+  (save-mark-and-excursion
     (goto-char (point-max))
     (while (seqel-fasta-backward 1)
       (seqel-fasta--rc)
@@ -328,7 +328,7 @@ It wraps on `seqel-fasta--rc'."
 
 It is just a wrapper on `seqel-fasta--translate'."
   (interactive)
-  (save-excursion
+  (save-mark-and-excursion
     (seqel-fasta--translate)))
 
 (defun seqel-fasta-translate-all ()
@@ -336,7 +336,7 @@ It is just a wrapper on `seqel-fasta--translate'."
 
 It calls `seqel-fasta--translate' on each fasta record."
   (interactive)
-  (save-excursion
+  (save-mark-and-excursion
     (goto-char (point-max))
     (while (seqel-fasta-backward 1)
       (seqel-fasta--translate)
@@ -346,7 +346,7 @@ It calls `seqel-fasta--translate' on each fasta record."
 (defun seqel-fasta-weight ()
   "Calculate the molecular weight of the current protein entry."
   (interactive)
-  (save-excursion
+  (save-mark-and-excursion
     (seqel-fasta-mark)
     (if seqel-pro-mode  ; if seqel-pro-mode is enabled
         (seqel-pro-weight (region-beginning) (region-end))
@@ -358,7 +358,7 @@ It calls `seqel-fasta--translate' on each fasta record."
 
 See also `seqel-summary', `seqel-nuc-summary', `seqel-pro-summary'."
   (interactive)
-  (save-excursion
+  (save-mark-and-excursion
     (seqel-fasta-mark)
     (if seqel-pro-mode
         (seqel-pro-summary (point) (mark))
@@ -387,7 +387,7 @@ If CASE is not nil, this function honors the case."
 
 It calls `seqel-unpaint'."
   (interactive)
-  (save-excursion
+  (save-mark-and-excursion
     (seqel-fasta-mark)
     (seqel-unpaint (region-beginning) (region-end))))
 
@@ -397,7 +397,7 @@ It calls `seqel-unpaint'."
 It is just a wrapper around `seqel-fasta--paint'.  Optional argument
 CASE is set to non-nil to paint with case sensitivity."
   (interactive "P")
-  (save-excursion
+  (save-mark-and-excursion
     (seqel-fasta--paint case)))
 
 (defun seqel-fasta-unpaint-all ()
@@ -405,7 +405,7 @@ CASE is set to non-nil to paint with case sensitivity."
 
 It calls `seqel-unpaint' on each fasta record."
   (interactive)
-  (save-excursion
+  (save-mark-and-excursion
     (goto-char (point-max))
     (while (seqel-fasta-backward 1)
       (seqel-fasta-mark)
@@ -418,7 +418,7 @@ It calls `seqel-unpaint' on each fasta record."
 It calls `seqel-fasta--paint' on each fasta record.  Optional argument
 CASE is set to non-nil to paint with case sensitivity."
   (interactive "P")
-  (save-excursion
+  (save-mark-and-excursion
     (goto-char (point-max))
     (while (seqel-fasta-backward 1)
       (seqel-fasta--paint case)
@@ -561,8 +561,7 @@ default."
             (seqel-fasta-bioseq-type)
             ;; these modes can slow the loading of a large fasta file;
             ;; disable these minor modes
-            (flyspell-mode -1)
-            (linum-mode -1)))
+            (flyspell-mode -1)))
 
 
 (provide 'seqel-fasta-mode)

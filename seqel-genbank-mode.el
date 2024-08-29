@@ -186,13 +186,13 @@ the beginning of the genbank entry instead of the sequence."
 (defun seqel-genbank-2-fasta ()
   "Convert current genbank record to fasta format."
   (interactive)
-  (save-excursion
+  (save-mark-and-excursion
     (seqel-genbank--2-fasta)))
 
 (defun seqel-genbank-2-fasta-all ()
   "Convert all genbank records to fasta format."
   (interactive)
-  (save-excursion
+  (save-mark-and-excursion
     (goto-char (point-max))
     (while (seqel-genbank-backward 1)
       (seqel-genbank--2-fasta))))

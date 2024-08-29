@@ -1,4 +1,4 @@
-;;; seqel-nuc-mode.el --- A minor mode for editing nucleic acid sequences. -*- lexical-binding: t; -*-
+;;; seqel-nuc-mode.el --- A minor mode for editing nucleic acid sequences.  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2021  Zech Xu
 
@@ -22,6 +22,8 @@
 
 (defvar seqel-nuc-mode-hook nil
   "*Hook to setup `seqel-nuc-mode'.")
+
+;;;;; END OF USER CUSTOMIZABLE VARIABLES
 
 
 (defvar seqel-nuc--base-alist
@@ -49,8 +51,6 @@
 For each inner list, the first element is allowed nuc bases; the second element
 is the complement of the first, and the rest is the degenerated bases
 for the first.  Only for lowercase, as the upcased will be added automatically.")
-
-;;;;; END OF USER CUSTOMIZABLE VARIABLES
 
 (defvar seqel-nuc-base-alist
   (append (mapcar (lambda (x)
@@ -176,7 +176,7 @@ region or the current line if no region is active.  See also
 `seqel-nuc-dna-p' and `seqel-nuc-p'."
   (interactive (seqel-region-or-line))
   (let ((case-fold-search t))           ; enable case insensitive search
-    (save-excursion
+    (save-mark-and-excursion
       (goto-char beg)
       (search-forward "u" end t))))
       ;; (re-search-forward "[uU]" end t))))
@@ -190,7 +190,7 @@ region or the current line if no region is active.
 See also `seqel-nuc-rna-p' and `seqel-nuc-p'."
   (interactive (seqel-region-or-line))
   (let ((case-fold-search t))
-    (save-excursion
+    (save-mark-and-excursion
       (goto-char beg)
       (search-forward "t" end t))))
 
@@ -354,7 +354,7 @@ region or the current line if no region is active."
   (interactive (seqel-region-or-line))
   (let ((n  1.0)  (ni 0) (nis 0)
         old cur)
-    (save-excursion
+    (save-mark-and-excursion
       (goto-char beg)
       (while (and (/= (point) end))
         (setq cur (char-after))
@@ -520,7 +520,7 @@ long."
   "Nucleic acid mode.
 
 It should not be enabled with `pro-mode' at the same time."
-  ;; the fun auto defines a buffer local variable `seqel-nuc-mode'
+  ;; the func auto defines a buffer local variable `seqel-nuc-mode'
   ;; and this key value set its initial value
   :init-value nil
   ;; the name, a string, to show in the modeline
