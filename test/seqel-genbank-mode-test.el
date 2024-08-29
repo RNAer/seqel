@@ -1,3 +1,5 @@
+;;; seqel-genbank-mode-test.el --- Tests for seqel-genbank-mode. -*- lexical-binding: t; -*-
+
 (require 'seqel-genbank-mode)
 
 
@@ -129,3 +131,6 @@ TACGGTAACAGAAGTACTTTCTAAACACGGTATTGACCAGCGTGTGCTCAACCCCGACAATCTCAAGG
         (setq tmp (buffer-string))
         (should (equal tmp (cdr test)))
         (delete-region (point-min) (point-max))))))
+
+
+(provide 'seqel-genbank-mode-test)

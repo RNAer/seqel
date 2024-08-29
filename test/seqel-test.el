@@ -1,3 +1,5 @@
+;;; seqel-test.el   -*- lexical-binding: t; -*-
+
 (require 'seqel)
 
 (ert-deftest seqel-summary-test ()
@@ -24,3 +26,6 @@
       (should
        (equal (seqel-isearch-mangle-str (car test))
               (cdr test))))))
+
+
+(provide 'seqel-test)

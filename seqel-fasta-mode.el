@@ -1,4 +1,4 @@
-;;; seqel-fasta-mode.el --- A major mode for editing fasta files.
+;;; seqel-fasta-mode.el --- A major mode for editing fasta files.  -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2021  Zech Xu
 

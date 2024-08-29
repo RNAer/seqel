@@ -1,4 +1,4 @@
-;;; seqel-genbank-mode.el --- A major mode to edit genbank files
+;;; seqel-genbank-mode.el --- A major mode to edit genbank files.  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2021  Zech Xu
 

@@ -1,3 +1,5 @@
+;;; seqel-pro-mode-test.el  ---  Tests for seqel-pro-mode.el.  -*- lexical-binding: t; -*-
+
 (require 'seqel-pro-mode)
 
 
@@ -73,3 +75,6 @@
         (maphash (lambda (k v) (if (= 0 (gethash k obs)) (remhash k obs))) obs)
         (should (seqel-hash-equal obs (seqel-hash-alist (cdr test))))
         (delete-region (point-min) (point-max))))))
+
+
+(provide 'seqel-pro-mode-test)

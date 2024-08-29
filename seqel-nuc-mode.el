@@ -1,4 +1,4 @@
-;;; seqel-nuc-mode.el --- A minor mode for editing nucleic acid sequences
+;;; seqel-nuc-mode.el --- A minor mode for editing nucleic acid sequences. -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2021  Zech Xu
 

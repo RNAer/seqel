@@ -1,3 +1,4 @@
+;;; seqel-nuc-mode-test.el --- Tests for seqel-nuc-mode.el. -*- lexical-binding: t; -*-
 (require 'seqel-nuc-mode)
 
 
@@ -183,7 +184,7 @@
         (delete-region (point-min) (point-max))))))
 
 
-(ert-deftest nuc-rc-test ()
+(ert-deftest seqel-nuc-rc-test ()
   :tags '(nuc-mode)
   ;; (should, test case, result)
   (let ((cases '(("A1 a" . "t 1T")
@@ -194,7 +195,7 @@
         (insert (car test))
         (set-mark (point-min))
         (goto-char (point-max))
-        (call-interactively 'nuc-rc)
+        (call-interactively 'seqel-nuc-rc)
         (should (equal (buffer-string) (cdr test)))
         ;; check the cursor has not moved
         ;; (should (equal (point) (point-max)))
@@ -282,3 +283,6 @@
       (should
        (equal (seqel-nuc-isearch-mangle-str-degeneracy (car test))
               (cdr test))))))
+
+
+(provide 'seqel-nuc-mode-test)

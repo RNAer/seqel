@@ -1,3 +1,5 @@
+;;; seqel-fasta-mode-test.el --- Tests for seqel-fasta-mode.el  -*- lexical-binding: t; -*-
+
 (require 'seqel-fasta-mode)
 
 
@@ -393,3 +395,6 @@ AEFZ" . seqel-nuc-mode))))
         (should (not (and (symbolp (cdr test)) (symbol-value (cdr test)))))
         (seqel-nuc-mode -1)
         (seqel-pro-mode -1)))))
+
+
+(provide 'seqel-fasta-mode-test)
