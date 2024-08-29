@@ -53,6 +53,6 @@ test:
 	@printf "\n------- Byte-Compiling elisp files...\n"
 	${EMACS} -Q --batch -L . -f batch-byte-compile *.el
 	@printf "\n------- Testing...\n"
-	${EMACS} -Q --batch -L . -l ert -l test/seqel-test.el -l test/seqel-nuc-mode-test.el -l test/seqel-pro-mode-test.el -l test/seqel-fasta-mode-test.el -l test/seqel-genbank-mode-test.el -f ert-run-tests-batch-and-exit
+	${EMACS} -Q --batch -L . -L test -l ert -l all-tests.el -f ert-run-tests-batch-and-exit
 
 # end
