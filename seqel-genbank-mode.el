@@ -29,27 +29,18 @@
     (define-key map "\C-c\C-z"  'seqel-genbank-last)
     (define-key map "\C-c\C-c"  'seqel-genbank-count)
     (define-key map "\C-c\C-d"  'seqel-genbank-delete)
-    (define-key map "\C-c\C-f"  'seqel-genbank-forward) ; it also binds to M-}
-    (define-key map "\C-c\C-b"  'seqel-genbank-backward); it also binds to M-}
-    (define-key map "\C-c\C-m"  'seqel-genbank-mark)    ; it also binds to M-h
+    (define-key map "\C-c\C-f"  'seqel-genbank-forward)
+    (define-key map [remap forward-paragraph] 'seqel-genbank-forward) ;  binds to M-}
+    (define-key map "\C-c\C-b"  'seqel-genbank-backward)
+    (define-key map [remap forward-paragraph] 'seqel-genbank-forward) ;  binds to M-}
+    (define-key map "\C-c\C-m"  'seqel-genbank-mark)
+    (define-key map [remap mark-paragraph] 'seqel-genbank-mark)       ; binds to M-h
     map)
  "The local keymap for `seqel-genbank-mode'.")
 
 ;;;###autoload
 (add-to-list 'auto-mode-alist
              '("\\.\\(genbank\\|gb\\|gbk\\)\\'" . seqel-genbank-mode))
-
-;; map the paragraph key bindings to corresponding functions
-(let ((equivs
-       '((seqel-genbank-forward  . forward-paragraph)
-         (seqel-genbank-backward . backward-paragraph)
-         (seqel-genbank-mark     . mark-paragraph))))
-  (dolist (x equivs)
-    (substitute-key-definition (cdr x)
-                               (car x)
-                               seqel-genbank-mode-map
-                               (current-global-map))))
-
 
 ;; create pull-down menu options on menu bar.
 (define-key seqel-genbank-mode-map [menu-bar seqel] (cons "Seqel" (make-sparse-keymap "Seqel")))

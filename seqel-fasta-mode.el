@@ -33,14 +33,18 @@
     (define-key map "\C-c\C-d"   'seqel-fasta-delete)
     (define-key map "\C-c\C-a"   'seqel-fasta-first)
     (define-key map "\C-c\C-z"   'seqel-fasta-last)
-    (define-key map "\C-c\C-f"   'seqel-fasta-forward) ; it also binds to M-}
-    (define-key map "\C-c\C-b"   'seqel-fasta-backward); it also binds to M-{
-    (define-key map "\C-c\C-m"   'seqel-fasta-mark)    ; it also binds to M-h
+    (define-key map "\C-c\C-f"   'seqel-fasta-forward)
+    (define-key map [remap forward-paragraph] 'seqel-fasta-forward) ;  binds to M-}
+    (define-key map "\C-c\C-b"   'seqel-fasta-backward)
+    (define-key map [remap backward-paragraph] 'seqel-fasta-backward) ;  binds to M-{
+    (define-key map "\C-c\C-m"   'seqel-fasta-mark)
+    (define-key map [remap mark-paragraph] 'seqel-fasta-mark)        ;  binds to M-h
     (define-key map "\C-c\C-l"   'seqel-fasta-length)
     (define-key map "\C-c\C-p"   'seqel-fasta-position)
     (define-key map "\C-c\C-w"   'seqel-fasta-weight)
     (define-key map "\C-c\C-r"   'seqel-fasta-rc-all)
     (define-key map "\C-c\C-t"   'seqel-fasta-translate-all)
+    ;; (define-key map "\C-c\C-vu"  'seqel-fasta-unpaint-all)
     (define-key map "\C-c\C-vd"  'seqel-fasta-column-delete)
     (define-key map "\C-c\C-vi"  'seqel-fasta-column-insert)
     (define-key map "\C-c\C-vh"  'seqel-fasta-column-highlight)
@@ -49,16 +53,6 @@
     map)
   "The local keymap for `seqel-fasta-mode'.")
 
-;; map the paragraph key bindings to corresponding fasta functions
-(let ((equivs
-       '((seqel-fasta-forward  . forward-paragraph)
-         (seqel-fasta-backward . backward-paragraph)
-         (seqel-fasta-mark     . mark-paragraph))))
-  (dolist (x equivs)
-    (substitute-key-definition (cdr x)
-                               (car x)
-                               seqel-fasta-mode-map
-                               (current-global-map))))
 
 ;; create pull-down menu options on menu bar.
 (define-key seqel-fasta-mode-map [menu-bar seqel] (cons "Seqel" (make-sparse-keymap "Seqel")))
