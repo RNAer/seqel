@@ -13,18 +13,24 @@ PACKAGE_NAME:=seqel-$(VERSION)
 PACKAGE_DIR:=/tmp/$(PACKAGE_NAME)
 PACKAGE:=/tmp/$(PACKAGE_NAME).tar
 
-EMACS :=
-ifeq ($(OS),Windows_NT)
-	EMACS = emacs
-else
-	UNAME_S := $(shell uname -s)
-	ifeq ($(UNAME_S), Linux)
+# Allow EMACS to be set via environment variable, default to an empty string
+EMACS ?=
+
+# If EMACS is not set, determine the default based on the OS
+ifeq ($(EMACS),)
+	ifeq ($(OS),Windows_NT)
 		EMACS = emacs
-	endif
-	ifeq ($(UNAME_S), Darwin)
-		EMACS = /Applications/Emacs.app/Contents/MacOS/Emacs
+	else
+		UNAME_S := $(shell uname -s)
+		ifeq ($(UNAME_S),Linux)
+			EMACS = emacs
+		endif
+		ifeq ($(UNAME_S),Darwin)
+			EMACS = /Applications/Emacs.app/Contents/MacOS/Emacs
+		endif
 	endif
 endif
+
 
 package: $(PACKAGE_DIR)
 	tar cvf $(PACKAGE) -C $(PACKAGE_DIR)/.. $(PACKAGE_NAME)
