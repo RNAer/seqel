@@ -1,4 +1,4 @@
-;;; seqel-genetic-code.el --- Store tables of genetic code
+;;; seqel-genetic-code.el --- Store tables of genetic code  -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2021  Zech Xu
 

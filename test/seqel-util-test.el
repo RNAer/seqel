@@ -1,9 +1,9 @@
 ;;; seqel-test.el   -*- lexical-binding: t; -*-
 
-(require 'seqel)
+(require 'seqel-util)
 
 (ert-deftest seqel-summary-test ()
-  :tags '(seq)
+  :tags '(util)
   (let ((cases '(("a1..- " .
                   ((?a . 1) (?1 . 1) (?. . 2) (?- . 1) (? . 1)))))
         obs)
@@ -19,7 +19,7 @@
 
 
 (ert-deftest seqel-isearch-mangle-str-test ()
-  :tags '(seq)
+  :tags '(util)
   (let ((cases '(("mR" . "m[\t\n .-]*R")
                  ("aTGc" . "a[\t\n .-]*T[\t\n .-]*G[\t\n .-]*c"))))
     (dolist (test cases)
@@ -28,4 +28,4 @@
               (cdr test))))))
 
 
-(provide 'seqel-test)
+(provide 'seqel-util-test)

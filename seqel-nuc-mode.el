@@ -15,7 +15,7 @@
 
 ;;; Code:
 
-(require 'seqel)
+(require 'seqel-util)
 (require 'seqel-genetic-code)
 
 ;;;;;; USER CUSTOMIZABLE VARIABLES START HERE

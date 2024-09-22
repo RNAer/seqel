@@ -15,7 +15,7 @@
 ;;; Code:
 
 
-(require 'seqel)
+(require 'seqel-util)
 
 
 (defvar seqel-pro-mode-hook nil

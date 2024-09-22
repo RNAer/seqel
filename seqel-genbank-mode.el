@@ -14,7 +14,7 @@
 ;;; Code:
 
 
-(require 'seqel)
+(require 'seqel-util)
 (require 'seqel-nuc-mode)
 (require 'seqel-pro-mode)
 

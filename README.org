@@ -1,5 +1,6 @@
 #+TILE: SEQEL - emacs-lisp package for biological sequence manipulation
 #+OPTIONS: ^:{}
+#+property: header-args+ :results none
 
 * A simple demo screencast
 [[image:usage-demo][demo.gif]]

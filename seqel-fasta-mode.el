@@ -5,6 +5,7 @@
 ;; Author: Zech Xu
 ;; Version: 1.0
 ;; Package-Requires: ((emacs "25.1"))
+;; Keywords: biology, sequence, DNA, protein, fasta
 ;; License: BSD-3
 ;; URL: https://github.com/RNAer/seqel
 
@@ -15,7 +16,7 @@
 ;;; Code:
 
 
-(require 'seqel)
+(require 'seqel-util)
 (require 'seqel-nuc-mode)
 (require 'seqel-pro-mode)
 
