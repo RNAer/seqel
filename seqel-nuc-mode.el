@@ -403,10 +403,7 @@ otherwise, not.  See `seqel-paint' for details.
 
 Interactively, BEG and END are the begin and end of the active
 region or the current line if no region is active."
-  (interactive "r\nP")
-  (if (not (use-region-p))
-      (setq beg (line-beginning-position)
-            end (line-end-position)))
+  (interactive (append (seqel-region-or-line) (list current-prefix-arg)))
   (seqel-paint beg end "nuc-base-face" case))
 
 ;;;###autoload

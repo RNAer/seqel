@@ -277,10 +277,7 @@ a nuc base in char type, hex-code colors for foreground and background")
 
 ;;;###autoload
 (defun seqel-pro-paint-alternative (beg end)
-  (interactive "r")
-  (if (not (use-region-p))
-      (setq beg (line-beginning-position)
-            end (line-end-position)))
+  (interactive (seqel-region-or-line))
   (save-mark-and-excursion
     (let (char face)
       (goto-char beg)
@@ -308,10 +305,7 @@ a nuc base in char type, hex-code colors for foreground and background")
 
 If the CASE is nil, upcase and lowercase base chars will be colored the same;
 otherwise, not.  See `seqel-paint' for details."
-  (interactive "r\nP")
-  (if (not (use-region-p))
-      (setq beg (line-beginning-position)
-            end (line-end-position)))
+  (interactive (append (seqel-region-or-line) (list current-prefix-arg)))
   (seqel-paint beg end "pro-aa-face" case))
 
 ;;;###autoload
