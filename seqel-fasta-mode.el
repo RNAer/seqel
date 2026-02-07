@@ -1,4 +1,4 @@
-;;; seqel-fasta-mode.el --- A major mode for editing fasta files.  -*- lexical-binding: t -*-
+;;; seqel-fasta-mode.el --- A major mode for editing fasta files.  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2021  Zech Xu
 
@@ -22,7 +22,7 @@
 
 
 (defvar seqel-fasta-mode-hook nil
-  "*Hook to setup `seqel-fasta-mode'.")
+  "Hook to setup `seqel-fasta-mode'.")
 
 
 (defvar seqel-fasta-mode-map
@@ -107,9 +107,9 @@ Special commands:
   "If not nil, set up fasta mode on buffer load by guessing buffer content.")
 
 (defun seqel-fasta-find-file ()
-  "Invoke `seqel-fasta-mode' if the buffer look like a fasta.
+  "Invoke `seqel-fasta-mode' if the buffer looks like a fasta.
 
-Only if the major mode is `fundermental'.  This function is added to
+Only if the major mode is `fundamental-mode'.  This function is added to
 `find-file-hooks'."
   (save-mark-and-excursion
     (goto-char (point-min))

@@ -12,22 +12,32 @@
 
 ;; Utility functions and variables for both nucleotide and protein minor modes
 
+
 ;;; Code:
+(defgroup seqel nil
+  "Biological sequence manipulation."
+  :group 'languages
+  :prefix "seqel-")
+
 
 (require 'color)
 
 
 ;; valid characters as alignment gaps in the sequences
-(defvar seqel-gap
+(defcustom seqel-gap
   '(?- ?.)
-  "*Chars of '.' and '-' that represent a gap.")
+  "Chars of '.' and '-' that represent a gap."
+  :type '(repeat character)
+  :group 'seqel)
 
-(defvar seqel-space
+(defcustom seqel-space
   '(?  ?\t ?\n ?\r)
-  "*Chars of whitespaces that may appear in sequences.
+  "Chars of whitespaces that may appear in sequences.
 
 It will be skipped during move or search or anything
-involving counting.")
+involving counting."
+  :type '(repeat character)
+  :group 'seqel)
 
 (defvar seqel-cruft-regexp
   (regexp-opt (mapcar #'char-to-string
@@ -182,10 +192,13 @@ from red to green without yellow) besides other differences."
 The first one is the text color and the second is the background.")
 
 (defvar seqel-color-pairs-cycle
-  (setcdr (last seqel-color-pairs) seqel-color-pairs)
+  (let ((colors (copy-sequence seqel-color-pairs)))
+    (setcdr (last colors) colors)
+    colors)
     "Color pairs that pass WCAG AAA test.
 
-The first one is the text color and the second is the background.")
+The first one is the text color and the second is the background.
+This is a circular list.")
 
 
 (defmacro seqel--def-char-face (letter backgrnd foregrnd grp)
@@ -203,32 +216,25 @@ background and FOREGRND as foreground colors."
        (((class color) (background light))
         (:background ,backgrnd :foreground ,foregrnd))
        (t (:background "gray")))
-     ,(concat "Face for marking up " (upcase letter) "'s")))
+     ,(concat "Face for marking up " (upcase letter) "'s")
+     :group 'seqel))
 
 
 (defun seqel-paint (beg end face-group &optional case)
-  "Color the sequences in the region BEG to END.
+  "Color the sequences in the region BEG to END with FACE-GROUP.
 
 If CASE is nil, upcase and lowercase chars will be colored the same;
-otherwise, not.  FACE-GROUP decides which face groups ('base-face' or
-'aa-face') to use.
-
-TODO: this is slow for long sequences."
+otherwise, not.  FACE-GROUP decides which face groups to use (e.g. \"seqel-nuc-base-face\")."
   (save-mark-and-excursion
-    (let (char face)
-      (goto-char beg)
-      (dotimes (i (- end beg))
-        (setq char (char-after))
-        ;; skip whitespaces and gap symbols
-        (if (not (gethash char seqel-cruft-set))
-            (progn (if case
-                       (setq face (format "%s-%c" face-group char))
-                     ;; let upcase base use the color of lowercase base color
-                     (setq face (format "%s-%c" face-group (upcase char))))
-                   ;; use font-lock-face instead of face for font-lock-mode is enabled
-                   (with-silent-modifications
-                     (put-text-property (+ beg i) (+ beg i 1) 'font-lock-face (intern face)))))
-        (forward-char)))))
+    (goto-char beg)
+    (let ((regexp "[a-zA-Z]")) ;; match any letter, more efficient
+      (while (re-search-forward regexp end t)
+        (let* ((char (char-before))
+               (use-char (if case char (upcase char)))
+               (face (intern (format "%s-%c" face-group use-char))))
+          (when (facep face)
+            (with-silent-modifications
+              (put-text-property (1- (point)) (point) 'font-lock-face face))))))))
 
 (defun seqel-unpaint (beg end)
   "Uncolor the sequences from BEG to END or the current line."
@@ -293,7 +299,9 @@ BOUND and NOERROR passes to function `re-search-backward'."
       (if isearch-forward 'seqel-isearch-forward 'seqel-isearch-backward)
     (isearch-search-fun-default)))
 
-(setq isearch-search-fun-function 'seqel--isearch-search-fun)
+;; NOTE: Setting isearch-search-fun-function globally on load is a side
+;; effect; it is set buffer-locally in the minor modes instead.
+;; (setq isearch-search-fun-function 'seqel--isearch-search-fun)
 
 
 (defun seqel-entry-forward (count entry-regexp)

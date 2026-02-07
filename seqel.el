@@ -8,6 +8,11 @@
 ;; License: BSD-3
 ;; URL: https://github.com/RNAer/seqel
 
+;;; Commentary:
+
+;; Entry point for the seqel package.  Loads fasta and genbank modes
+;; for biological sequence manipulation.
+
 ;;; Code:
 
 (require 'seqel-fasta-mode)

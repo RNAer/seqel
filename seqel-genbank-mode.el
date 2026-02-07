@@ -4,6 +4,7 @@
 
 ;; Author: Zech Xu
 ;; Version: 1.0
+;; Package-Requires: ((emacs "25.1"))
 ;; License: BSD-3
 ;; URL: https://github.com/RNAer/seqel
 
@@ -19,7 +20,7 @@
 (require 'seqel-pro-mode)
 
 (defvar seqel-genbank-mode-hook nil
-  "*Hook to setup `seqel-genbank-mode'.")
+  "Hook to setup `seqel-genbank-mode'.")
 
 (defvar seqel-genbank-mode-map
   ;; use `make-keymap' if there are lots of keybindings
@@ -32,7 +33,7 @@
     (define-key map "\C-c\C-f"  'seqel-genbank-forward)
     (define-key map [remap forward-paragraph] 'seqel-genbank-forward) ;  binds to M-}
     (define-key map "\C-c\C-b"  'seqel-genbank-backward)
-    (define-key map [remap forward-paragraph] 'seqel-genbank-forward) ;  binds to M-}
+    (define-key map [remap backward-paragraph] 'seqel-genbank-backward) ;  binds to M-{
     (define-key map "\C-c\C-m"  'seqel-genbank-mark)
     (define-key map [remap mark-paragraph] 'seqel-genbank-mark)       ; binds to M-h
     map)
@@ -84,7 +85,7 @@
   "Major mode for editing sequences in genbank format.
 
 Special commands:
-￼\\{seqel-genbank-mode-map}
+\\{seqel-genbank-mode-map}
   \\{seqel-nuc-mode-map}
   \\{seqel-pro-mode-map}"
   ;; This runs the normal hook change-major-mode-hook, then gets rid of

@@ -4,6 +4,7 @@
 
 ;; Author: Zech Xu
 ;; Version: 1.0
+;; Package-Requires: ((emacs "25.1"))
 ;; License: BSD-3
 ;; URL: https://github.com/RNAer/seqel
 
@@ -20,8 +21,10 @@
 
 ;;;;;; USER CUSTOMIZABLE VARIABLES START HERE
 
-(defvar seqel-nuc-mode-hook nil
-  "*Hook to setup `seqel-nuc-mode'.")
+(defcustom seqel-nuc-mode-hook nil
+  "Hook to setup `seqel-nuc-mode'."
+  :type 'hook
+  :group 'seqel)
 
 ;;;;; END OF USER CUSTOMIZABLE VARIABLES
 
@@ -46,7 +49,7 @@
     (?x  ?x ?a ?t ?g ?c))
   ;; Traditionally, the doc string starting with an asterisk (*) indicates
   ;; the variable is customizable.
-  "*A association list showing the degeneracies and complements of the bases.
+  "A association list showing the degeneracies and complements of the bases.
 
 For each inner list, the first element is allowed nuc bases; the second element
 is the complement of the first, and the rest is the degenerated bases
@@ -385,15 +388,28 @@ This is a list of lists.  For each inner list, it contains 3
 atoms: a nuc base in char type, hex-code colors for foreground
 and background")
 
-;;; add them to the group of "nuc-base-face"
-(mapc (lambda (elem)
-        (let ((l (format "%c" (nth 0 elem)))
-              (f (nth 2 elem))
-              (b (nth 1 elem)))
-          (eval (macroexpand `(seqel--def-char-face ,l ,b ,f "nuc-base-face")))))
-      seqel-nuc-base-colors)
+;;; create faces at compile-time
+(eval-when-compile
+  (defmacro seqel-nuc--define-all-base-faces ()
+    "Generate defface forms for all nucleotide bases at compile-time."
+    `(progn
+       ,@(mapcar (lambda (elem)
+                   (let ((l (format "%c" (nth 0 elem)))
+                         (f (nth 2 elem))
+                         (b (nth 1 elem)))
+                     `(seqel--def-char-face ,l ,b ,f "seqel-nuc-base-face")))
+                 seqel-nuc-base-colors))))
+
+;; Expand the macro to create all face definitions
+(seqel-nuc--define-all-base-faces)
 
 
+
+(defvar seqel-nuc-font-lock-keywords
+  (list
+   (list (concat "[" (mapconcat (lambda (x) (char-to-string (car x))) seqel-nuc-base-alist "") "]")
+         '(0 (intern (format "seqel-nuc-base-face-%c" (char-after (match-beginning 0)))) t)))
+  "Font lock keywords for `seqel-nuc-mode'.")
 ;;;###autoload
 (defun seqel-nuc-paint (beg end &optional case)
   "Color the nucleic acid region BEG to END.
@@ -404,7 +420,7 @@ otherwise, not.  See `seqel-paint' for details.
 Interactively, BEG and END are the begin and end of the active
 region or the current line if no region is active."
   (interactive (append (seqel-region-or-line) (list current-prefix-arg)))
-  (seqel-paint beg end "nuc-base-face" case))
+  (seqel-paint beg end "seqel-nuc-base-face" case))
 
 ;;;###autoload
 (defalias 'seqel-nuc-unpaint 'seqel-unpaint
@@ -527,6 +543,10 @@ It should not be enabled with `pro-mode' at the same time."
   (or seqel-nuc-translation-table (seqel-nuc-set-translation-table 1))
   (setq-local seqel-isearch-p t)
   (setq isearch-search-fun-function 'seqel-nuc--isearch-search-fun)
+  (if seqel-nuc-mode
+      (font-lock-add-keywords nil seqel-nuc-font-lock-keywords)
+    (font-lock-remove-keywords nil seqel-nuc-font-lock-keywords))
+  (font-lock-flush)
   (run-hooks 'seqel-nuc-mode-hook))
 
 

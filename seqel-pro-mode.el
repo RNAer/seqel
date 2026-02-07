@@ -1,9 +1,10 @@
-;;; seqel-pro-mode.el --- A minor mode for editing protein sequences
+;;; seqel-pro-mode.el --- A minor mode for editing protein sequences  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2021  Zech Xu
 
 ;; Author: Zech Xu
 ;; Version: 1.0
+;; Package-Requires: ((emacs "25.1"))
 ;; License: BSD-3
 ;; URL: https://github.com/RNAer/seqel
 
@@ -18,8 +19,10 @@
 (require 'seqel-util)
 
 
-(defvar seqel-pro-mode-hook nil
-  "*Hook to setup `seqel-pro-mode'.")
+(defcustom seqel-pro-mode-hook nil
+  "Hook to setup `seqel-pro-mode'."
+  :type 'hook
+  :group 'seqel)
 
 
 (defvar seqel-pro-aa-alist
@@ -48,7 +51,7 @@
     (?X  "Xaa"  92      ?.)  ; unknown aa; set it weight to average weight
     (?Y  "Tyr"  163.18  ?y)
     (?Z  "Glx"  128     ?e ?q)) ; Glu Gln
-  "*A association list of 1-letter, 3-letter IUPAC codes and molecular weights.
+  "A association list of 1-letter, 3-letter IUPAC codes and molecular weights.
 
 This is the molecular weight with H2O subtracted.
 
@@ -77,17 +80,26 @@ similar in Python language.")
 (defvar seqel-pro-aa-neg '(?E ?D))
 (defvar seqel-pro-aa-polar '(?N ?Q ?S ?T))
 (defvar seqel-pro-aa-aromatic '(?H ?Y))
-(eval (macroexpand `(seqel--def-char-face "hydrophobic" "RoyalBlue" "white" "pro-aa-background")))
-(eval (macroexpand `(seqel--def-char-face "pos" "brown" "white" "pro-aa-background")))
-(eval (macroexpand `(seqel--def-char-face "neg" "purple" "white" "pro-aa-background")))
-(eval (macroexpand `(seqel--def-char-face "polar" "green yellow" "white" "pro-aa-background")))
-(eval (macroexpand `(seqel--def-char-face "aromatic" "cyan4" "white" "pro-aa-background")))
+;; Define category faces at compile-time
+(eval-when-compile
+  (defmacro seqel-pro--define-category-faces ()
+    "Generate defface forms for amino acid categories at compile-time."
+    `(progn
+       ;; Background faces
+       (seqel--def-char-face "hydrophobic" "RoyalBlue" "white" "pro-aa-background")
+       (seqel--def-char-face "pos" "brown" "white" "pro-aa-background")
+       (seqel--def-char-face "neg" "purple" "white" "pro-aa-background")
+       (seqel--def-char-face "polar" "green yellow" "white" "pro-aa-background")
+       (seqel--def-char-face "aromatic" "cyan4" "white" "pro-aa-background")
+       ;; Foreground faces
+       (seqel--def-char-face "hydrophobic" "white" "RoyalBlue" "pro-aa-foreground")
+       (seqel--def-char-face "pos" "white" "brown" "pro-aa-foreground")
+       (seqel--def-char-face "neg" "white" "purple" "pro-aa-foreground")
+       (seqel--def-char-face "polar" "white" "green yellow" "pro-aa-foreground")
+       (seqel--def-char-face "aromatic" "white" "cyan4" "pro-aa-foreground"))))
 
-(eval (macroexpand `(seqel--def-char-face "hydrophobic" "white" "RoyalBlue" "pro-aa-foreground")))
-(eval (macroexpand `(seqel--def-char-face "pos" "white" "brown" "pro-aa-foreground")))
-(eval (macroexpand `(seqel--def-char-face "neg" "white" "purple" "pro-aa-foreground")))
-(eval (macroexpand `(seqel--def-char-face "polar" "white" "green yellow" "pro-aa-foreground")))
-(eval (macroexpand `(seqel--def-char-face "aromatic" "white" "cyan4" "pro-aa-foreground")))
+;; Expand the macro to create all category face definitions
+(seqel-pro--define-category-faces)
 
 
 (defvar seqel-pro-aa-mw
@@ -200,7 +212,7 @@ See `seqel-nuc-move-forward'"
   (seqel-forward-char count seqel-pro-alphabet-set))
 
 (defun seqel-pro-move-backward (count)
-  "Move backward COUNT number of amino acides, similar to `seqel-pro-move-forward'."
+  "Move backward COUNT number of amino acids, similar to `seqel-pro-move-forward'."
   (interactive "p")
   ;; (proceed-char-repeatedly count 'backward-char))
   (seqel-forward-char (- count) seqel-pro-alphabet-set))
@@ -227,7 +239,7 @@ See also `seqel-nuc-delete-backward'."
 
 
 (defun seqel-pro-count (beg end)
-  "Count the amino acid in the region or in the current line).
+  "Count the amino acid in the region or the current line.
 
 Return the count if the region contains only legal amino acid
 characters, including `seqel-pro-alphabet-set', `seqel-cruft-set';
@@ -266,17 +278,31 @@ This is a list of lists.  For each inner list, it contains 3 atoms:
 a nuc base in char type, hex-code colors for foreground and background")
 
 
-;; create faces
-(mapc (lambda (elem)
-        (let ((l (format "%c" (nth 0 elem)))
-              (f (nth 2 elem))
-              (b (nth 1 elem)))
-          (eval (macroexpand `(seqel--def-char-face ,l ,b ,f "pro-aa-face")))))
-      seqel-pro-aa-colors)
+;; create faces at compile-time
+(eval-when-compile
+  (defmacro seqel-pro--define-all-aa-faces ()
+    "Generate defface forms for all amino acids at compile-time."
+    `(progn
+       ,@(mapcar (lambda (elem)
+                   (let ((l (format "%c" (nth 0 elem)))
+                         (f (nth 2 elem))
+                         (b (nth 1 elem)))
+                     `(seqel--def-char-face ,l ,b ,f "seqel-pro-aa-face")))
+                 seqel-pro-aa-colors))))
+
+;; Expand the macro to create all face definitions
+(seqel-pro--define-all-aa-faces)
+
+(defvar seqel-pro-font-lock-keywords
+  (list
+   (list (concat "[" (mapconcat (lambda (x) (char-to-string (car x))) seqel-pro-aa-alist "") "]")
+         '(0 (intern (format "seqel-pro-aa-face-%c" (char-after (match-beginning 0)))) t)))
+  "Font lock keywords for `seqel-pro-mode'.")
 
 
 ;;;###autoload
 (defun seqel-pro-paint-alternative (beg end)
+  "Paint protein sequence from BEG to END by amino acid category."
   (interactive (seqel-region-or-line))
   (save-mark-and-excursion
     (let (char face)
@@ -284,15 +310,15 @@ a nuc base in char type, hex-code colors for foreground and background")
       (dotimes (i (- end beg))
         (setq char (char-after))
         (cond ((member char seqel-pro-aa-hydrophobic)
-               (setq face 'pro-aa-background-hydrophobic))
+               (setq face 'seqel-pro-aa-background-hydrophobic))
               ((member char seqel-pro-aa-polar)
-               (setq face 'pro-aa-background-polar))
+               (setq face 'seqel-pro-aa-background-polar))
               ((member char seqel-pro-aa-pos)
-               (setq face 'pro-aa-background-pos))
+               (setq face 'seqel-pro-aa-background-pos))
               ((member char seqel-pro-aa-neg)
-               (setq face 'pro-aa-background-neg))
+               (setq face 'seqel-pro-aa-background-neg))
               ((member char seqel-pro-aa-aromatic)
-               (setq face 'pro-aa-background-aromatic))
+               (setq face 'seqel-pro-aa-background-aromatic))
               (t (setq face 'default)))
         (with-silent-modifications
           (put-text-property (+ beg i) (+ beg i 1) 'font-lock-face face))
@@ -306,7 +332,7 @@ a nuc base in char type, hex-code colors for foreground and background")
 If the CASE is nil, upcase and lowercase base chars will be colored the same;
 otherwise, not.  See `seqel-paint' for details."
   (interactive (append (seqel-region-or-line) (list current-prefix-arg)))
-  (seqel-paint beg end "pro-aa-face" case))
+  (seqel-paint beg end "seqel-pro-aa-face" case))
 
 ;;;###autoload
 (defalias 'seqel-pro-unpaint 'seqel-unpaint
@@ -334,6 +360,10 @@ It should be not enabled with `nuc-mode' at the same time."
   :lighter " protein"
   :keymap seqel-pro-mode-map
   (setq-local seqel-isearch-p t)
+  (if seqel-pro-mode
+      (font-lock-add-keywords nil seqel-pro-font-lock-keywords)
+    (font-lock-remove-keywords nil seqel-pro-font-lock-keywords))
+  (font-lock-flush)
   (run-hooks 'seqel-pro-mode-hook))
 
 

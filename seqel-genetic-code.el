@@ -1,9 +1,10 @@
-;;; seqel-genetic-code.el --- Store tables of genetic code  -*- lexical-binding: t -*-
+;;; seqel-genetic-code.el --- Store tables of genetic code  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2021  Zech Xu
 
 ;; Author: Zech Xu
 ;; Version: 1.0
+;; Package-Requires: ((emacs "25.1"))
 ;; License: BSD-3
 ;; URL: https://github.com/RNAer/seqel
 

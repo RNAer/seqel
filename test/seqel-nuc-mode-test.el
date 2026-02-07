@@ -252,8 +252,8 @@
 
 (ert-deftest seqel-nuc-paint-test ()
   :tags '(nuc-mode)
-  (let ((cases '(("aAt" t (nuc-base-face-a nuc-base-face-A nuc-base-face-t))
-                 ("aAt" nil (nuc-base-face-A nuc-base-face-A nuc-base-face-T)))))
+  (let ((cases '(("aAt" t (seqel-nuc-base-face-a seqel-nuc-base-face-A seqel-nuc-base-face-t))
+                 ("aAt" nil (seqel-nuc-base-face-A seqel-nuc-base-face-A seqel-nuc-base-face-T)))))
     (with-temp-buffer
       (dolist (test cases)
         (insert (nth 0 test))
@@ -277,8 +277,8 @@
 
 (ert-deftest seqel-nuc-isearch-mangle-str-degeneracy-test ()
   :tags '(nuc-mode)
-  (let ((cases '(("mR" . "[ac][\t\n .-]*[AG]")
-                 ("aTGc" . "[a][\t\n .-]*[T][\t\n .-]*[G][\t\n .-]*[c]"))))
+  (let ((cases '(("mR" . "[ac][\t\n\r .-]*[AG]")
+                 ("aTGc" . "[a][\t\n\r .-]*[T][\t\n\r .-]*[G][\t\n\r .-]*[c]"))))
     (dolist (test cases)
       (should
        (equal (seqel-nuc-isearch-mangle-str-degeneracy (car test))
